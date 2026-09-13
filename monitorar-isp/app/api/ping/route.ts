@@ -1,4 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Socket } from "net";
+
+function checkTcpConnection(address: string, port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new Socket();
+    const timeout = 5000;
+
+    socket.setTimeout(timeout);
+
+    socket.on("connect", () => {
+      socket.destroy();
+      resolve(true);
+    });
+
+    socket.on("timeout", () => {
+      socket.destroy();
+      resolve(false);
+    });
+
+    socket.on("error", () => {
+      resolve(false);
+    });
+
+    socket.connect(port, address);
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,22 +37,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const url = `http://${address}:${port || 80}`;
-
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-
-      const response = await fetch(url, {
-        method: "HEAD",
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-      return NextResponse.json({ online: true });
-    } catch (err) {
-      return NextResponse.json({ online: false });
+    // Porta padrão baseada no tipo de serviço
+    let portToCheck = port;
+    if (!portToCheck) {
+      // Se não especificou porta, tenta HTTP/HTTPS
+      portToCheck = 80;
     }
+
+    // Tenta conexão TCP
+    const online = await checkTcpConnection(address, portToCheck);
+    return NextResponse.json({ online });
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error" },
