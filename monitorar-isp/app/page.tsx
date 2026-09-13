@@ -14,6 +14,8 @@ interface Host {
 export default function Home() {
   const [hosts, setHosts] = useState<Host[]>([]);
   const [formData, setFormData] = useState({ name: "", address: "", port: 80 });
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("hosts");
@@ -69,21 +71,45 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [hosts]);
 
-  const addHost = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.address) return;
 
-    const newHost: Host = {
-      id: Date.now().toString(),
-      name: formData.name,
-      address: formData.address,
-      port: formData.port,
-      online: false,
-      lastCheck: new Date(),
-    };
+    if (editingId) {
+      setHosts(
+        hosts.map((h) =>
+          h.id === editingId
+            ? { ...h, name: formData.name, address: formData.address, port: formData.port }
+            : h
+        )
+      );
+      setEditingId(null);
+    } else {
+      const newHost: Host = {
+        id: Date.now().toString(),
+        name: formData.name,
+        address: formData.address,
+        port: formData.port,
+        online: false,
+        lastCheck: new Date(),
+      };
+      setHosts([...hosts, newHost]);
+    }
 
-    setHosts([...hosts, newHost]);
     setFormData({ name: "", address: "", port: 80 });
+    setShowForm(false);
+  };
+
+  const startEdit = (host: Host) => {
+    setFormData({ name: host.name, address: host.address, port: host.port });
+    setEditingId(host.id);
+    setShowForm(true);
+  };
+
+  const cancelEdit = () => {
+    setFormData({ name: "", address: "", port: 80 });
+    setEditingId(null);
+    setShowForm(false);
   };
 
   const removeHost = (id: string) => {
@@ -92,80 +118,101 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">
-          Monitorar ISP
-        </h1>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+            Monitorar ISP
+          </h1>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition"
+          >
+            {showForm ? "Cancelar" : "+ Adicionar Host"}
+          </button>
+        </div>
 
-        <form
-          onSubmit={addHost}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8"
-        >
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nome do Host
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Ex: Google DNS"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+        {showForm && (
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nome do Host
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Ex: Google DNS"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Endereço (IP ou Domínio)
+                </label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  placeholder="Ex: 8.8.8.8 ou localhost"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Porta
+                </label>
+                <input
+                  type="number"
+                  value={formData.port}
+                  onChange={(e) =>
+                    setFormData({ ...formData, port: parseInt(e.target.value) })
+                  }
+                  placeholder="Ex: 80"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Endereço (IP ou Domínio)
-              </label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
-                placeholder="Ex: 8.8.8.8 ou localhost"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="flex gap-4 mt-6">
+              <button
+                type="submit"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
+              >
+                {editingId ? "Atualizar Host" : "Adicionar Host"}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition"
+                >
+                  Cancelar Edição
+                </button>
+              )}
             </div>
+          </form>
+        )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Porta
-              </label>
-              <input
-                type="number"
-                value={formData.port}
-                onChange={(e) =>
-                  setFormData({ ...formData, port: parseInt(e.target.value) })
-                }
-                placeholder="Ex: 80"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
-            >
-              Adicionar Host
-            </button>
-          </div>
-        </form>
-
-        <div className="space-y-4">
-          {hosts.length === 0 ? (
-            <p className="text-center text-gray-600 dark:text-gray-400">
-              Nenhum host adicionado ainda
-            </p>
-          ) : (
-            hosts.map((host) => (
+        {hosts.length === 0 ? (
+          <p className="text-center text-gray-600 dark:text-gray-400 py-12">
+            Nenhum host adicionado ainda
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {hosts.map((host) => (
               <div
                 key={host.id}
-                className={`rounded-lg shadow p-6 flex justify-between items-center transition ${
+                className={`rounded-lg shadow p-6 flex flex-col justify-between transition ${
                   host.online
                     ? "bg-green-50 dark:bg-green-900 border-l-4 border-green-500"
                     : "bg-red-50 dark:bg-red-900 border-l-4 border-red-500"
@@ -175,32 +222,40 @@ export default function Home() {
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {host.name}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {host.address}:{host.port}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                     Última verificação:{" "}
                     {new Date(host.lastCheck).toLocaleTimeString("pt-BR")}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between mt-4">
                   <div
                     className={`w-6 h-6 rounded-full ${
                       host.online ? "bg-green-500" : "bg-red-500"
                     }`}
                   />
-                  <button
-                    onClick={() => removeHost(host.id)}
-                    className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-700 transition text-sm"
-                  >
-                    Remover
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => startEdit(host)}
+                      className="px-3 py-1 bg-blue-300 dark:bg-blue-600 text-gray-900 dark:text-white rounded hover:bg-blue-400 dark:hover:bg-blue-700 transition text-sm"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => removeHost(host.id)}
+                      className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-700 transition text-sm"
+                    >
+                      Remover
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
