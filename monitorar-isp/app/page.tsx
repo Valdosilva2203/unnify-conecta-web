@@ -237,19 +237,17 @@ export default function Home() {
                       host.online ? "bg-green-500" : "bg-red-500"
                     }`}
                   />
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => startEdit(host)}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium text-sm transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
+                      className="px-3 py-1 bg-blue-300 dark:bg-blue-600 text-gray-900 dark:text-white rounded hover:bg-blue-400 dark:hover:bg-blue-700 transition text-sm"
                     >
-                      <span>✏️</span>
                       Editar
                     </button>
                     <button
                       onClick={() => removeHost(host.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-medium text-sm transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
+                      className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-700 transition text-sm"
                     >
-                      <span>🗑️</span>
                       Remover
                     </button>
                   </div>
