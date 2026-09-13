@@ -24,6 +24,7 @@ export default function Home() {
   });
   const [showForm, setShowForm] = useState(false);
   const [selectedCamera, setSelectedCamera] = useState<Camera | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("cameras");
@@ -41,17 +42,36 @@ export default function Home() {
     e.preventDefault();
     if (!formData.name || !formData.ip) return;
 
-    const newCamera: Camera = {
-      id: Date.now().toString(),
-      name: formData.name,
-      ip: formData.ip,
-      port: formData.port,
-      username: formData.username,
-      password: formData.password,
-      protocol: formData.protocol,
-    };
+    if (editingId) {
+      setCameras(
+        cameras.map((c) =>
+          c.id === editingId
+            ? {
+                ...c,
+                name: formData.name,
+                ip: formData.ip,
+                port: formData.port,
+                username: formData.username,
+                password: formData.password,
+                protocol: formData.protocol,
+              }
+            : c
+        )
+      );
+      setEditingId(null);
+    } else {
+      const newCamera: Camera = {
+        id: Date.now().toString(),
+        name: formData.name,
+        ip: formData.ip,
+        port: formData.port,
+        username: formData.username,
+        password: formData.password,
+        protocol: formData.protocol,
+      };
+      setCameras([...cameras, newCamera]);
+    }
 
-    setCameras([...cameras, newCamera]);
     setFormData({
       name: "",
       ip: "",
@@ -60,6 +80,32 @@ export default function Home() {
       password: "",
       protocol: "http",
     });
+    setShowForm(false);
+  };
+
+  const startEdit = (camera: Camera) => {
+    setFormData({
+      name: camera.name,
+      ip: camera.ip,
+      port: camera.port,
+      username: camera.username || "",
+      password: camera.password || "",
+      protocol: camera.protocol,
+    });
+    setEditingId(camera.id);
+    setShowForm(true);
+  };
+
+  const cancelEdit = () => {
+    setFormData({
+      name: "",
+      ip: "",
+      port: 80,
+      username: "",
+      password: "",
+      protocol: "http",
+    });
+    setEditingId(null);
     setShowForm(false);
   };
 
@@ -193,12 +239,23 @@ export default function Home() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
-            >
-              Adicionar Câmera
-            </button>
+            <div className="flex gap-4 mt-6">
+              <button
+                type="submit"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
+              >
+                {editingId ? "Atualizar Câmera" : "Adicionar Câmera"}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
           </form>
         )}
 
@@ -225,15 +282,26 @@ export default function Home() {
                   >
                     <p className="font-medium text-sm">{camera.name}</p>
                     <p className="text-xs opacity-75">{camera.ip}</p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeCamera(camera.id);
-                      }}
-                      className="mt-2 text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded transition"
-                    >
-                      Remover
-                    </button>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEdit(camera);
+                        }}
+                        className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeCamera(camera.id);
+                        }}
+                        className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded transition"
+                      >
+                        Remover
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
