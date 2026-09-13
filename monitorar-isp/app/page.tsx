@@ -208,11 +208,11 @@ export default function Home() {
             Nenhum host adicionado ainda
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex flex-wrap gap-8">
             {hosts.map((host) => (
               <div
                 key={host.id}
-                className={`rounded-lg shadow p-6 flex flex-col justify-between transition ${
+                className={`rounded-lg shadow p-6 flex flex-col justify-between transition max-w-sm w-full ${
                   host.online
                     ? "bg-green-50 dark:bg-green-900 border-l-4 border-green-500"
                     : "bg-red-50 dark:bg-red-900 border-l-4 border-red-500"
