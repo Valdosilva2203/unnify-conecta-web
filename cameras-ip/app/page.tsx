@@ -43,21 +43,27 @@ export default function Home() {
     if (!formData.name || !formData.ip) return;
 
     if (editingId) {
+      const updatedCamera = {
+        id: editingId,
+        name: formData.name,
+        ip: formData.ip,
+        port: formData.port,
+        username: formData.username,
+        password: formData.password,
+        protocol: formData.protocol,
+      };
+
       setCameras(
         cameras.map((c) =>
-          c.id === editingId
-            ? {
-                ...c,
-                name: formData.name,
-                ip: formData.ip,
-                port: formData.port,
-                username: formData.username,
-                password: formData.password,
-                protocol: formData.protocol,
-              }
-            : c
+          c.id === editingId ? updatedCamera : c
         )
       );
+
+      // Atualizar a câmera selecionada se ela for a que estava sendo editada
+      if (selectedCamera?.id === editingId) {
+        setSelectedCamera(updatedCamera);
+      }
+
       setEditingId(null);
     } else {
       const newCamera: Camera = {
