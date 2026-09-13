@@ -320,20 +320,42 @@ export default function Home() {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                   {selectedCamera.name}
                 </h2>
-                <div className="bg-black rounded-lg overflow-hidden aspect-video flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-white mb-4">
-                      📹 Visualizador de Câmera
-                    </p>
-                    <p className="text-gray-400 text-sm mb-4">
-                      Para usar RTSP, é necessário um player JavaScript compatível
-                    </p>
-                    <div className="bg-gray-900 p-4 rounded text-gray-300 text-xs text-left font-mono">
-                      <p>IP: {selectedCamera.ip}:{selectedCamera.port}</p>
-                      <p>Protocolo: {selectedCamera.protocol.toUpperCase()}</p>
-                      <p className="mt-2">
-                        URL: {getCameraUrl(selectedCamera)}
+                <div className="bg-black rounded-lg overflow-hidden aspect-video flex items-center justify-center relative">
+                  {selectedCamera.protocol === "http" ? (
+                    <img
+                      src={`http://${selectedCamera.username ? `${selectedCamera.username}:${selectedCamera.password}@` : ""}${selectedCamera.ip}:${selectedCamera.port}/video`}
+                      alt={selectedCamera.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : null}
+
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-center" id={`camera-${selectedCamera.id}-fallback`}>
+                    <div>
+                      <p className="text-white mb-4">
+                        📹 Câmera: {selectedCamera.name}
                       </p>
+                      <p className="text-gray-400 text-sm mb-4">
+                        {selectedCamera.protocol === "http"
+                          ? "Carregando stream MJPEG..."
+                          : "Para usar RTSP, é necessário um player JavaScript compatível"}
+                      </p>
+                      <div className="bg-gray-900 p-4 rounded text-gray-300 text-xs text-left font-mono max-w-md mx-auto">
+                        <p>IP: {selectedCamera.ip}:{selectedCamera.port}</p>
+                        <p>Protocolo: {selectedCamera.protocol.toUpperCase()}</p>
+                        {selectedCamera.protocol === "http" && (
+                          <p className="mt-2">
+                            URL: http://{selectedCamera.ip}:{selectedCamera.port}/video
+                          </p>
+                        )}
+                        {selectedCamera.protocol === "rtsp" && (
+                          <p className="mt-2">
+                            URL: rtsp://{selectedCamera.ip}:554/stream
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
