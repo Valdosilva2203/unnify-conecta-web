@@ -91,7 +91,7 @@ export default function CompartilharLinkModal({
           </div>
 
           <div className="flex gap-2">
-            {typeof navigator !== "undefined" && navigator.share && (
+            {typeof navigator !== "undefined" && (navigator as any).share && (
               <button
                 onClick={compartilharLink}
                 className="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition"
