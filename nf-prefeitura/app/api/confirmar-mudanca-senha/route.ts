@@ -51,6 +51,18 @@ export async function GET(req: NextRequest) {
       if (usuarioFunc) {
         usuario = usuarioFunc;
         tabela = "funcionarios";
+      } else {
+        // Procurar em admins
+        const { data: usuarioAdmin } = await supabase
+          .from("admins")
+          .select("id, password_change_hash, password_change_token_expires")
+          .eq("password_change_token", tokenHash)
+          .single();
+
+        if (usuarioAdmin) {
+          usuario = usuarioAdmin;
+          tabela = "admins";
+        }
       }
     }
 
@@ -73,14 +85,23 @@ export async function GET(req: NextRequest) {
     }
 
     // Atualizar senha e limpar campos temporários
+    const updateData = tabela === "admins"
+      ? {
+          senha_hash: usuario.password_change_hash,
+          password_change_token: null,
+          password_change_token_expires: null,
+          password_change_hash: null,
+        }
+      : {
+          senha: usuario.password_change_hash,
+          password_change_token: null,
+          password_change_token_expires: null,
+          password_change_hash: null,
+        };
+
     const { error: updateError } = await supabase
       .from(tabela)
-      .update({
-        senha: usuario.password_change_hash,
-        password_change_token: null,
-        password_change_token_expires: null,
-        password_change_hash: null,
-      })
+      .update(updateData)
       .eq("id", usuario.id);
 
     if (updateError) {

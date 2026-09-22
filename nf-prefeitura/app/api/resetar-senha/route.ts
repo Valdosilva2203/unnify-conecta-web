@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
 async function hashPassword(password: string): Promise<string> {
@@ -8,6 +8,17 @@ async function hashPassword(password: string): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
+    // Usar service_role key para contornar RLS
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+      {
+        auth: {
+          persistSession: false,
+        },
+      }
+    );
+
     const { token, novaSenha } = await req.json();
 
     if (!token || !novaSenha) {
@@ -84,13 +95,13 @@ export async function POST(req: NextRequest) {
     const senhaHash = await hashPassword(novaSenha);
 
     // Atualizar senha e limpar tokens
+    const updateData = userTable === "admins"
+      ? { senha_hash: senhaHash, reset_token: null, reset_token_expires: null }
+      : { senha: senhaHash, reset_token: null, reset_token_expires: null };
+
     const { error: updateError } = await supabase
       .from(userTable)
-      .update({
-        senha: senhaHash,
-        reset_token: null,
-        reset_token_expires: null,
-      })
+      .update(updateData)
       .eq("id", user.id);
 
     if (updateError) throw updateError;

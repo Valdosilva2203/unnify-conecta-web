@@ -39,9 +39,14 @@ export async function POST(req: NextRequest) {
     let usuario: any = null;
     let tabelaEncontrada = tabela;
 
+    // Helper para select com campo correto de senha
+    const selectCampoSenha = (t: string) => {
+      return t === "admins" ? "id, email, senha_hash" : "id, email, senha";
+    };
+
     const { data: usuarioTabela } = await supabase
       .from(tabela)
-      .select("id, email, senha")
+      .select(selectCampoSenha(tabela))
       .eq("id", userId)
       .single();
 
@@ -50,7 +55,7 @@ export async function POST(req: NextRequest) {
     } else if (tabela === "prefeitura_users") {
       const { data: usuarioFunc } = await supabase
         .from("funcionarios")
-        .select("id, email, senha")
+        .select(selectCampoSenha("funcionarios"))
         .eq("id", userId)
         .single();
       if (usuarioFunc) {
@@ -59,7 +64,7 @@ export async function POST(req: NextRequest) {
       } else {
         const { data: usuarioAdmin } = await supabase
           .from("admins")
-          .select("id, email, senha")
+          .select(selectCampoSenha("admins"))
           .eq("id", userId)
           .single();
         if (usuarioAdmin) {
@@ -70,7 +75,7 @@ export async function POST(req: NextRequest) {
     } else if (tabela === "funcionarios") {
       const { data: usuarioPref } = await supabase
         .from("prefeitura_users")
-        .select("id, email, senha")
+        .select(selectCampoSenha("prefeitura_users"))
         .eq("id", userId)
         .single();
       if (usuarioPref) {
@@ -79,7 +84,7 @@ export async function POST(req: NextRequest) {
       } else {
         const { data: usuarioAdmin } = await supabase
           .from("admins")
-          .select("id, email, senha")
+          .select(selectCampoSenha("admins"))
           .eq("id", userId)
           .single();
         if (usuarioAdmin) {
@@ -90,7 +95,7 @@ export async function POST(req: NextRequest) {
     } else if (tabela === "admins") {
       const { data: usuarioPref } = await supabase
         .from("prefeitura_users")
-        .select("id, email, senha")
+        .select(selectCampoSenha("prefeitura_users"))
         .eq("id", userId)
         .single();
       if (usuarioPref) {
@@ -99,7 +104,7 @@ export async function POST(req: NextRequest) {
       } else {
         const { data: usuarioFunc } = await supabase
           .from("funcionarios")
-          .select("id, email, senha")
+          .select(selectCampoSenha("funcionarios"))
           .eq("id", userId)
           .single();
         if (usuarioFunc) {
@@ -123,7 +128,10 @@ export async function POST(req: NextRequest) {
       .update(senhaAtual)
       .digest("hex");
 
-    if (senhaAtualHash !== usuario.senha) {
+    // admins usa senha_hash, outros usam senha
+    const senhaArmazenada = tabelaEncontrada === "admins" ? usuario.senha_hash : usuario.senha;
+
+    if (senhaAtualHash !== senhaArmazenada) {
       return NextResponse.json(
         { error: "Senha atual incorreta" },
         { status: 401 }
@@ -142,13 +150,21 @@ export async function POST(req: NextRequest) {
       .digest("hex");
 
     // Armazenar token e novo hash temporário
+    const updateData = tabelaEncontrada === "admins"
+      ? {
+          password_change_token: tokenHash,
+          password_change_token_expires: expiresAt.toISOString(),
+          password_change_hash: novaSenhaHash,
+        }
+      : {
+          password_change_token: tokenHash,
+          password_change_token_expires: expiresAt.toISOString(),
+          password_change_hash: novaSenhaHash,
+        };
+
     const { error: updateError } = await supabase
       .from(tabelaEncontrada)
-      .update({
-        password_change_token: tokenHash,
-        password_change_token_expires: expiresAt.toISOString(),
-        password_change_hash: novaSenhaHash,
-      })
+      .update(updateData)
       .eq("id", userId);
 
     if (updateError) {
