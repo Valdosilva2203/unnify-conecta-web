@@ -157,33 +157,71 @@ function DetalhePrefeituraContent() {
   };
 
   useEffect(() => {
-    const isAdminCheck = isAuthenticated();
-    const isPrefeituraUser = prefeituraSession && prefeituraSession.prefeitura_id === id;
+    const validarSubdominio = async () => {
+      // Se usuário logado (não é admin master)
+      if (prefeituraSession && prefeituraSession.prefeitura_id && !isAuthenticated()) {
+        // Extrair slug do subdomínio da URL
+        const hostname = window.location.hostname;
+        const subdomain = hostname.split(".")[0];
 
-    if (isAdminCheck) {
-      // Admin master pode ver qualquer prefeitura
-      setIsAdmin(true);
-      setAutenticado(true);
-      loadPrefeitura();
-      loadTodosFuncionarios();
-      loadSecretarias();
-      loadSolicitacoesPendentes();
-    } else if (isPrefeituraUser) {
-      // Usuário de prefeitura pode ver apenas sua prefeitura
-      setIsAdmin(false);
-      setAutenticado(true);
-      loadPrefeitura();
-      loadTodosFuncionarios();
-      loadSecretarias();
-      loadSolicitacoesPendentes();
-    } else if (prefeituraSession && prefeituraSession.prefeitura_id !== id) {
-      // Usuário de prefeitura tentando acessar prefeitura que não é dele
-      setErro("Acesso negado: você só pode visualizar sua própria prefeitura");
-      setLoading(false);
-    } else {
-      // Não autenticado
-      setLoading(false);
-    }
+        // Se o subdomínio não corresponde ao prefeitura_id do usuário, redirecionar
+        if (subdomain && subdomain !== "localhost" && subdomain !== "www") {
+          // Buscar prefeitura_id correspondente ao slug
+          const { data: prefeituraData } = await supabase
+            .from("prefeituras")
+            .select("id, slug")
+            .eq("slug", subdomain)
+            .single();
+
+          if (prefeituraData && prefeituraData.id !== prefeituraSession.prefeitura_id) {
+            // Subdomínio não corresponde ao usuário logado
+            // Buscar slug do prefeitura_id do usuário
+            const { data: userPrefeitura } = await supabase
+              .from("prefeituras")
+              .select("slug")
+              .eq("id", prefeituraSession.prefeitura_id)
+              .single();
+
+            if (userPrefeitura && userPrefeitura.slug) {
+              // Redirecionar para o subdomínio correto
+              window.location.href = `https://${userPrefeitura.slug}.unnifyconecta.com.br${window.location.pathname}`;
+              return;
+            }
+          }
+        }
+      }
+
+      // Validação normal de autenticação
+      const isAdminCheck = isAuthenticated();
+      const isPrefeituraUser = prefeituraSession && prefeituraSession.prefeitura_id === id;
+
+      if (isAdminCheck) {
+        // Admin master pode ver qualquer prefeitura
+        setIsAdmin(true);
+        setAutenticado(true);
+        loadPrefeitura();
+        loadTodosFuncionarios();
+        loadSecretarias();
+        loadSolicitacoesPendentes();
+      } else if (isPrefeituraUser) {
+        // Usuário de prefeitura pode ver apenas sua prefeitura
+        setIsAdmin(false);
+        setAutenticado(true);
+        loadPrefeitura();
+        loadTodosFuncionarios();
+        loadSecretarias();
+        loadSolicitacoesPendentes();
+      } else if (prefeituraSession && prefeituraSession.prefeitura_id !== id) {
+        // Usuário de prefeitura tentando acessar prefeitura que não é dele
+        setErro("Acesso negado: você só pode visualizar sua própria prefeitura");
+        setLoading(false);
+      } else {
+        // Não autenticado
+        setLoading(false);
+      }
+    };
+
+    validarSubdominio();
   }, [id, prefeituraSession]);
 
   useEffect(() => {
