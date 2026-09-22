@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
 
     // Enviar email
     const response = await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: "noreply@unnifyconecta.com.br",
       to: usuario.email,
       subject: "Confirmar Mudança de Senha - NF Prefeitura",
       html: `
