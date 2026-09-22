@@ -16,7 +16,6 @@ export default function PrefeituraModal({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
-    slug: "",
     cnpj: "",
     email: "",
     telefone: "",
@@ -37,7 +36,6 @@ export default function PrefeituraModal({
       await onSubmit(formData);
       setFormData({
         nome: "",
-        slug: "",
         cnpj: "",
         email: "",
         telefone: "",
@@ -81,21 +79,6 @@ export default function PrefeituraModal({
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="Prefeitura de..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Slug do Subdomínio
-            </label>
-            <input
-              type="text"
-              name="slug"
-              value={formData.slug}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="sampaio (será: sampaio.unnifyconecta.com.br)"
             />
           </div>
 
