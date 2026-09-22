@@ -163,9 +163,18 @@ function MinhaContaContent() {
     setAlterandoEmail(true);
 
     try {
-      // Atualizar email na tabela prefeitura_users
+      // Determinar qual tabela atualizar baseado no tipo de usuário
+      let table = "prefeitura_users"; // padrão
+
+      if (session?.tipo === "funcionario") {
+        table = "funcionarios";
+      } else if (session?.tipo === "admin") {
+        table = "prefeitura_users"; // admins usam prefeitura_users
+      }
+
+      // Atualizar email na tabela apropriada
       const { error: updateError } = await supabase
-        .from("prefeitura_users")
+        .from(table)
         .update({ email: novoEmail })
         .eq("id", session?.id);
 
