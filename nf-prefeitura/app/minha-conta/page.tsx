@@ -280,16 +280,19 @@ function MinhaContaContent() {
 
       setMensagem({
         tipo: "sucesso",
-        texto: "Email de confirmação enviado! Verifique sua caixa de entrada para confirmar a mudança de senha."
+        texto: "Email de confirmação enviado! Você será desconectado para segurança. Confirme a mudança de senha no email e faça login novamente."
       });
       setSenhaAtual("");
       setNovaSenha("");
       setConfirmarSenha("");
 
-      // Fechar modal após 3 segundos
+      // Fazer logout após 2 segundos (por segurança)
       setTimeout(() => {
-        setMostrarAlterarSenha(false);
-      }, 3000);
+        localStorage.removeItem("prefeitura_session");
+        localStorage.removeItem("admin_session");
+        localStorage.removeItem("secretaria_atual_id");
+        window.location.href = "/login";
+      }, 2000);
     } catch (error) {
       console.error("Erro ao alterar senha:", error);
       setMensagem({ tipo: "erro", texto: error instanceof Error ? error.message : "Erro ao alterar senha" });
