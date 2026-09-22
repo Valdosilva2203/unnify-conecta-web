@@ -250,7 +250,8 @@ function MinhaContaContent() {
       // Determinar qual tabela o usuário pertence
       let tabelaUsuario = "prefeitura_users";
 
-      const { data: funcionario } = await supabase
+      // Tentar funcionarios primeiro
+      const { data: funcionario, error: errFunc } = await supabase
         .from("funcionarios")
         .select("id")
         .eq("id", session?.id)
@@ -258,9 +259,10 @@ function MinhaContaContent() {
 
       if (funcionario) {
         tabelaUsuario = "funcionarios";
+        console.log("Usuário encontrado em funcionarios");
       } else {
         // Tentar em admins (usuário master)
-        const { data: admin } = await supabase
+        const { data: admin, error: errAdmin } = await supabase
           .from("admins")
           .select("id")
           .eq("id", session?.id)
@@ -268,6 +270,22 @@ function MinhaContaContent() {
 
         if (admin) {
           tabelaUsuario = "admins";
+          console.log("Usuário encontrado em admins");
+        } else {
+          // Tentar em prefeitura_users
+          const { data: prefUser, error: errPref } = await supabase
+            .from("prefeitura_users")
+            .select("id")
+            .eq("id", session?.id)
+            .single();
+
+          if (prefUser) {
+            tabelaUsuario = "prefeitura_users";
+            console.log("Usuário encontrado em prefeitura_users");
+          } else {
+            console.error("Usuário não encontrado em nenhuma tabela");
+            throw new Error("Usuário não encontrado no sistema");
+          }
         }
       }
 
