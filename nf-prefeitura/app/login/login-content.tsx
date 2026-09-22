@@ -225,6 +225,15 @@ export default function LoginContent() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
+
+        <div className="text-center mt-6">
+          <a
+            href="/recuperar-senha"
+            className="text-teal-600 hover:text-teal-700 font-medium text-sm transition"
+          >
+            Esqueci minha senha
+          </a>
+        </div>
       </div>
     </div>
   );
