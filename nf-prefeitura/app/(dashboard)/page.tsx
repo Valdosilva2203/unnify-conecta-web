@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 interface Prefeitura {
   id: string;
   nome: string;
+  slug: string | null;
   cnpj: string;
   email: string;
   telefone: string;
@@ -347,6 +348,12 @@ function DashboardContent() {
 
                   {/* Informações */}
                   <div className="space-y-2 mb-4 text-xs">
+                    {prefeitura.slug && (
+                      <div>
+                        <p className="text-gray-600 font-medium">Subdomínio:</p>
+                        <p className="text-gray-900 break-all">{prefeitura.slug}.unnifyconecta.com.br</p>
+                      </div>
+                    )}
                     <div>
                       <p className="text-gray-600 font-medium">CNPJ:</p>
                       <p className="text-gray-900">{prefeitura.cnpj}</p>
