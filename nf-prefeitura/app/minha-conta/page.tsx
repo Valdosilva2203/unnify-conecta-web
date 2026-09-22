@@ -8,7 +8,6 @@ import { logout as logoutAuth } from "@/lib/auth";
 import { usePrefeituraAuth } from "@/hooks/usePrefeituraAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import TopNavBar from "@/components/TopNavBar";
-import crypto from "crypto";
 
 interface Prefeitura {
   id: string;
@@ -163,6 +162,20 @@ function MinhaContaContent() {
     setAlterandoEmail(true);
 
     try {
+      // Determinar qual tabela o usuário pertence
+      let tabelaUsuario = "prefeitura_users";
+
+      // Tentar encontrar em funcionarios primeiro
+      const { data: funcionario } = await supabase
+        .from("funcionarios")
+        .select("id")
+        .eq("id", session?.id)
+        .single();
+
+      if (funcionario) {
+        tabelaUsuario = "funcionarios";
+      }
+
       // Chamar API route para alterar email (usa service_role, contorna RLS)
       const res = await fetch("/api/alterar-email", {
         method: "POST",
@@ -170,7 +183,7 @@ function MinhaContaContent() {
         body: JSON.stringify({
           userId: session?.id,
           novoEmail,
-          tabela: "prefeitura_users",
+          tabela: tabelaUsuario,
         }),
       });
 
@@ -211,7 +224,7 @@ function MinhaContaContent() {
     e.preventDefault();
     setMensagem(null);
 
-    if (!novaSenha || !confirmarSenha) {
+    if (!senhaAtual || !novaSenha || !confirmarSenha) {
       setMensagem({ tipo: "erro", texto: "Preencha todos os campos" });
       return;
     }
@@ -234,56 +247,52 @@ function MinhaContaContent() {
     setAlterandoSenha(true);
 
     try {
-      // Buscar usuário atual
-      const { data: usuario, error: searchError } = await supabase
-        .from("prefeitura_users")
-        .select("*")
+      // Determinar qual tabela o usuário pertence
+      let tabelaUsuario = "prefeitura_users";
+
+      const { data: funcionario } = await supabase
+        .from("funcionarios")
+        .select("id")
         .eq("id", session?.id)
         .single();
 
-      if (searchError || !usuario) {
-        setMensagem({ tipo: "erro", texto: "Erro ao buscar usuário" });
-        setAlterandoSenha(false);
-        return;
+      if (funcionario) {
+        tabelaUsuario = "funcionarios";
       }
 
-      // Validar senha atual
-      const senhaAtualHash = crypto
-        .createHash("sha256")
-        .update(senhaAtual)
-        .digest("hex");
-      if (senhaAtualHash !== usuario.senha) {
-        setMensagem({ tipo: "erro", texto: "Senha atual incorreta" });
-        setAlterandoSenha(false);
-        return;
+      // Chamar API route para alterar senha (usa service_role, contorna RLS)
+      const res = await fetch("/api/alterar-senha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session?.id,
+          senhaAtual,
+          novaSenha,
+          tabela: tabelaUsuario,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao alterar senha");
       }
 
-      // Atualizar para nova senha
-      const novaSenhaHash = crypto
-        .createHash("sha256")
-        .update(novaSenha)
-        .digest("hex");
-      const { error: updateError } = await supabase
-        .from("prefeitura_users")
-        .update({ senha: novaSenhaHash })
-        .eq("id", session?.id);
-
-      if (updateError) throw updateError;
-
-      setMensagem({ tipo: "sucesso", texto: "Senha alterada com sucesso! Fazendo logout..." });
+      setMensagem({
+        tipo: "sucesso",
+        texto: "Email de confirmação enviado! Verifique sua caixa de entrada para confirmar a mudança de senha."
+      });
       setSenhaAtual("");
       setNovaSenha("");
       setConfirmarSenha("");
 
-      // Fazer logout de todos os dispositivos removendo a sessão
-      localStorage.removeItem("prefeitura_session");
-
+      // Fechar modal após 3 segundos
       setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
+        setMostrarAlterarSenha(false);
+      }, 3000);
     } catch (error) {
       console.error("Erro ao alterar senha:", error);
-      setMensagem({ tipo: "erro", texto: "Erro ao alterar senha" });
+      setMensagem({ tipo: "erro", texto: error instanceof Error ? error.message : "Erro ao alterar senha" });
     } finally {
       setAlterandoSenha(false);
     }
