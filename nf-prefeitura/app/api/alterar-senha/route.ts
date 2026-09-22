@@ -56,6 +56,16 @@ export async function POST(req: NextRequest) {
       if (usuarioFunc) {
         usuario = usuarioFunc;
         tabelaEncontrada = "funcionarios";
+      } else {
+        const { data: usuarioAdmin } = await supabase
+          .from("admins")
+          .select("id, email, senha")
+          .eq("id", userId)
+          .single();
+        if (usuarioAdmin) {
+          usuario = usuarioAdmin;
+          tabelaEncontrada = "admins";
+        }
       }
     } else if (tabela === "funcionarios") {
       const { data: usuarioPref } = await supabase
@@ -66,6 +76,36 @@ export async function POST(req: NextRequest) {
       if (usuarioPref) {
         usuario = usuarioPref;
         tabelaEncontrada = "prefeitura_users";
+      } else {
+        const { data: usuarioAdmin } = await supabase
+          .from("admins")
+          .select("id, email, senha")
+          .eq("id", userId)
+          .single();
+        if (usuarioAdmin) {
+          usuario = usuarioAdmin;
+          tabelaEncontrada = "admins";
+        }
+      }
+    } else if (tabela === "admins") {
+      const { data: usuarioPref } = await supabase
+        .from("prefeitura_users")
+        .select("id, email, senha")
+        .eq("id", userId)
+        .single();
+      if (usuarioPref) {
+        usuario = usuarioPref;
+        tabelaEncontrada = "prefeitura_users";
+      } else {
+        const { data: usuarioFunc } = await supabase
+          .from("funcionarios")
+          .select("id, email, senha")
+          .eq("id", userId)
+          .single();
+        if (usuarioFunc) {
+          usuario = usuarioFunc;
+          tabelaEncontrada = "funcionarios";
+        }
       }
     }
 

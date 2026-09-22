@@ -258,6 +258,17 @@ function MinhaContaContent() {
 
       if (funcionario) {
         tabelaUsuario = "funcionarios";
+      } else {
+        // Tentar em admins (usuário master)
+        const { data: admin } = await supabase
+          .from("admins")
+          .select("id")
+          .eq("id", session?.id)
+          .single();
+
+        if (admin) {
+          tabelaUsuario = "admins";
+        }
       }
 
       // Chamar API route para alterar senha (usa service_role, contorna RLS)
