@@ -152,10 +152,14 @@ export async function POST(req: NextRequest) {
 
     console.log("Email enviado com sucesso:", response);
 
+    // Em desenvolvimento, retornar o link também
+    const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3003"}/resetar-senha?token=${token}`;
+
     return NextResponse.json(
       {
         success: true,
         message: "Email de recuperação enviado com sucesso",
+        resetLink: process.env.NODE_ENV === "development" ? resetLink : undefined,
       },
       { status: 200 }
     );
