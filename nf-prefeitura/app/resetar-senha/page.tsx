@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function ResetarSenhaPage() {
+function ResetarSenhaContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -203,5 +203,32 @@ export default function ResetarSenhaPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function ResetarSenhaLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-600 to-orange-700 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+        <div className="text-center mb-8">
+          <div className="text-5xl font-bold text-orange-600 mb-2">🔑</div>
+          <h1 className="text-3xl font-bold text-gray-900">Resetar Senha</h1>
+        </div>
+        <div className="text-center">
+          <div className="inline-block animate-spin">
+            <div className="h-8 w-8 border-4 border-orange-600 border-t-transparent rounded-full"></div>
+          </div>
+          <p className="text-gray-600 mt-4">Carregando...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ResetarSenhaPage() {
+  return (
+    <Suspense fallback={<ResetarSenhaLoading />}>
+      <ResetarSenhaContent />
+    </Suspense>
   );
 }
