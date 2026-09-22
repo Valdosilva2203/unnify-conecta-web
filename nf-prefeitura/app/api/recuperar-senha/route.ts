@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import crypto from "crypto";
 
@@ -16,6 +16,18 @@ export async function POST(req: NextRequest) {
     }
 
     const resend = new Resend(apiKey);
+
+    // Usar service_role key para contornar RLS
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+      {
+        auth: {
+          persistSession: false,
+        },
+      }
+    );
+
     const { email } = await req.json();
 
     if (!email) {
