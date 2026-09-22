@@ -163,13 +163,22 @@ function MinhaContaContent() {
     setAlterandoEmail(true);
 
     try {
-      // Atualizar email no Supabase (RLS policy agora permite)
-      const { error: updateError } = await supabase
-        .from("prefeitura_users")
-        .update({ email: novoEmail })
-        .eq("id", session?.id);
+      // Chamar API route para alterar email (usa service_role, contorna RLS)
+      const res = await fetch("/api/alterar-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session?.id,
+          novoEmail,
+          tabela: "prefeitura_users",
+        }),
+      });
 
-      if (updateError) throw updateError;
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao alterar email");
+      }
 
       // Atualizar na sessão do localStorage
       const prefeituraSession = localStorage.getItem("prefeitura_session");
