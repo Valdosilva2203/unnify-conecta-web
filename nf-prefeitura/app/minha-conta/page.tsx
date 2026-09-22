@@ -191,6 +191,11 @@ function MinhaContaContent() {
       setMensagem({ tipo: "sucesso", texto: "Email alterado com sucesso! Fazendo logout..." });
       setNovoEmail("");
 
+      // Remover sessão antes de redirecionar
+      localStorage.removeItem("prefeitura_session");
+      localStorage.removeItem("admin_session");
+      localStorage.removeItem("secretaria_atual_id");
+
       setTimeout(() => {
         window.location.href = "/login";
       }, 2000);
