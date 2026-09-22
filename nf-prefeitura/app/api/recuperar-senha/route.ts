@@ -25,14 +25,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar se admin existe
-    const { data: admin, error: selectError } = await supabase
-      .from("admins")
+    const emailTrimmed = email.trim().toLowerCase();
+
+    // Procurar em prefeitura_users
+    let user: any = null;
+    let userTable = "";
+
+    const { data: prefeituraUser } = await supabase
+      .from("prefeitura_users")
       .select("id, email")
-      .eq("email", email)
+      .eq("email", emailTrimmed)
       .single();
 
-    if (selectError || !admin) {
+    if (prefeituraUser) {
+      user = prefeituraUser;
+      userTable = "prefeitura_users";
+    }
+
+    // Se não encontrou, procurar em funcionarios
+    if (!user) {
+      const { data: funcionario } = await supabase
+        .from("funcionarios")
+        .select("id, email")
+        .eq("email", emailTrimmed)
+        .single();
+
+      if (funcionario) {
+        user = funcionario;
+        userTable = "funcionarios";
+      }
+    }
+
+    // Se não encontrou, procurar em admins (compatibilidade)
+    if (!user) {
+      const { data: admin } = await supabase
+        .from("admins")
+        .select("id, email")
+        .eq("email", emailTrimmed)
+        .single();
+
+      if (admin) {
+        user = admin;
+        userTable = "admins";
+      }
+    }
+
+    if (!user) {
       // Não revelar se o email existe ou não (segurança)
       return NextResponse.json(
         {
@@ -50,12 +88,12 @@ export async function POST(req: NextRequest) {
 
     // Salvar token no banco
     const { error: updateError } = await supabase
-      .from("admins")
+      .from(userTable)
       .update({
         reset_token: tokenHash,
         reset_token_expires: expiresAt.toISOString(),
       })
-      .eq("id", admin.id);
+      .eq("id", user.id);
 
     if (updateError) throw updateError;
 

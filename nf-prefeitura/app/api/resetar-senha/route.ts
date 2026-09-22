@@ -27,15 +27,53 @@ export async function POST(req: NextRequest) {
     // Hash do token recebido
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    // Buscar admin com token válido
-    const { data: admin, error: selectError } = await supabase
-      .from("admins")
+    // Procurar em prefeitura_users
+    let user: any = null;
+    let userTable = "";
+
+    const { data: prefeituraUser } = await supabase
+      .from("prefeitura_users")
       .select("id, email")
       .eq("reset_token", tokenHash)
       .gt("reset_token_expires", new Date().toISOString())
       .single();
 
-    if (selectError || !admin) {
+    if (prefeituraUser) {
+      user = prefeituraUser;
+      userTable = "prefeitura_users";
+    }
+
+    // Se não encontrou, procurar em funcionarios
+    if (!user) {
+      const { data: funcionario } = await supabase
+        .from("funcionarios")
+        .select("id, email")
+        .eq("reset_token", tokenHash)
+        .gt("reset_token_expires", new Date().toISOString())
+        .single();
+
+      if (funcionario) {
+        user = funcionario;
+        userTable = "funcionarios";
+      }
+    }
+
+    // Se não encontrou, procurar em admins (compatibilidade)
+    if (!user) {
+      const { data: admin } = await supabase
+        .from("admins")
+        .select("id, email")
+        .eq("reset_token", tokenHash)
+        .gt("reset_token_expires", new Date().toISOString())
+        .single();
+
+      if (admin) {
+        user = admin;
+        userTable = "admins";
+      }
+    }
+
+    if (!user) {
       return NextResponse.json(
         { error: "Link expirado ou inválido" },
         { status: 400 }
@@ -47,13 +85,13 @@ export async function POST(req: NextRequest) {
 
     // Atualizar senha e limpar tokens
     const { error: updateError } = await supabase
-      .from("admins")
+      .from(userTable)
       .update({
         senha: senhaHash,
         reset_token: null,
         reset_token_expires: null,
       })
-      .eq("id", admin.id);
+      .eq("id", user.id);
 
     if (updateError) throw updateError;
 
