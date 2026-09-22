@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NF Prefeitura - Gestão de Notas Fiscais",
   description: "Sistema SaaS para gestão de notas fiscais em prefeituras",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
