@@ -40,6 +40,9 @@ function MinhaContaContent() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [mensagem, setMensagem] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
   const [mostrarSenhas, setMostrarSenhas] = useState({ atual: false, nova: false, confirmar: false });
+  const [mostrarAlterarEmail, setMostrarAlterarEmail] = useState(false);
+  const [novoEmail, setNovoEmail] = useState("");
+  const [alterandoEmail, setAlterandoEmail] = useState(false);
 
   useEffect(() => {
     if (sessionLoading) return;
@@ -141,6 +144,53 @@ function MinhaContaContent() {
     // Redirecionar para página de login apropriada
     const tipo = session?.tipo || "funcionario";
     router.push(tipo === "admin" ? "/auth" : "/login");
+  };
+
+  const handleAlterarEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMensagem(null);
+
+    if (!novoEmail) {
+      setMensagem({ tipo: "erro", texto: "Digite um novo email" });
+      return;
+    }
+
+    if (novoEmail === session?.email) {
+      setMensagem({ tipo: "erro", texto: "O novo email não pode ser igual ao atual" });
+      return;
+    }
+
+    setAlterandoEmail(true);
+
+    try {
+      // Atualizar email na tabela prefeitura_users
+      const { error: updateError } = await supabase
+        .from("prefeitura_users")
+        .update({ email: novoEmail })
+        .eq("id", session?.id);
+
+      if (updateError) throw updateError;
+
+      // Atualizar na sessão do localStorage
+      const prefeituraSession = localStorage.getItem("prefeitura_session");
+      if (prefeituraSession) {
+        const sessionData = JSON.parse(prefeituraSession);
+        sessionData.email = novoEmail;
+        localStorage.setItem("prefeitura_session", JSON.stringify(sessionData));
+      }
+
+      setMensagem({ tipo: "sucesso", texto: "Email alterado com sucesso! Fazendo logout..." });
+      setNovoEmail("");
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+    } catch (error) {
+      console.error("Erro ao alterar email:", error);
+      setMensagem({ tipo: "erro", texto: "Erro ao alterar email" });
+    } finally {
+      setAlterandoEmail(false);
+    }
   };
 
   const handleAlterarSenha = async (e: React.FormEvent) => {
@@ -282,6 +332,17 @@ function MinhaContaContent() {
               >
                 <Lock size={20} />
                 <span>Alterar Senha</span>
+              </button>
+              <button
+                onClick={() => setMostrarAlterarEmail(!mostrarAlterarEmail)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium ${
+                  mostrarAlterarEmail
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
+                } border border-gray-200 shadow-sm`}
+              >
+                <Mail size={20} />
+                <span>Alterar Email</span>
               </button>
               <button
                 onClick={handleLogout}
@@ -507,6 +568,92 @@ function MinhaContaContent() {
                       setSenhaAtual("");
                       setNovaSenha("");
                       setConfirmarSenha("");
+                      setMensagem(null);
+                    }}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Alterar Email */}
+        {mostrarAlterarEmail && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">✉️ Alterar Email</h2>
+                <button
+                  onClick={() => {
+                    setMostrarAlterarEmail(false);
+                    setNovoEmail("");
+                    setMensagem(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleAlterarEmail} className="space-y-4">
+                {mensagem && (
+                  <div
+                    className={`p-4 rounded-lg text-sm ${
+                      mensagem.tipo === "sucesso"
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-red-50 text-red-700 border border-red-200"
+                    }`}
+                  >
+                    {mensagem.texto}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Atual
+                  </label>
+                  <input
+                    type="email"
+                    value={session?.email}
+                    disabled
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Novo Email
+                  </label>
+                  <input
+                    type="email"
+                    value={novoEmail}
+                    onChange={(e) => setNovoEmail(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Digite seu novo email"
+                    required
+                  />
+                </div>
+
+                <p className="text-xs text-gray-600 bg-blue-50 p-3 rounded-lg">
+                  ℹ️ Você será desconectado após alterar o email e precisará fazer login novamente.
+                </p>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={alterandoEmail}
+                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition disabled:opacity-50"
+                  >
+                    {alterandoEmail ? "Alterando..." : "Alterar Email"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMostrarAlterarEmail(false);
+                      setNovoEmail("");
                       setMensagem(null);
                     }}
                     className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition"
