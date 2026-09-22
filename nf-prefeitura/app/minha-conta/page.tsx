@@ -163,22 +163,21 @@ function MinhaContaContent() {
     setAlterandoEmail(true);
 
     try {
-      // Determinar qual tabela atualizar baseado no tipo de usuário
-      let table = "prefeitura_users"; // padrão
-
-      if (session?.tipo === "funcionario") {
-        table = "funcionarios";
-      } else if (session?.tipo === "admin") {
-        table = "prefeitura_users"; // admins usam prefeitura_users
-      }
-
-      // Atualizar email na tabela apropriada
+      // Tentar atualizar prefeitura_users primeiro
       const { error: updateError } = await supabase
-        .from(table)
+        .from("prefeitura_users")
         .update({ email: novoEmail })
         .eq("id", session?.id);
 
-      if (updateError) throw updateError;
+      // Se falhar, tentar funcionarios
+      if (updateError) {
+        const { error: funcError } = await supabase
+          .from("funcionarios")
+          .update({ email: novoEmail })
+          .eq("id", session?.id);
+
+        if (funcError) throw funcError;
+      }
 
       // Atualizar na sessão do localStorage
       const prefeituraSession = localStorage.getItem("prefeitura_session");
