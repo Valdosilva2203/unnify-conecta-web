@@ -44,7 +44,7 @@ function ConfiguracoesContent() {
 
   useEffect(() => {
     const isAdminCheck = isAuthenticated();
-    const isPrefeituraUser = prefeituraSession && prefeituraSession.prefeitura_id === id;
+    const isPrefeituraUser = prefeituraSession && prefeituraSession.tipo === "admin" && prefeituraSession.prefeitura_id === id;
 
     if (isAdminCheck || isPrefeituraUser) {
       setAutenticado(true);

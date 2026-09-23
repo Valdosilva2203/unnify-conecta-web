@@ -91,7 +91,8 @@ function FuncionariosContent() {
 
   useEffect(() => {
     const isAdminCheck = isAuthenticated();
-    const isPrefeituraUser = prefeituraSession && prefeituraSession.prefeitura_id === id;
+    // Apenas admins (prefeitura_users) ou master users (admins table) podem acessar
+    const isPrefeituraUser = prefeituraSession && prefeituraSession.tipo === "admin" && prefeituraSession.prefeitura_id === id;
 
     if (isAdminCheck || isPrefeituraUser) {
       setIsAdmin(isAdminCheck);

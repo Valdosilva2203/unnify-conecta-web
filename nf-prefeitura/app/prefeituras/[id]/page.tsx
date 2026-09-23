@@ -158,7 +158,7 @@ function DetalhePrefeituraContent() {
 
   useEffect(() => {
     const isAdminCheck = isAuthenticated();
-    const isPrefeituraUser = prefeituraSession && prefeituraSession.prefeitura_id === id;
+    const isPrefeituraUser = prefeituraSession && prefeituraSession.tipo === "admin" && prefeituraSession.prefeitura_id === id;
 
     if (isAdminCheck) {
       // Admin master pode ver qualquer prefeitura
@@ -606,6 +606,23 @@ function DetalhePrefeituraContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-600">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!autenticado) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
+        <div className="max-w-md w-full bg-white rounded-lg shadow p-6 text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">🔒 Acesso Negado</h2>
+          <p className="text-gray-600 mb-6">Você não tem permissão para acessar o dashboard desta prefeitura.</p>
+          <button
+            onClick={() => router.push("/")}
+            className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded transition"
+          >
+            Voltar ao Início
+          </button>
+        </div>
       </div>
     );
   }
