@@ -185,6 +185,9 @@ function TarefasContent() {
       <TopNavBar
         title="Tarefas"
         subtitle="Gerencie todas as tarefas do sistema"
+        tabs={[{ id: "tarefas", label: "Tarefas" }]}
+        activeTab="tarefas"
+        onTabChange={() => {}}
         onExport={() => console.log("Exportando...")}
         userName="Usuário"
         userRole="Master"
