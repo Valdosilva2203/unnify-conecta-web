@@ -297,6 +297,45 @@ function DashboardContent() {
           ))}
         </div>
 
+        {/* Card de Tarefas */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-2xl">✓</span> Tarefas Importantes
+            </h2>
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">3 pendentes</span>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 pb-3 border-b border-gray-100">
+              <input type="checkbox" className="mt-1 w-4 h-4 text-blue-600 rounded" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Validar notas fiscais pendentes</p>
+                <p className="text-xs text-gray-500 mt-1">3 notas aguardando aprovação</p>
+              </div>
+              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded font-semibold">URGENTE</span>
+            </div>
+
+            <div className="flex items-start gap-3 pb-3 border-b border-gray-100">
+              <input type="checkbox" className="mt-1 w-4 h-4 text-blue-600 rounded" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Revisar requisições em andamento</p>
+                <p className="text-xs text-gray-500 mt-1">5 requisições para processar</p>
+              </div>
+              <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-semibold">ATENÇÃO</span>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <input type="checkbox" className="mt-1 w-4 h-4 text-blue-600 rounded" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Atualizar dados de fornecedores</p>
+                <p className="text-xs text-gray-500 mt-1">12 fornecedores com informações desatualizadas</p>
+              </div>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-semibold">NORMAL</span>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-xl shadow-sm p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Prefeituras Ativas
