@@ -156,6 +156,32 @@ function DetalhePrefeituraContent() {
     }
   };
 
+  // Redirecionamento automático para funcionários
+  useEffect(() => {
+    if (!prefeituraSession) return;
+
+    const handleFuncionarioRedirect = async () => {
+      // Se é funcionário, redireciona baseado em secretaria
+      if (prefeituraSession.tipo === "funcionario") {
+        // Buscar secretaria vinculada
+        const { data } = await supabase
+          .from("funcionarios")
+          .select("secretaria_id")
+          .eq("id", prefeituraSession.id)
+          .single();
+
+        if (data?.secretaria_id) {
+          router.push(`/secretaria/${data.secretaria_id}`);
+        } else {
+          // Sem secretaria vinculada, vai para perfil
+          router.push("/minha-conta");
+        }
+      }
+    };
+
+    handleFuncionarioRedirect();
+  }, [prefeituraSession, router]);
+
   useEffect(() => {
     const isAdminCheck = isAuthenticated();
     const isPrefeituraUser = prefeituraSession && prefeituraSession.tipo === "admin" && prefeituraSession.prefeitura_id === id;
@@ -176,12 +202,8 @@ function DetalhePrefeituraContent() {
       loadTodosFuncionarios();
       loadSecretarias();
       loadSolicitacoesPendentes();
-    } else if (prefeituraSession && prefeituraSession.prefeitura_id !== id) {
-      // Usuário de prefeitura tentando acessar prefeitura que não é dele
-      setErro("Acesso negado: você só pode visualizar sua própria prefeitura");
-      setLoading(false);
     } else {
-      // Não autenticado
+      // Não autenticado ou funcionário (será redirecionado acima)
       setLoading(false);
     }
   }, [id, prefeituraSession]);
@@ -612,34 +634,8 @@ function DetalhePrefeituraContent() {
 
   if (!autenticado) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
-        <div className="max-w-md w-full bg-white rounded-lg shadow p-6 text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">🔒 Acesso Negado</h2>
-          <p className="text-gray-600 mb-6">Você não tem permissão para acessar o dashboard desta prefeitura.</p>
-          <button
-            onClick={() => router.push("/")}
-            className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded transition"
-          >
-            Voltar ao Início
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (erro) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
-        <div className="max-w-md w-full bg-white rounded-lg shadow p-6 text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">🔒 Acesso Negado</h2>
-          <p className="text-gray-600 mb-6">{erro}</p>
-          <button
-            onClick={() => router.push("/")}
-            className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded transition"
-          >
-            Voltar ao Dashboard
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Redirecionando...</p>
       </div>
     );
   }
