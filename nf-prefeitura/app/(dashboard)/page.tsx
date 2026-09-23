@@ -324,75 +324,79 @@ function DashboardContent() {
                   onDragEnter={() => handleDragEnter(prefeitura.id)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, prefeitura.id)}
-                  className={`bg-white rounded-lg shadow-sm p-5 transition cursor-move border-2 ${
+                  className={`bg-white rounded-2xl overflow-hidden transition cursor-move border border-gray-200 hover:border-orange-300 hover:shadow-lg ${
                     dragOverId === prefeitura.id
-                      ? "border-orange-500 bg-orange-50"
+                      ? "border-orange-500 bg-orange-50 shadow-lg"
                       : draggedId === prefeitura.id
                       ? "opacity-50 border-gray-300"
-                      : "border-gray-200 hover:shadow-md"
+                      : "shadow-sm"
                   }`}
                 >
-                  {/* Logo/Brasão */}
-                  <div className="flex justify-center mb-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center text-2xl">
-                      🏛️
+                  {/* Header com Icon */}
+                  <div className="bg-gradient-to-r from-teal-50 to-green-50 px-6 py-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-green-500 rounded-lg flex items-center justify-center text-xl shadow-sm">
+                          🏛️
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-bold text-gray-900 truncate">
+                            {prefeitura.nome}
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            {prefeitura.cidade}, {prefeitura.estado}
+                          </p>
+                        </div>
+                      </div>
+                      <div className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        prefeitura.status === "ativa"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}>
+                        {prefeitura.status === "ativa" ? "Ativa" : "Inativa"}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Nome da Prefeitura */}
-                  <h3 className="text-sm font-bold text-gray-900 text-center mb-1">
-                    {prefeitura.nome}
-                  </h3>
-                  <p className="text-xs text-gray-500 text-center mb-4">({prefeitura.id})</p>
-
-                  {/* Informações */}
-                  <div className="space-y-2 mb-4 text-xs">
-                    <div>
-                      <p className="text-gray-600 font-medium">CNPJ:</p>
-                      <p className="text-gray-900">{prefeitura.cnpj}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 font-medium">Endereço:</p>
-                      <p className="text-gray-900">{prefeitura.endereco}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 font-medium">Cidade:</p>
-                      <p className="text-gray-900">
-                        {prefeitura.cidade}, {prefeitura.estado}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 font-medium">Telefone:</p>
-                      <p className="text-gray-900">{prefeitura.telefone}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 font-medium">E-mail:</p>
-                      <p className="text-gray-900">{prefeitura.email}</p>
+                  {/* Conteúdo */}
+                  <div className="px-6 py-4">
+                    {/* Informações Compactas */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-600">CNPJ</span>
+                        <span className="text-sm font-medium text-gray-900">{prefeitura.cnpj}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-600">Email</span>
+                        <span className="text-sm text-gray-900 truncate ml-2">{prefeitura.email}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-600">Telefone</span>
+                        <span className="text-sm font-medium text-gray-900">{prefeitura.telefone}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Botões */}
-                  <div className="space-y-1.5">
+                  {/* Botões de Ação */}
+                  <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 grid grid-cols-3 gap-2">
                     <button
                       onClick={() => router.push(`/prefeituras/${prefeitura.id}`)}
-                      className="w-full bg-teal-500 hover:bg-teal-600 text-white font-medium py-1.5 px-3 rounded text-sm transition"
+                      className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-3 rounded-lg text-sm transition shadow-sm"
                     >
                       Acessar
                     </button>
-                    <div className="flex gap-1.5">
-                      <button
-                        onClick={() => router.push(`/prefeituras/${prefeitura.id}/configuracoes`)}
-                        className="flex-1 text-orange-600 hover:text-orange-700 border border-orange-600 hover:border-orange-700 font-medium text-xs py-1 px-2 rounded transition"
-                      >
-                        ⚙️ Config
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(prefeitura)}
-                        className="flex-1 text-red-600 hover:text-red-700 border border-red-600 hover:border-red-700 font-medium text-xs py-1 px-2 rounded transition"
-                      >
-                        Excluir
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => router.push(`/prefeituras/${prefeitura.id}/configuracoes`)}
+                      className="bg-orange-100 hover:bg-orange-200 text-orange-700 font-semibold py-2 px-3 rounded-lg text-sm transition"
+                    >
+                      ⚙️
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(prefeitura)}
+                      className="bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-3 rounded-lg text-sm transition"
+                    >
+                      ✕
+                    </button>
                   </div>
                 </div>
               ))}
