@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import TopNavBar from "@/components/TopNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { supabase } from "@/lib/supabase";
 
 interface Tarefa {
   id: string;
@@ -12,48 +13,47 @@ interface Tarefa {
   prioridade: "urgente" | "normal" | "baixa";
   data_vencimento: string;
   responsavel: string;
+  created_at?: string;
 }
 
 function TarefasContent() {
   const router = useRouter();
-  const [tarefas, setTarefas] = useState<Tarefa[]>([
-    {
-      id: "1",
-      titulo: "Validar notas fiscais pendentes",
-      status: "pendente",
-      prioridade: "urgente",
-      data_vencimento: "2026-09-24",
-      responsavel: "João Silva",
-    },
-    {
-      id: "2",
-      titulo: "Atualizar dados de fornecedores",
-      status: "em_andamento",
-      prioridade: "normal",
-      data_vencimento: "2026-09-26",
-      responsavel: "Maria Santos",
-    },
-    {
-      id: "3",
-      titulo: "Processar requisições",
-      status: "pendente",
-      prioridade: "normal",
-      data_vencimento: "2026-09-25",
-      responsavel: "Pedro Costa",
-    },
-  ]);
+  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [busca, setBusca] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     titulo: "",
     prioridade: "normal" as const,
     data_vencimento: "",
     responsavel: "",
   });
+
+  useEffect(() => {
+    loadTarefas();
+  }, []);
+
+  const loadTarefas = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("tarefas")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setTarefas(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar tarefas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const tarefasFiltradas = tarefas.filter((tarefa) => {
     const statusMatch = filtroStatus === "todos" || tarefa.status === filtroStatus;
@@ -83,43 +83,57 @@ function TarefasContent() {
     setIsModalOpen(true);
   };
 
-  const handleSaveTarefa = () => {
+  const handleSaveTarefa = async () => {
     if (!formData.titulo.trim()) return;
 
-    if (editingId) {
-      setTarefas(
-        tarefas.map((t) =>
-          t.id === editingId
-            ? {
-                ...t,
-                titulo: formData.titulo,
-                prioridade: formData.prioridade,
-                data_vencimento: formData.data_vencimento,
-                responsavel: formData.responsavel,
-              }
-            : t
-        )
-      );
-    } else {
-      const newTarefa: Tarefa = {
-        id: Math.random().toString(),
-        titulo: formData.titulo,
-        prioridade: formData.prioridade,
-        data_vencimento: formData.data_vencimento,
-        responsavel: formData.responsavel,
-        status: "pendente",
-      };
-      setTarefas([...tarefas, newTarefa]);
+    try {
+      setIsSaving(true);
+
+      if (editingId) {
+        const { error } = await supabase
+          .from("tarefas")
+          .update({
+            titulo: formData.titulo,
+            prioridade: formData.prioridade,
+            data_vencimento: formData.data_vencimento,
+            responsavel: formData.responsavel,
+          })
+          .eq("id", editingId);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("tarefas").insert({
+          titulo: formData.titulo,
+          prioridade: formData.prioridade,
+          data_vencimento: formData.data_vencimento,
+          responsavel: formData.responsavel,
+          status: "pendente",
+        });
+
+        if (error) throw error;
+      }
+
+      await loadTarefas();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Erro ao salvar tarefa:", error);
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
 
-  const handleFinalizarTarefa = (id: string) => {
-    setTarefas(
-      tarefas.map((t) =>
-        t.id === id ? { ...t, status: "concluida" } : t
-      )
-    );
+  const handleFinalizarTarefa = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("tarefas")
+        .update({ status: "concluida" })
+        .eq("id", id);
+
+      if (error) throw error;
+      await loadTarefas();
+    } catch (error) {
+      console.error("Erro ao finalizar tarefa:", error);
+    }
   };
 
   const stats = [
@@ -149,14 +163,18 @@ function TarefasContent() {
     },
   ];
 
-  const handleDeleteTarefa = (id: string) => {
-    setTarefas(tarefas.filter((t) => t.id !== id));
-  };
+  const handleDeleteTarefa = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("tarefas")
+        .delete()
+        .eq("id", id);
 
-  const handleStatusChange = (id: string, novoStatus: Tarefa["status"]) => {
-    setTarefas(
-      tarefas.map((t) => (t.id === id ? { ...t, status: novoStatus } : t))
-    );
+      if (error) throw error;
+      await loadTarefas();
+    } catch (error) {
+      console.error("Erro ao deletar tarefa:", error);
+    }
   };
 
   const getStatusLabel = (status: string) => {
@@ -261,7 +279,11 @@ function TarefasContent() {
 
         {/* Lista de Tarefas */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          {tarefasFiltradas.length === 0 ? (
+          {loading ? (
+            <div className="p-12 text-center">
+              <p className="text-gray-600 text-lg">Carregando tarefas...</p>
+            </div>
+          ) : tarefasFiltradas.length === 0 ? (
             <div className="p-12 text-center">
               <p className="text-gray-600 text-lg">Nenhuma tarefa encontrada</p>
             </div>
@@ -435,15 +457,17 @@ function TarefasContent() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+                disabled={isSaving}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSaveTarefa}
-                className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition font-medium"
+                disabled={isSaving}
+                className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition font-medium disabled:opacity-50"
               >
-                {editingId ? "Atualizar" : "Criar"} Tarefa
+                {isSaving ? "Salvando..." : editingId ? "Atualizar" : "Criar"} Tarefa
               </button>
             </div>
           </div>
