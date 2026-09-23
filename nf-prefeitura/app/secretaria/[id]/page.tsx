@@ -1117,7 +1117,7 @@ export default function SecretariaPage() {
             {funcionarios.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {funcionarios.map((func) => {
-                  const ehSecretario = func.cargo?.toLowerCase().includes("secretario");
+                  const ehSecretario = func.cargo?.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes("secretario");
                   return (
                   <div
                     key={func.id}
