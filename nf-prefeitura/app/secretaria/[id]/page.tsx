@@ -1164,9 +1164,12 @@ export default function SecretariaPage() {
                     </div>
 
                     {/* Divider */}
-                    <div className="border-t border-gray-200 pt-4">
+                    <div className="border-t border-gray-200 pt-4 space-y-2">
                       <button className="w-full text-center text-xs font-medium text-orange-600 hover:text-orange-700 py-2 rounded-lg hover:bg-orange-50 transition">
                         Ver perfil
+                      </button>
+                      <button className="w-full text-center text-xs font-medium text-red-600 hover:text-red-700 py-2 rounded-lg hover:bg-red-50 transition">
+                        Desvincular
                       </button>
                     </div>
                   </div>
