@@ -525,7 +525,7 @@ function FuncionariosContent() {
     setFormData({
       nome: funcionario.nome,
       email: funcionario.email,
-      telefone: funcionario.telefone,
+      telefone: funcionario.telefone || "",
       cargo: funcionario.cargo,
       secretaria_id: funcionario.secretaria_id || "",
       cpf: funcionario.cpf || "",

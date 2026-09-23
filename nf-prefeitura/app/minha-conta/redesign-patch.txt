@@ -1,0 +1,7 @@
+REDESIGN DA PÁGINA MINHA CONTA - Mudando para layout mais limpo com:
+- Header em full-width com perfil e ações
+- Grid 3 colunas (Prefeitura, Status, Perfil)
+- Grid 2 colunas (Secretárias, Atividades)
+- Grid 2 colunas (Comunicados, Requisições)
+- Preferências em uma linha com divisor
+- Cards mais compactos e melhor organização visual

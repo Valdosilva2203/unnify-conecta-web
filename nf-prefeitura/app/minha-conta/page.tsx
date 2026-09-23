@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Settings, LogOut, Mail, Phone, MapPin } from "lucide-react";
+import { Lock, LogOut, Mail, Phone, MapPin, Settings, BookOpen, FileText, MessageSquare, Activity, Bell } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { logout as logoutAuth } from "@/lib/auth";
 import { usePrefeituraAuth } from "@/hooks/usePrefeituraAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import TopNavBar from "@/components/TopNavBar";
 
 interface Prefeitura {
   id: string;
@@ -51,7 +50,6 @@ function MinhaContaContent() {
       return;
     }
 
-    // Buscar ID da secretária atual do localStorage (quando visitou a página de uma secretária)
     const secretariaAtual = localStorage.getItem("secretaria_atual_id");
     if (secretariaAtual) {
       setSecretariaAtualId(secretariaAtual);
@@ -89,7 +87,6 @@ function MinhaContaContent() {
     try {
       const secretariasList: Secretaria[] = [];
 
-      // Buscar pela secretaria principal (secretaria_id)
       if (session?.tipo === "funcionario") {
         const { data: funcionario } = await supabase
           .from("funcionarios")
@@ -109,7 +106,6 @@ function MinhaContaContent() {
         }
       }
 
-      // Buscar secretarias adicionais via funcionario_secretarias
       const { data: secretariasAdicionais } = await supabase
         .from("funcionario_secretarias")
         .select("secretaria_id")
@@ -135,12 +131,10 @@ function MinhaContaContent() {
   };
 
   const handleLogout = () => {
-    // Remover todas as sessões do usuário logado
-    logoutAuth(); // Remove admin_session
+    logoutAuth();
     localStorage.removeItem("prefeitura_session");
     localStorage.removeItem("secretaria_atual_id");
 
-    // Redirecionar para página de login apropriada
     const tipo = session?.tipo || "funcionario";
     router.push(tipo === "admin" ? "/auth" : "/login");
   };
@@ -162,10 +156,8 @@ function MinhaContaContent() {
     setAlterandoEmail(true);
 
     try {
-      // Determinar qual tabela o usuário pertence
       let tabelaUsuario = "prefeitura_users";
 
-      // Tentar encontrar em funcionarios primeiro
       const { data: funcionario } = await supabase
         .from("funcionarios")
         .select("id")
@@ -176,7 +168,6 @@ function MinhaContaContent() {
         tabelaUsuario = "funcionarios";
       }
 
-      // Chamar API route para alterar email (usa service_role, contorna RLS)
       const res = await fetch("/api/alterar-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -193,7 +184,6 @@ function MinhaContaContent() {
         throw new Error(data.error || "Erro ao alterar email");
       }
 
-      // Atualizar na sessão do localStorage
       const prefeituraSession = localStorage.getItem("prefeitura_session");
       if (prefeituraSession) {
         const sessionData = JSON.parse(prefeituraSession);
@@ -204,7 +194,6 @@ function MinhaContaContent() {
       setMensagem({ tipo: "sucesso", texto: "Email alterado com sucesso! Fazendo logout..." });
       setNovoEmail("");
 
-      // Remover sessão antes de redirecionar
       localStorage.removeItem("prefeitura_session");
       localStorage.removeItem("admin_session");
       localStorage.removeItem("secretaria_atual_id");
@@ -247,10 +236,8 @@ function MinhaContaContent() {
     setAlterandoSenha(true);
 
     try {
-      // Determinar qual tabela o usuário pertence
       let tabelaUsuario = "prefeitura_users";
 
-      // Tentar funcionarios primeiro
       const { data: funcionario, error: errFunc } = await supabase
         .from("funcionarios")
         .select("id")
@@ -261,7 +248,6 @@ function MinhaContaContent() {
         tabelaUsuario = "funcionarios";
         console.log("Usuário encontrado em funcionarios");
       } else {
-        // Tentar em admins (usuário master)
         const { data: admin, error: errAdmin } = await supabase
           .from("admins")
           .select("id")
@@ -272,7 +258,6 @@ function MinhaContaContent() {
           tabelaUsuario = "admins";
           console.log("Usuário encontrado em admins");
         } else {
-          // Tentar em prefeitura_users
           const { data: prefUser, error: errPref } = await supabase
             .from("prefeitura_users")
             .select("id")
@@ -289,7 +274,6 @@ function MinhaContaContent() {
         }
       }
 
-      // Chamar API route para alterar senha (usa service_role, contorna RLS)
       const res = await fetch("/api/alterar-senha", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -315,7 +299,6 @@ function MinhaContaContent() {
       setNovaSenha("");
       setConfirmarSenha("");
 
-      // Fazer logout após 2 segundos (por segurança)
       setTimeout(() => {
         localStorage.removeItem("prefeitura_session");
         localStorage.removeItem("admin_session");
@@ -338,175 +321,338 @@ function MinhaContaContent() {
     );
   }
 
+  const menuItems = [
+    { icon: <Lock size={20} />, label: "Alterar Senha", action: () => setMostrarAlterarSenha(true), count: null },
+    { icon: <Mail size={20} />, label: "Alterar Email", action: () => setMostrarAlterarEmail(true), count: null },
+    { icon: <BookOpen size={20} />, label: "Meus Cursos", action: () => {}, count: 0 },
+    { icon: <FileText size={20} />, label: "Documentos", action: () => {}, count: 0 },
+    { icon: <MessageSquare size={20} />, label: "Mensagens", action: () => {}, count: 1 },
+    { icon: <Settings size={20} />, label: "Preferências", action: () => {}, count: null },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TopNavBar
-        title="Minha Conta"
-        subtitle="Gerenciar perfil e configurações"
-        tabs={[]}
-        activeTab=""
-        onTabChange={() => {}}
-        userName={session?.nome || "Usuário"}
-        userRole={session?.cargo || session?.role || "Acesso"}
-      />
+    <div className="min-h-screen bg-gray-100">
+      <div className="flex h-screen">
+        {/* Sidebar */}
+        <div className="w-64 bg-gradient-to-br from-orange-500 to-orange-600 text-white p-8 overflow-y-auto">
+          <h1 className="text-3xl font-bold mb-12">SUCCESS</h1>
 
-      <div className="app-container p-8">
-        {/* Botão Voltar */}
-        <button
-          onClick={() => router.back()}
-          className="mb-8 text-orange-600 hover:text-orange-700 font-medium flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-orange-50 transition"
-        >
-          ← Voltar
-        </button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Coluna Esquerda - Informações Pessoais */}
-          <div className="lg:col-span-1">
-            {/* Card do Perfil */}
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-8 text-white mb-6 shadow-lg">
-              <div className="text-5xl mb-4">👤</div>
-              <h2 className="text-2xl font-bold mb-2">{session?.nome}</h2>
-              <p className="text-orange-100 text-sm mb-4 capitalize">{session?.cargo || session?.role || "Sem cargo"}</p>
-              <div className="bg-white/20 rounded-lg p-4 space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Mail size={16} />
-                  <span className="truncate">{session?.email}</span>
-                </div>
+          {/* Perfil Resumido */}
+          <div className="bg-white/10 rounded-lg p-4 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl">👤</div>
+              <div>
+                <p className="font-bold text-sm">{session?.nome}</p>
+                <p className="text-xs text-purple-200">{session?.cargo}</p>
               </div>
             </div>
-
-            {/* Botões de Ação */}
-            <div className="space-y-3">
-              <button
-                onClick={() => setMostrarAlterarSenha(!mostrarAlterarSenha)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium ${
-                  mostrarAlterarSenha
-                    ? "bg-orange-100 text-orange-700"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                } border border-gray-200 shadow-sm`}
-              >
-                <Lock size={20} />
-                <span>Alterar Senha</span>
-              </button>
-              <button
-                onClick={() => setMostrarAlterarEmail(!mostrarAlterarEmail)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium ${
-                  mostrarAlterarEmail
-                    ? "bg-orange-100 text-orange-700"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                } border border-gray-200 shadow-sm`}
-              >
-                <Mail size={20} />
-                <span>Alterar Email</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 shadow-sm"
-              >
-                <LogOut size={20} />
-                <span>Sair</span>
-              </button>
-            </div>
+            <p className="text-xs text-purple-200 truncate">{session?.email}</p>
           </div>
 
-          {/* Coluna Direita */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Secretárias Vinculadas */}
-            {secretarias.length > 0 && (
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">📋 Suas Secretárias</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {secretarias.map((secretaria) => {
-                    const isAtual = secretariaAtualId === secretaria.id;
-                    return (
-                      <div
-                        key={secretaria.id}
-                        onClick={() => {
-                          if (!isAtual) {
-                            router.push(`/secretaria/${secretaria.id}`);
-                          }
-                        }}
-                        className={`p-6 rounded-xl border-2 transition ${
-                          isAtual
-                            ? "bg-orange-50 border-orange-400 ring-2 ring-orange-200 shadow-md"
-                            : "bg-white border-gray-200 hover:border-orange-300 hover:shadow-md cursor-pointer"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <span className="text-3xl">{isAtual ? "⭐" : "🏢"}</span>
-                          {isAtual && <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">ATUAL</span>}
-                        </div>
-                        <h4 className={`font-bold text-lg ${isAtual ? "text-orange-700" : "text-gray-900"}`}>
-                          {secretaria.nome}
-                        </h4>
-                        {isAtual && <p className="text-xs text-orange-600 mt-2">Você está nesta secretária</p>}
-                      </div>
-                    );
-                  })}
+          {/* Menu */}
+          <nav className="space-y-2 mb-8">
+            {menuItems.map((item, idx) => (
+              <button
+                key={idx}
+                onClick={item.action}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-white/10 transition text-sm"
+              >
+                <div className="flex items-center gap-3">
+                  {item.icon}
+                  <span>{item.label}</span>
                 </div>
-              </div>
-            )}
+                {item.count !== null && (
+                  <span className="bg-white/30 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
 
-            {/* Informações da Prefeitura */}
-            {prefeitura && (
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">🏛️ Prefeitura</h3>
-                <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Nome</p>
-                      <p className="text-lg font-semibold text-gray-900">{prefeitura.nome}</p>
-                    </div>
+          {/* Sair */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-500/20 text-red-200 hover:bg-red-500/30 transition mt-auto"
+          >
+            <LogOut size={20} />
+            <span className="text-sm">Sair</span>
+          </button>
+        </div>
 
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">CNPJ</p>
-                      <p className="text-lg font-semibold text-gray-900">{prefeitura.cnpj}</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <MapPin size={20} className="text-orange-600" />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Localização</p>
-                        <p className="text-gray-900">{prefeitura.cidade}/{prefeitura.estado}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Phone size={20} className="text-orange-600" />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Telefone</p>
-                        <p className="text-gray-900">{prefeitura.telefone}</p>
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-2 flex items-center gap-2">
-                      <Mail size={20} className="text-orange-600" />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Email</p>
-                        <p className="text-gray-900">{prefeitura.email}</p>
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Endereço</p>
-                      <p className="text-gray-900">{prefeitura.endereco}</p>
-                    </div>
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-8 max-w-6xl mx-auto">
+            {/* Header com Perfil */}
+            <div className="bg-white rounded-2xl p-8 mb-8 shadow-sm">
+              <div className="flex items-start gap-8">
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-6xl">
+                  👤
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">{session?.nome}</h1>
+                  <p className="text-gray-600 mb-4">Registro: 24 de setembro de 2024</p>
+                  <p className="text-sm text-gray-500 mb-6">{session?.email}</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setMostrarAlterarSenha(true)}
+                      className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+                    >
+                      ✏️ Editar Perfil
+                    </button>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Grid Principal - 3 colunas */}
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              {/* Prefeitura */}
+              {prefeitura && (
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <span>🏛️</span> Prefeitura
+                  </h3>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-500 font-semibold">NOME</p>
+                      <p className="text-gray-900 font-medium">{prefeitura.nome}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 font-semibold">CNPJ</p>
+                      <p className="text-gray-900">{prefeitura.cnpj}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 font-semibold">LOCALIZAÇÃO</p>
+                      <p className="text-gray-900">{prefeitura.cidade}/{prefeitura.estado}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Status */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                  <span>🔗</span> Status
+                </h3>
+                <p className="text-sm font-semibold text-blue-900 mb-2">Aguardando Vinculação</p>
+                <p className="text-xs text-blue-700">Sua solicitação está pendente de aprovação</p>
+              </div>
+
+              {/* Perfil Pessoal */}
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <span>👥</span> Perfil
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="text-xs text-gray-500 font-semibold">CPF</p>
+                    <p className="text-gray-900">-</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-semibold">TELEFONE</p>
+                    <p className="text-gray-900">-</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid Secundária - 2 colunas */}
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              {/* Secretárias */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <span>📋</span> Suas Secretárias
+                </h3>
+                {secretarias.length > 0 ? (
+                  <div className="space-y-3">
+                    {secretarias.map((secretaria) => {
+                      const isAtual = secretariaAtualId === secretaria.id;
+                      return (
+                        <div
+                          key={secretaria.id}
+                          onClick={() => {
+                            if (!isAtual) {
+                              router.push(`/secretaria/${secretaria.id}`);
+                            }
+                          }}
+                          className={`p-4 rounded-lg border-2 transition ${
+                            isAtual
+                              ? "bg-orange-50 border-orange-400 cursor-default"
+                              : "bg-white border-gray-200 hover:border-orange-300 cursor-pointer"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className={`font-bold ${isAtual ? "text-orange-700" : "text-gray-900"}`}>
+                                {secretaria.nome}
+                              </h4>
+                              {isAtual && <p className="text-xs text-orange-600 mt-1">✓ Secretária atual</p>}
+                            </div>
+                            <span className="text-2xl">{isAtual ? "⭐" : "🏢"}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-center">
+                    <p className="text-4xl mb-2">🔗</p>
+                    <p className="text-gray-600 font-medium mb-1">Ainda não vinculado</p>
+                    <p className="text-xs text-gray-500">Aguarde aprovação de um administrador</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Atividades */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <span>📊</span> Atividades Recentes
+                </h3>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <p className="text-gray-500 py-8">Nenhuma atividade registrada</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid Terciária - 2 colunas */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Comunicados */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <span>📢</span> Comunicados
+                </h3>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <p className="text-gray-500 py-8">Nenhum comunicado no momento</p>
+                </div>
+              </div>
+
+              {/* Requisições */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <span>📝</span> Requisições Pendentes
+                </h3>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <p className="text-gray-500 py-8">Nenhuma requisição pendente</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Seção de Alterar Senha */}
+      {/* Modal Alterar Senha */}
+      {mostrarAlterarSenha && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">🔐 Alterar Senha</h2>
+              <button
+                onClick={() => {
+                  setMostrarAlterarSenha(false);
+                  setSenhaAtual("");
+                  setNovaSenha("");
+                  setConfirmarSenha("");
+                  setMensagem(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
 
-        {/* Modal de Alterar Senha */}
-        {mostrarAlterarSenha && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">🔐 Alterar Senha</h2>
+            <form onSubmit={handleAlterarSenha} className="space-y-4">
+              {mensagem && (
+                <div
+                  className={`p-4 rounded-lg text-sm ${
+                    mensagem.tipo === "sucesso"
+                      ? "bg-green-50 text-green-700 border border-green-200"
+                      : "bg-red-50 text-red-700 border border-red-200"
+                  }`}
+                >
+                  {mensagem.texto}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Senha Atual</label>
+                <div className="relative">
+                  <input
+                    type={mostrarSenhas.atual ? "text" : "password"}
+                    value={senhaAtual}
+                    onChange={(e) => setSenhaAtual(e.target.value)}
+                    className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Digite sua senha atual"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMostrarSenhas({ ...mostrarSenhas, atual: !mostrarSenhas.atual })
+                    }
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {mostrarSenhas.atual ? "👁️" : "👁️‍🗨️"}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nova Senha</label>
+                <div className="relative">
+                  <input
+                    type={mostrarSenhas.nova ? "text" : "password"}
+                    value={novaSenha}
+                    onChange={(e) => setNovaSenha(e.target.value)}
+                    className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Digite sua nova senha"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMostrarSenhas({ ...mostrarSenhas, nova: !mostrarSenhas.nova })
+                    }
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {mostrarSenhas.nova ? "👁️" : "👁️‍🗨️"}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar Nova Senha</label>
+                <div className="relative">
+                  <input
+                    type={mostrarSenhas.confirmar ? "text" : "password"}
+                    value={confirmarSenha}
+                    onChange={(e) => setConfirmarSenha(e.target.value)}
+                    className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Confirme sua nova senha"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMostrarSenhas({ ...mostrarSenhas, confirmar: !mostrarSenhas.confirmar })
+                    }
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {mostrarSenhas.confirmar ? "👁️" : "👁️‍🗨️"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
                 <button
+                  type="submit"
+                  disabled={alterandoSenha}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition disabled:opacity-50"
+                >
+                  {alterandoSenha ? "Alterando..." : "Alterar Senha"}
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setMostrarAlterarSenha(false);
                     setSenhaAtual("");
@@ -514,213 +660,97 @@ function MinhaContaContent() {
                     setConfirmarSenha("");
                     setMensagem(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition"
                 >
-                  ×
+                  Cancelar
                 </button>
               </div>
-
-              <form onSubmit={handleAlterarSenha} className="space-y-4">
-                {mensagem && (
-                  <div
-                    className={`p-4 rounded-lg text-sm ${
-                      mensagem.tipo === "sucesso"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                    }`}
-                  >
-                    {mensagem.texto}
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Senha Atual
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={mostrarSenhas.atual ? "text" : "password"}
-                      value={senhaAtual}
-                      onChange={(e) => setSenhaAtual(e.target.value)}
-                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Digite sua senha atual"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMostrarSenhas({ ...mostrarSenhas, atual: !mostrarSenhas.atual })
-                      }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {mostrarSenhas.atual ? "👁️" : "👁️‍🗨️"}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nova Senha
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={mostrarSenhas.nova ? "text" : "password"}
-                      value={novaSenha}
-                      onChange={(e) => setNovaSenha(e.target.value)}
-                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Digite sua nova senha"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMostrarSenhas({ ...mostrarSenhas, nova: !mostrarSenhas.nova })
-                      }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {mostrarSenhas.nova ? "👁️" : "👁️‍🗨️"}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirmar Nova Senha
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={mostrarSenhas.confirmar ? "text" : "password"}
-                      value={confirmarSenha}
-                      onChange={(e) => setConfirmarSenha(e.target.value)}
-                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Confirme sua nova senha"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMostrarSenhas({ ...mostrarSenhas, confirmar: !mostrarSenhas.confirmar })
-                      }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {mostrarSenhas.confirmar ? "👁️" : "👁️‍🗨️"}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    disabled={alterandoSenha}
-                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition disabled:opacity-50"
-                  >
-                    {alterandoSenha ? "Alterando..." : "Alterar Senha"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMostrarAlterarSenha(false);
-                      setSenhaAtual("");
-                      setNovaSenha("");
-                      setConfirmarSenha("");
-                      setMensagem(null);
-                    }}
-                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal de Alterar Email */}
-        {mostrarAlterarEmail && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">✉️ Alterar Email</h2>
+      {/* Modal Alterar Email */}
+      {mostrarAlterarEmail && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">✉️ Alterar Email</h2>
+              <button
+                onClick={() => {
+                  setMostrarAlterarEmail(false);
+                  setNovoEmail("");
+                  setMensagem(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleAlterarEmail} className="space-y-4">
+              {mensagem && (
+                <div
+                  className={`p-4 rounded-lg text-sm ${
+                    mensagem.tipo === "sucesso"
+                      ? "bg-green-50 text-green-700 border border-green-200"
+                      : "bg-red-50 text-red-700 border border-red-200"
+                  }`}
+                >
+                  {mensagem.texto}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email Atual</label>
+                <input
+                  type="email"
+                  value={session?.email}
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Novo Email</label>
+                <input
+                  type="email"
+                  value={novoEmail}
+                  onChange={(e) => setNovoEmail(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Digite seu novo email"
+                  required
+                />
+              </div>
+
+              <p className="text-xs text-gray-600 bg-blue-50 p-3 rounded-lg">
+                ℹ️ Você será desconectado após alterar o email e precisará fazer login novamente.
+              </p>
+
+              <div className="flex gap-3 pt-4">
                 <button
+                  type="submit"
+                  disabled={alterandoEmail}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition disabled:opacity-50"
+                >
+                  {alterandoEmail ? "Alterando..." : "Alterar Email"}
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setMostrarAlterarEmail(false);
                     setNovoEmail("");
                     setMensagem(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition"
                 >
-                  ×
+                  Cancelar
                 </button>
               </div>
-
-              <form onSubmit={handleAlterarEmail} className="space-y-4">
-                {mensagem && (
-                  <div
-                    className={`p-4 rounded-lg text-sm ${
-                      mensagem.tipo === "sucesso"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                    }`}
-                  >
-                    {mensagem.texto}
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Atual
-                  </label>
-                  <input
-                    type="email"
-                    value={session?.email}
-                    disabled
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Novo Email
-                  </label>
-                  <input
-                    type="email"
-                    value={novoEmail}
-                    onChange={(e) => setNovoEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    placeholder="Digite seu novo email"
-                    required
-                  />
-                </div>
-
-                <p className="text-xs text-gray-600 bg-blue-50 p-3 rounded-lg">
-                  ℹ️ Você será desconectado após alterar o email e precisará fazer login novamente.
-                </p>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    disabled={alterandoEmail}
-                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition disabled:opacity-50"
-                  >
-                    {alterandoEmail ? "Alterando..." : "Alterar Email"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMostrarAlterarEmail(false);
-                      setNovoEmail("");
-                      setMensagem(null);
-                    }}
-                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
