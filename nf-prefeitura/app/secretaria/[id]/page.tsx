@@ -1184,7 +1184,7 @@ export default function SecretariaPage() {
                       <button className="flex-1 text-center text-xs font-medium text-orange-600 hover:text-orange-700 py-2 rounded-lg hover:bg-orange-50 transition">
                         Ver perfil
                       </button>
-                      {hoverFuncionarioId === func.id && usuarioLogado?.cargo?.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes("secretario") && (
+                      {hoverFuncionarioId === func.id && usuarioLogado?.cargo?.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes("secretario") && usuarioLogado?.id !== func.id && (
                         <button className="flex-1 text-center text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition">
                           Desvincular
                         </button>
