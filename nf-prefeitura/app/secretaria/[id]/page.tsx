@@ -50,6 +50,7 @@ export default function SecretariaPage() {
   const [funcionariosDisponiveis, setFuncionariosDisponiveis] = useState<any[]>([]);
   const [hoverFuncionarioId, setHoverFuncionarioId] = useState<string | null>(null);
   const [usuarioLogado, setUsuarioLogado] = useState<any>(null);
+  const [desvinculando, setDesvinculando] = useState<string | null>(null);
   const [mostrarModalVincular, setMostrarModalVincular] = useState(false);
   const [funcionarioSelecionado, setFuncionarioSelecionado] = useState<string>("");
   const [vinculando, setVinculando] = useState(false);
@@ -266,6 +267,52 @@ export default function SecretariaPage() {
     const ano = data.getFullYear();
 
     return `${dia} de ${mes} de ${ano}`;
+  };
+
+  const handleDesvincularFuncionario = async (funcionarioId: string) => {
+    if (!confirm("Tem certeza que deseja desvincular este funcionário?")) {
+      return;
+    }
+
+    setDesvinculando(funcionarioId);
+    try {
+      // Verificar se o funcionário está vinculado a outra secretaria
+      const { data: outrasSecretarias } = await supabase
+        .from("funcionario_secretarias")
+        .select("secretaria_id")
+        .eq("funcionario_id", funcionarioId)
+        .neq("secretaria_id", id);
+
+      const temOutraSecretaria = outrasSecretarias && outrasSecretarias.length > 0;
+
+      // Desvincula da secretaria atual
+      const { error: updateError } = await supabase
+        .from("funcionarios")
+        .update({
+          secretaria_id: null,
+          cargo: temOutraSecretaria ? undefined : "Usuário comum"
+        })
+        .eq("id", funcionarioId);
+
+      if (updateError) throw updateError;
+
+      // Remove da tabela de vinculações
+      const { error: deleteError } = await supabase
+        .from("funcionario_secretarias")
+        .delete()
+        .eq("funcionario_id", funcionarioId)
+        .eq("secretaria_id", id);
+
+      if (deleteError) throw deleteError;
+
+      alert("Funcionário desvinculado com sucesso!");
+      await loadFuncionarios();
+    } catch (error) {
+      console.error("Erro ao desvincular funcionário:", error);
+      alert("Erro ao desvincular funcionário");
+    } finally {
+      setDesvinculando(null);
+    }
   };
 
   const loadDashboardDataWithPrefeitura = async (prefeituraId: string) => {
@@ -1185,8 +1232,12 @@ export default function SecretariaPage() {
                         Ver perfil
                       </button>
                       {hoverFuncionarioId === func.id && usuarioLogado?.cargo?.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes("secretario") && usuarioLogado?.id !== func.id && (
-                        <button className="flex-1 text-center text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition">
-                          Desvincular
+                        <button
+                          onClick={() => handleDesvincularFuncionario(func.id)}
+                          disabled={desvinculando === func.id}
+                          className="flex-1 text-center text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition disabled:opacity-50"
+                        >
+                          {desvinculando === func.id ? "Desvinculando..." : "Desvincular"}
                         </button>
                       )}
                     </div>
