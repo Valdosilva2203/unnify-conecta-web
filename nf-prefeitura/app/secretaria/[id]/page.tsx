@@ -49,6 +49,7 @@ export default function SecretariaPage() {
   const [todosOsFuncionarios, setTodosOsFuncionarios] = useState<any[]>([]);
   const [funcionariosDisponiveis, setFuncionariosDisponiveis] = useState<any[]>([]);
   const [hoverFuncionarioId, setHoverFuncionarioId] = useState<string | null>(null);
+  const [usuarioLogado, setUsuarioLogado] = useState<any>(null);
   const [mostrarModalVincular, setMostrarModalVincular] = useState(false);
   const [funcionarioSelecionado, setFuncionarioSelecionado] = useState<string>("");
   const [vinculando, setVinculando] = useState(false);
@@ -141,6 +142,9 @@ export default function SecretariaPage() {
 
     try {
       const session = JSON.parse(prefeituraSession);
+
+      // Armazenar usuário logado
+      setUsuarioLogado(session);
 
       // Armazenar nome do usuário
       if (session.nome) {
@@ -1180,7 +1184,7 @@ export default function SecretariaPage() {
                       <button className="flex-1 text-center text-xs font-medium text-orange-600 hover:text-orange-700 py-2 rounded-lg hover:bg-orange-50 transition">
                         Ver perfil
                       </button>
-                      {hoverFuncionarioId === func.id && (
+                      {hoverFuncionarioId === func.id && usuarioLogado?.cargo?.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes("secretario") && (
                         <button className="flex-1 text-center text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition">
                           Desvincular
                         </button>
