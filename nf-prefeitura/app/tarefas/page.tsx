@@ -38,6 +38,20 @@ function TarefasContent() {
     loadTarefas();
   }, []);
 
+  useEffect(() => {
+    const handleClickFora = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-menu-container]')) {
+        setMenuAberto(null);
+      }
+    };
+
+    if (menuAberto) {
+      document.addEventListener("click", handleClickFora);
+      return () => document.removeEventListener("click", handleClickFora);
+    }
+  }, [menuAberto]);
+
   const loadTarefas = async () => {
     try {
       setLoading(true);
@@ -119,6 +133,20 @@ function TarefasContent() {
       console.error("Erro ao salvar tarefa:", error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleEmAndamento = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("tarefas")
+        .update({ status: "em_andamento" })
+        .eq("id", id);
+
+      if (error) throw error;
+      await loadTarefas();
+    } catch (error) {
+      console.error("Erro ao colocar tarefa em andamento:", error);
     }
   };
 
@@ -323,25 +351,38 @@ function TarefasContent() {
                       {getStatusLabel(tarefa.status)}
                     </span>
                   </div>
-                  <div className="col-span-1 flex justify-center items-center relative">
+                  <div className="col-span-1 flex justify-center items-center relative" data-menu-container>
                     <button
                       onClick={() => setMenuAberto(menuAberto === tarefa.id ? null : tarefa.id)}
                       className="text-gray-400 hover:text-gray-600 text-lg leading-none transition"
                       title="Opções"
+                      data-menu-container
                     >
                       ⋯
                     </button>
 
                     {menuAberto === tarefa.id && (
-                      <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
+                      <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-40" data-menu-container>
                         <button
                           onClick={() => {
                             handleEditTarefa(tarefa);
                             setMenuAberto(null);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 border-b border-gray-100 font-medium transition"
+                          data-menu-container
                         >
                           ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleEmAndamento(tarefa.id);
+                            setMenuAberto(null);
+                          }}
+                          disabled={tarefa.status === "concluida" || tarefa.status === "em_andamento"}
+                          className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 border-b border-gray-100 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          data-menu-container
+                        >
+                          ⚡ Em Andamento
                         </button>
                         <button
                           onClick={() => {
@@ -350,6 +391,7 @@ function TarefasContent() {
                           }}
                           disabled={tarefa.status === "concluida"}
                           className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 border-b border-gray-100 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          data-menu-container
                         >
                           ✓ Finalizar
                         </button>
@@ -359,6 +401,7 @@ function TarefasContent() {
                             setMenuAberto(null);
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium transition"
+                          data-menu-container
                         >
                           🗑️ Deletar
                         </button>
