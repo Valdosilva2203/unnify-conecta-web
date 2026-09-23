@@ -1177,7 +1177,7 @@ export default function SecretariaPage() {
                       <button className="flex-1 text-center text-xs font-medium text-orange-600 hover:text-orange-700 py-2 rounded-lg hover:bg-orange-50 transition">
                         Ver perfil
                       </button>
-                      <button className="flex-1 text-center text-xs font-medium text-white bg-red-600 hover:bg-red-700 py-2 rounded-lg transition">
+                      <button className="flex-1 text-center text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition">
                         Desvincular
                       </button>
                     </div>
