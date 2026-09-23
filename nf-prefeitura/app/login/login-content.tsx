@@ -142,7 +142,8 @@ export default function LoginContent() {
         if (redirectUrl) {
           router.push(redirectUrl);
         } else {
-          router.push(`/prefeituras/${funcionario.prefeitura_id}`);
+          // Funcionário sem secretaria vinculada - redireciona para perfil
+          router.push(`/minha-conta`);
         }
         return;
       }
