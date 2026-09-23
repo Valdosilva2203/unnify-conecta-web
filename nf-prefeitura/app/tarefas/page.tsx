@@ -44,11 +44,82 @@ function TarefasContent() {
   ]);
 
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  const [busca, setBusca] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    titulo: "",
+    prioridade: "normal" as const,
+    data_vencimento: "",
+    responsavel: "",
+  });
 
   const tarefasFiltradas = tarefas.filter((tarefa) => {
-    return filtroStatus === "todos" || tarefa.status === filtroStatus;
+    const statusMatch = filtroStatus === "todos" || tarefa.status === filtroStatus;
+    const buscaMatch = tarefa.titulo.toLowerCase().includes(busca.toLowerCase());
+    return statusMatch && buscaMatch;
   });
+
+  const handleAddTarefa = () => {
+    setEditingId(null);
+    setFormData({
+      titulo: "",
+      prioridade: "normal",
+      data_vencimento: "",
+      responsavel: "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleEditTarefa = (tarefa: Tarefa) => {
+    setEditingId(tarefa.id);
+    setFormData({
+      titulo: tarefa.titulo,
+      prioridade: tarefa.prioridade,
+      data_vencimento: tarefa.data_vencimento,
+      responsavel: tarefa.responsavel,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSaveTarefa = () => {
+    if (!formData.titulo.trim()) return;
+
+    if (editingId) {
+      setTarefas(
+        tarefas.map((t) =>
+          t.id === editingId
+            ? {
+                ...t,
+                titulo: formData.titulo,
+                prioridade: formData.prioridade,
+                data_vencimento: formData.data_vencimento,
+                responsavel: formData.responsavel,
+              }
+            : t
+        )
+      );
+    } else {
+      const newTarefa: Tarefa = {
+        id: Math.random().toString(),
+        titulo: formData.titulo,
+        prioridade: formData.prioridade,
+        data_vencimento: formData.data_vencimento,
+        responsavel: formData.responsavel,
+        status: "pendente",
+      };
+      setTarefas([...tarefas, newTarefa]);
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleFinalizarTarefa = (id: string) => {
+    setTarefas(
+      tarefas.map((t) =>
+        t.id === id ? { ...t, status: "concluida" } : t
+      )
+    );
+  };
 
   const stats = [
     {
@@ -153,20 +224,38 @@ function TarefasContent() {
           ))}
         </div>
 
-        {/* Filtro e Título */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Tarefas</h2>
-          <select
-            value={filtroStatus}
-            onChange={(e) => setFiltroStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          >
-            <option value="todos">Todos</option>
-            <option value="pendente">Pendente</option>
-            <option value="em_andamento">Em Andamento</option>
-            <option value="concluida">Concluída</option>
-            <option value="cancelada">Cancelada</option>
-          </select>
+        {/* Header com Busca e Filtros */}
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">Tarefas</h2>
+            <button
+              onClick={handleAddTarefa}
+              className="ml-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center gap-2"
+            >
+              <span>+</span> Nova Tarefa
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <input
+              type="text"
+              placeholder="Buscar por nome da tarefa..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+            <select
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              <option value="todos">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="em_andamento">Em Andamento</option>
+              <option value="concluida">Concluída</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+          </div>
         </div>
 
         {/* Lista de Tarefas */}
@@ -192,7 +281,7 @@ function TarefasContent() {
                   key={tarefa.id}
                   className="px-6 py-4 hover:bg-gray-50 transition grid grid-cols-12 gap-4 items-center"
                 >
-                  <div className="col-span-5">
+                  <div className="col-span-4">
                     <h3 className="font-semibold text-gray-900">
                       {tarefa.titulo}
                     </h3>
@@ -211,12 +300,25 @@ function TarefasContent() {
                       {getStatusLabel(tarefa.status)}
                     </span>
                   </div>
-                  <div className="col-span-1 flex gap-2">
+                  <div className="col-span-2 flex gap-2">
+                    <button
+                      onClick={() => handleEditTarefa(tarefa)}
+                      className="px-3 py-1 text-orange-600 border border-orange-600 hover:bg-orange-50 rounded text-xs font-medium transition"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleFinalizarTarefa(tarefa.id)}
+                      disabled={tarefa.status === "concluida"}
+                      className="px-3 py-1 text-green-600 border border-green-600 hover:bg-green-50 rounded text-xs font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Finalizar
+                    </button>
                     <button
                       onClick={() => handleDeleteTarefa(tarefa.id)}
-                      className="text-gray-400 hover:text-red-600 transition"
+                      className="px-3 py-1 text-red-600 border border-red-600 hover:bg-red-50 rounded text-xs font-medium transition"
                     >
-                      ⋯
+                      Deletar
                     </button>
                   </div>
                 </div>
@@ -225,6 +327,106 @@ function TarefasContent() {
           )}
         </div>
       </div>
+
+      {/* Modal de Criar/Editar Tarefa */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">
+              {editingId ? "Editar Tarefa" : "Nova Tarefa"}
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Título da Tarefa
+                </label>
+                <input
+                  type="text"
+                  value={formData.titulo}
+                  onChange={(e) =>
+                    setFormData({ ...formData, titulo: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ex: Validar notas fiscais"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Prioridade
+                  </label>
+                  <select
+                    value={formData.prioridade}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        prioridade: e.target.value as Tarefa["prioridade"],
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="urgente">Urgente</option>
+                    <option value="normal">Normal</option>
+                    <option value="baixa">Baixa</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Data de Vencimento
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.data_vencimento}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        data_vencimento: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Responsável
+                </label>
+                <input
+                  type="text"
+                  value={formData.responsavel}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      responsavel: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nome do responsável"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveTarefa}
+                className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition font-medium"
+              >
+                {editingId ? "Atualizar" : "Criar"} Tarefa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
