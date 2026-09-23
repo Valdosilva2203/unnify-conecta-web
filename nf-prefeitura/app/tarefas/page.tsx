@@ -47,6 +47,7 @@ function TarefasContent() {
   const [busca, setBusca] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [menuAberto, setMenuAberto] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     titulo: "",
     prioridade: "normal" as const,
@@ -300,26 +301,46 @@ function TarefasContent() {
                       {getStatusLabel(tarefa.status)}
                     </span>
                   </div>
-                  <div className="col-span-2 flex gap-2">
+                  <div className="col-span-2 flex justify-end relative">
                     <button
-                      onClick={() => handleEditTarefa(tarefa)}
-                      className="px-3 py-1 text-orange-600 border border-orange-600 hover:bg-orange-50 rounded text-xs font-medium transition"
+                      onClick={() => setMenuAberto(menuAberto === tarefa.id ? null : tarefa.id)}
+                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition"
                     >
-                      Editar
+                      ⋯
                     </button>
-                    <button
-                      onClick={() => handleFinalizarTarefa(tarefa.id)}
-                      disabled={tarefa.status === "concluida"}
-                      className="px-3 py-1 text-green-600 border border-green-600 hover:bg-green-50 rounded text-xs font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Finalizar
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTarefa(tarefa.id)}
-                      className="px-3 py-1 text-red-600 border border-red-600 hover:bg-red-50 rounded text-xs font-medium transition"
-                    >
-                      Deletar
-                    </button>
+
+                    {menuAberto === tarefa.id && (
+                      <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
+                        <button
+                          onClick={() => {
+                            handleEditTarefa(tarefa);
+                            setMenuAberto(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 border-b border-gray-100 font-medium transition"
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleFinalizarTarefa(tarefa.id);
+                            setMenuAberto(null);
+                          }}
+                          disabled={tarefa.status === "concluida"}
+                          className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 border-b border-gray-100 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          ✓ Finalizar
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleDeleteTarefa(tarefa.id);
+                            setMenuAberto(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium transition"
+                        >
+                          🗑️ Deletar
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
