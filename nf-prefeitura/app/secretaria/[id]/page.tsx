@@ -1134,14 +1134,11 @@ export default function SecretariaPage() {
                       </div>
                     )}
 
-                    {/* Header com Avatar e Botão Desvincular */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+                    {/* Header com Avatar */}
+                    <div className="mb-4">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold">
                         {func.nome.charAt(0).toUpperCase()}
                       </div>
-                      <button className="text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded text-xs font-medium transition">
-                        Desvincular
-                      </button>
                     </div>
 
                     {/* Info */}
@@ -1176,9 +1173,12 @@ export default function SecretariaPage() {
                     </div>
 
                     {/* Divider */}
-                    <div className="border-t border-gray-200 pt-4">
-                      <button className="w-full text-center text-xs font-medium text-orange-600 hover:text-orange-700 py-2 rounded-lg hover:bg-orange-50 transition">
+                    <div className="border-t border-gray-200 pt-4 flex gap-2">
+                      <button className="flex-1 text-center text-xs font-medium text-orange-600 hover:text-orange-700 py-2 rounded-lg hover:bg-orange-50 transition">
                         Ver perfil
+                      </button>
+                      <button className="flex-1 text-center text-xs font-medium text-red-600 hover:text-red-700 py-2 rounded-lg hover:bg-red-50 transition">
+                        Desvincular
                       </button>
                     </div>
                   </div>
