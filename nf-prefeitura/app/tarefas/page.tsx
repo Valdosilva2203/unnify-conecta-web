@@ -268,11 +268,11 @@ function TarefasContent() {
           ) : (
             <div className="divide-y divide-gray-200">
               {/* Cabeçalho */}
-              <div className="px-6 py-4 bg-gray-50 grid grid-cols-12 gap-4 font-semibold text-sm text-gray-700">
-                <div className="col-span-5">Tarefa</div>
+              <div className="px-6 py-4 bg-gray-50 grid grid-cols-10 gap-4 font-semibold text-sm text-gray-700">
+                <div className="col-span-4">Tarefa</div>
                 <div className="col-span-2">Responsável</div>
                 <div className="col-span-2">Vencimento</div>
-                <div className="col-span-2">Status</div>
+                <div className="col-span-1">Status</div>
                 <div className="col-span-1">Ação</div>
               </div>
 
@@ -280,7 +280,7 @@ function TarefasContent() {
               {tarefasFiltradas.map((tarefa) => (
                 <div
                   key={tarefa.id}
-                  className="px-6 py-4 hover:bg-gray-50 transition grid grid-cols-12 gap-4 items-center"
+                  className="px-6 py-4 hover:bg-gray-50 transition grid grid-cols-10 gap-4 items-start"
                 >
                   <div className="col-span-4">
                     <h3 className="font-semibold text-gray-900">
@@ -296,12 +296,12 @@ function TarefasContent() {
                   <div className="col-span-2">
                     <p className="text-sm text-gray-900">{tarefa.data_vencimento}</p>
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-1">
                     <span className={`text-sm font-semibold ${getStatusBadgeColor(tarefa.status)}`}>
                       {getStatusLabel(tarefa.status)}
                     </span>
                   </div>
-                  <div className="col-span-2 flex justify-end relative">
+                  <div className="col-span-1 flex justify-center relative">
                     <button
                       onClick={() => setMenuAberto(menuAberto === tarefa.id ? null : tarefa.id)}
                       className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition"
