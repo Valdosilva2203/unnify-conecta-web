@@ -1121,12 +1121,19 @@ export default function SecretariaPage() {
                   return (
                   <div
                     key={func.id}
-                    className={`rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border ${
+                    className={`rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border-2 ${
                       ehSecretario
-                        ? "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300 hover:border-blue-400"
-                        : "bg-gradient-to-br from-white to-gray-50 border-gray-100 hover:border-orange-200"
+                        ? "bg-gradient-to-br from-yellow-50 to-amber-50 border-amber-400 hover:border-amber-500 hover:shadow-lg"
+                        : "bg-gradient-to-br from-white to-gray-50 border-gray-200 hover:border-orange-200"
                     }`}
                   >
+                    {/* Badge de Secretário */}
+                    {ehSecretario && (
+                      <div className="mb-3 inline-block bg-amber-200 text-amber-900 px-3 py-1 rounded-full text-xs font-bold">
+                        👑 Secretário
+                      </div>
+                    )}
+
                     {/* Header com Avatar e Botão Desvincular */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
