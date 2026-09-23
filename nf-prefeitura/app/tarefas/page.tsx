@@ -301,10 +301,11 @@ function TarefasContent() {
                       {getStatusLabel(tarefa.status)}
                     </span>
                   </div>
-                  <div className="col-span-1 flex justify-center relative">
+                  <div className="col-span-1 flex justify-center relative -mx-2">
                     <button
                       onClick={() => setMenuAberto(menuAberto === tarefa.id ? null : tarefa.id)}
                       className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition"
+                      title="Opções"
                     >
                       ⋯
                     </button>
