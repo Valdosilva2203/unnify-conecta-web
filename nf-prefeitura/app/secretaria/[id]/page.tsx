@@ -48,6 +48,7 @@ export default function SecretariaPage() {
   const [funcionarios, setFuncionarios] = useState<any[]>([]);
   const [todosOsFuncionarios, setTodosOsFuncionarios] = useState<any[]>([]);
   const [funcionariosDisponiveis, setFuncionariosDisponiveis] = useState<any[]>([]);
+  const [hoverFuncionarioId, setHoverFuncionarioId] = useState<string | null>(null);
   const [mostrarModalVincular, setMostrarModalVincular] = useState(false);
   const [funcionarioSelecionado, setFuncionarioSelecionado] = useState<string>("");
   const [vinculando, setVinculando] = useState(false);
@@ -1121,6 +1122,8 @@ export default function SecretariaPage() {
                   return (
                   <div
                     key={func.id}
+                    onMouseEnter={() => setHoverFuncionarioId(func.id)}
+                    onMouseLeave={() => setHoverFuncionarioId(null)}
                     className={`rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border-2 ${
                       ehSecretario
                         ? "bg-gradient-to-br from-yellow-50 to-amber-50 border-amber-400 hover:border-amber-500 hover:shadow-lg"
@@ -1177,9 +1180,11 @@ export default function SecretariaPage() {
                       <button className="flex-1 text-center text-xs font-medium text-orange-600 hover:text-orange-700 py-2 rounded-lg hover:bg-orange-50 transition">
                         Ver perfil
                       </button>
-                      <button className="flex-1 text-center text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition">
-                        Desvincular
-                      </button>
+                      {hoverFuncionarioId === func.id && (
+                        <button className="flex-1 text-center text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 py-2 rounded-lg transition">
+                          Desvincular
+                        </button>
+                      )}
                     </div>
                   </div>
                   );
