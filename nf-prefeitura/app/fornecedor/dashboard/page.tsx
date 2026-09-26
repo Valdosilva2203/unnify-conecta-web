@@ -39,13 +39,14 @@ interface Contrato {
 
 interface Chamado {
   id: string;
-  numero: string;
   titulo: string;
   descricao: string;
-  status: "pendente" | "em_andamento" | "concluido";
-  prioridade: "baixa" | "media" | "alta";
+  status: "pendente" | "atribuida" | "em_andamento" | "finalizada" | "cancelada";
+  prioridade: "baixa" | "normal" | "urgente";
   data_criacao: string;
-  data_atualizacao: string;
+  data_finalizacao?: string;
+  fornecedor_id: string;
+  prefeitura_id: string;
 }
 
 export default function FornecedorDashboardPage() {
@@ -102,16 +103,19 @@ export default function FornecedorDashboardPage() {
 
         setChamadosCount(count || 0);
 
-        // Buscar chamados do fornecedor nessa prefeitura
-        const { data: chamadosData } = await supabase
-          .from("chamados")
-          .select("*")
-          .eq("fornecedor_id", sessionData.id)
-          .eq("prefeitura_id", sessionData.prefeitura_id)
-          .order("data_atualizacao", { ascending: false });
-
-        if (chamadosData) {
-          setChamados(chamadosData);
+        // Buscar chamados do fornecedor nessa prefeitura via API
+        try {
+          const response = await fetch(
+            `/api/fornecedor/chamados?fornecedor_id=${sessionData.id}&prefeitura_id=${sessionData.prefeitura_id}`
+          );
+          if (response.ok) {
+            const { chamados: chamadosData } = await response.json();
+            if (chamadosData) {
+              setChamados(chamadosData);
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao buscar chamados:", error);
         }
 
         // Buscar contratos do fornecedor nessa prefeitura
@@ -432,7 +436,6 @@ export default function FornecedorDashboardPage() {
                   <table className="w-full">
                     <thead className="border-b-2 border-gray-300">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Número</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Título</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Descrição</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Prioridade</th>
@@ -444,18 +447,15 @@ export default function FornecedorDashboardPage() {
                       {chamados.map((chamado) => (
                         <tr key={chamado.id} className="hover:bg-gray-50 transition">
                           <td className="px-6 py-4">
-                            <span className="font-bold text-gray-900">{chamado.numero}</span>
-                          </td>
-                          <td className="px-6 py-4">
                             <span className="font-semibold text-gray-900">{chamado.titulo}</span>
                           </td>
                           <td className="px-6 py-4 text-gray-700 truncate max-w-xs">{chamado.descricao}</td>
                           <td className="px-6 py-4">
                             <span
                               className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                                chamado.prioridade === "alta"
+                                chamado.prioridade === "urgente"
                                   ? "bg-red-100 text-red-700"
-                                  : chamado.prioridade === "media"
+                                  : chamado.prioridade === "normal"
                                     ? "bg-yellow-100 text-yellow-700"
                                     : "bg-green-100 text-green-700"
                               }`}
@@ -470,7 +470,11 @@ export default function FornecedorDashboardPage() {
                                   ? "bg-orange-100 text-orange-700"
                                   : chamado.status === "em_andamento"
                                     ? "bg-blue-100 text-blue-700"
-                                    : "bg-green-100 text-green-700"
+                                    : chamado.status === "finalizada"
+                                      ? "bg-green-100 text-green-700"
+                                      : chamado.status === "cancelada"
+                                        ? "bg-red-100 text-red-700"
+                                        : "bg-gray-100 text-gray-700"
                               }`}
                             >
                               {chamado.status === "em_andamento" ? "em andamento" : chamado.status}
