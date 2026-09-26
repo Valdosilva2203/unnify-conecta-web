@@ -11,9 +11,11 @@ export default function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
   const [email, setEmail] = useState("");
+  const [cnpj, setCnpj] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [verificando, setVerificando] = useState(true);
+  const [tipoLogin, setTipoLogin] = useState<"prefeitura" | "fornecedor">("prefeitura");
 
   const hashSenha = async (senhaText: string): Promise<string> => {
     const encoder = new TextEncoder();
@@ -44,16 +46,76 @@ export default function LoginContent() {
     setErro("");
 
     try {
-      const emailTrimmed = email.trim().toLowerCase();
       const senhaTrimmed = senha.trim();
 
-      if (!emailTrimmed || !senhaTrimmed) {
+      if (!senhaTrimmed) {
         setErro("Preencha todos os campos");
         setLoading(false);
         return;
       }
 
       const senhaHash = await hashSenha(senhaTrimmed);
+
+      // Login de Fornecedor
+      if (tipoLogin === "fornecedor") {
+        const cnpjTrimmed = cnpj.trim();
+        if (!cnpjTrimmed) {
+          setErro("Preencha todos os campos");
+          setLoading(false);
+          return;
+        }
+
+        const { data: credenciais, error: credError } = await supabase
+          .from("fornecedor_credenciais")
+          .select("*, fornecedores(*)")
+          .eq("cnpj", cnpjTrimmed)
+          .single();
+
+        if (credenciais && !credError) {
+          if (senhaHash !== credenciais.senha) {
+            setErro("CNPJ ou senha inválidos");
+            setLoading(false);
+            return;
+          }
+
+          if (credenciais.status !== "ativo") {
+            setErro("Usuário inativo");
+            setLoading(false);
+            return;
+          }
+
+          const fornecedor = credenciais.fornecedores;
+          const sessionData = {
+            id: fornecedor.id,
+            cnpj: credenciais.cnpj,
+            nome: fornecedor.nome,
+            email: fornecedor.email,
+            tipo: "fornecedor",
+            credencial_id: credenciais.id,
+          };
+
+          console.log("🔐 FORNECEDOR LOGIN");
+          console.log("📛 Nome:", fornecedor.nome);
+          console.log("🏢 CNPJ:", credenciais.cnpj);
+          console.log("🔑 Full sessionData:", sessionData);
+          localStorage.setItem("empresa_session", JSON.stringify(sessionData));
+
+          router.push(`/empresa/${fornecedor.id}/selecionar-prefeitura`);
+          return;
+        }
+
+        setErro("CNPJ ou senha inválidos");
+        return;
+      }
+
+      // Login de Prefeitura (Admin/Funcionário)
+      const emailTrimmed = email.trim().toLowerCase();
+
+      if (!emailTrimmed) {
+        setErro("Preencha todos os campos");
+        setLoading(false);
+        return;
+      }
 
       const { data: admin, error: adminError } = await supabase
         .from("prefeitura_users")
@@ -155,7 +217,6 @@ export default function LoginContent() {
         if (redirectUrl) {
           router.push(redirectUrl);
         } else {
-          // Funcionário sem secretaria vinculada - redireciona para perfil
           router.push(`/minha-conta`);
         }
         return;
@@ -187,6 +248,32 @@ export default function LoginContent() {
           <p className="text-gray-600 mt-2">Login</p>
         </div>
 
+        {/* Abas de Tipo de Login */}
+        <div className="flex gap-2 mb-6 border-b border-gray-200">
+          <button
+            type="button"
+            onClick={() => setTipoLogin("prefeitura")}
+            className={`flex-1 py-2 px-3 text-sm font-medium transition ${
+              tipoLogin === "prefeitura"
+                ? "text-orange-600 border-b-2 border-orange-600"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Prefeitura
+          </button>
+          <button
+            type="button"
+            onClick={() => setTipoLogin("fornecedor")}
+            className={`flex-1 py-2 px-3 text-sm font-medium transition ${
+              tipoLogin === "fornecedor"
+                ? "text-orange-600 border-b-2 border-orange-600"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Fornecedor
+          </button>
+        </div>
+
         {erro && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
             {erro}
@@ -194,19 +281,35 @@ export default function LoginContent() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="seu@email.com"
-              required
-            />
-          </div>
+          {tipoLogin === "fornecedor" ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                CNPJ
+              </label>
+              <input
+                type="text"
+                value={cnpj}
+                onChange={(e) => setCnpj(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="00.000.000/0000-00"
+                required
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="seu@email.com"
+                required
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
