@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       .select("*")
       .eq("fornecedor_id", fornecedorId)
       .eq("prefeitura_id", prefeituraId)
-      .order("data_criacao", { ascending: false });
+      .order("created_at", { ascending: false });
 
     console.log("✅ Chamados retornados:", chamados?.length || 0, "| Erro:", error);
 

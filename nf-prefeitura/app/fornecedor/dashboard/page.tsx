@@ -43,7 +43,7 @@ interface Chamado {
   descricao: string;
   status: "pendente" | "atribuida" | "em_andamento" | "finalizada" | "cancelada";
   prioridade: "baixa" | "normal" | "urgente";
-  data_criacao: string;
+  created_at: string;
   data_finalizacao?: string;
   fornecedor_id: string;
   prefeitura_id: string;
@@ -481,7 +481,7 @@ export default function FornecedorDashboardPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-gray-700">
-                            {new Date(chamado.data_criacao).toLocaleDateString("pt-BR")}
+                            {new Date(chamado.created_at).toLocaleDateString("pt-BR")}
                           </td>
                         </tr>
                       ))}
