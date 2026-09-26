@@ -214,7 +214,7 @@ export default function ChamadosPage() {
     }
   };
 
-  const isMaster = session?.role === "admin";
+  const isMaster = session?.role === "admin" || session?.role === "prefeitura";
 
   const chamadosVisiveis = isMaster
     ? chamados
