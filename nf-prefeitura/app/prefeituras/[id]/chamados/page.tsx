@@ -214,19 +214,18 @@ export default function ChamadosPage() {
     }
   };
 
-  const isSecretario = session?.cargo?.toLowerCase().includes("secretario");
-  const isAdmin = session?.role === "admin" || session?.tipo === "admin";
-  const isPrefeito = session?.role === "prefeitura" || session?.tipo === "admin";
+  const isMaster = session?.role === "admin";
 
-  const chamadosVisiveis = chamados.filter((n) => {
-    if (isAdmin || isPrefeito) {
-      return true;
-    } else if (isSecretario) {
-      return n.secretaria_id === session?.secretaria_id;
-    } else {
-      return n.criado_por === session?.id;
-    }
-  });
+  const chamadosVisiveis = isMaster
+    ? chamados
+    : chamados.filter((n) => {
+        const isSecretario = session?.cargo?.toLowerCase().includes("secretario");
+        if (isSecretario) {
+          return n.secretaria_id === session?.secretaria_id;
+        } else {
+          return n.criado_por === session?.id;
+        }
+      });
 
   const chamadosFiltrados = chamadosVisiveis.filter((n) => {
     const statusMatch = filtroStatus === "todos" || n.status === filtroStatus;
