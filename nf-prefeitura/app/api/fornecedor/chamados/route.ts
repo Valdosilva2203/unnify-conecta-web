@@ -6,6 +6,8 @@ export async function GET(request: NextRequest) {
     const fornecedorId = request.nextUrl.searchParams.get("fornecedor_id");
     const prefeituraId = request.nextUrl.searchParams.get("prefeitura_id");
 
+    console.log("🔍 Chamados API - Buscar chamados:", { fornecedorId, prefeituraId });
+
     if (!fornecedorId || !prefeituraId) {
       return NextResponse.json(
         { error: "Missing fornecedor_id or prefeitura_id" },
@@ -22,10 +24,12 @@ export async function GET(request: NextRequest) {
       .eq("prefeitura_id", prefeituraId)
       .order("data_criacao", { ascending: false });
 
+    console.log("✅ Chamados retornados:", chamados?.length || 0, "| Erro:", error);
+
     if (error) {
-      console.error("Erro ao buscar chamados:", error);
+      console.error("❌ Erro ao buscar chamados:", error);
       return NextResponse.json(
-        { error: "Erro ao buscar chamados" },
+        { error: "Erro ao buscar chamados", details: error },
         { status: 500 }
       );
     }
