@@ -37,6 +37,17 @@ interface Contrato {
   data_fim: string;
 }
 
+interface Chamado {
+  id: string;
+  numero: string;
+  titulo: string;
+  descricao: string;
+  status: "pendente" | "em_andamento" | "concluido";
+  prioridade: "baixa" | "media" | "alta";
+  data_criacao: string;
+  data_atualizacao: string;
+}
+
 export default function FornecedorDashboardPage() {
   const router = useRouter();
   const [session, setSession] = useState<SessionData | null>(null);
@@ -44,6 +55,7 @@ export default function FornecedorDashboardPage() {
   const [fornecedorInfo, setFornecedorInfo] = useState<FornecedorInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [chamadosCount, setChamadosCount] = useState(0);
+  const [chamados, setChamados] = useState<Chamado[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [menuAberto, setMenuAberto] = useState(true);
 
@@ -89,6 +101,18 @@ export default function FornecedorDashboardPage() {
           .in("status", ["pendente", "em_andamento"]);
 
         setChamadosCount(count || 0);
+
+        // Buscar chamados do fornecedor nessa prefeitura
+        const { data: chamadosData } = await supabase
+          .from("chamados")
+          .select("*")
+          .eq("fornecedor_id", sessionData.id)
+          .eq("prefeitura_id", sessionData.prefeitura_id)
+          .order("data_atualizacao", { ascending: false });
+
+        if (chamadosData) {
+          setChamados(chamadosData);
+        }
 
         // Buscar contratos do fornecedor nessa prefeitura
         const { data: contratosData } = await supabase
@@ -398,10 +422,69 @@ export default function FornecedorDashboardPage() {
 
             {/* Chamados Recentes */}
             <div className="bg-white rounded-xl shadow-md p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">📞 Chamados Recentes</h2>
-              <div className="text-center py-16">
-                <p className="text-gray-500 text-lg">Nenhum chamado no momento</p>
-              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">📞 Chamados Recentes ({chamados.length})</h2>
+              {chamados.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">Nenhum chamado no momento</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b-2 border-gray-300">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Número</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Título</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Descrição</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Prioridade</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Status</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Data Criação</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {chamados.map((chamado) => (
+                        <tr key={chamado.id} className="hover:bg-gray-50 transition">
+                          <td className="px-6 py-4">
+                            <span className="font-bold text-gray-900">{chamado.numero}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="font-semibold text-gray-900">{chamado.titulo}</span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-700 truncate max-w-xs">{chamado.descricao}</td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                                chamado.prioridade === "alta"
+                                  ? "bg-red-100 text-red-700"
+                                  : chamado.prioridade === "media"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-green-100 text-green-700"
+                              }`}
+                            >
+                              {chamado.prioridade}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                                chamado.status === "pendente"
+                                  ? "bg-orange-100 text-orange-700"
+                                  : chamado.status === "em_andamento"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-green-100 text-green-700"
+                              }`}
+                            >
+                              {chamado.status === "em_andamento" ? "em andamento" : chamado.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-700">
+                            {new Date(chamado.data_criacao).toLocaleDateString("pt-BR")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
