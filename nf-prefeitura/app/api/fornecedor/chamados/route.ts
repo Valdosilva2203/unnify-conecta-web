@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: chamados, error } = await supabase
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { data: chamados, error } = await supabaseAdmin
       .from("chamados")
       .select("*")
       .eq("fornecedor_id", fornecedorId)
