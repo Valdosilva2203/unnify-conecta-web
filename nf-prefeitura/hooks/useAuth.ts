@@ -13,12 +13,30 @@ export function useAuth() {
 
   useEffect(() => {
     const adminSession = getSession();
-    setSession(adminSession);
+
+    if (adminSession) {
+      setSession(adminSession);
+    } else if (typeof window !== "undefined") {
+      // Tentar carregar prefeitura_session como fallback
+      const prefeituraSession = localStorage.getItem("prefeitura_session");
+      if (prefeituraSession) {
+        try {
+          const parsed = JSON.parse(prefeituraSession);
+          setSession(parsed);
+        } catch (e) {
+          setSession(null);
+        }
+      } else {
+        setSession(null);
+      }
+    }
+
     setLoading(false);
   }, []);
 
   const handleLogout = () => {
     logout();
+    localStorage.removeItem("prefeitura_session");
     setSession(null);
     window.location.href = "/auth";
   };

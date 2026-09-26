@@ -81,8 +81,11 @@ export default function LoginContent() {
           prefeitura_id: admin.prefeitura_id,
           role: admin.role,
           tipo: "admin",
+          secretaria_id: admin.secretaria_id || null,
         };
 
+        console.log("🔐 Admin login - sessionData:", sessionData);
+        console.log("🔐 Admin full data:", admin);
         localStorage.setItem("prefeitura_session", JSON.stringify(sessionData));
 
         if (redirect) {
@@ -106,6 +109,21 @@ export default function LoginContent() {
           return;
         }
 
+        let secretariaId = funcionario.secretaria_id;
+
+        if (!secretariaId) {
+          const { data: secretarias, error: secError } = await supabase
+            .from("funcionario_secretarias")
+            .select("secretaria_id")
+            .eq("funcionario_id", funcionario.id)
+            .limit(1)
+            .single();
+
+          if (secretarias && !secError) {
+            secretariaId = secretarias.secretaria_id;
+          }
+        }
+
         const sessionData = {
           id: funcionario.id,
           email: funcionario.email,
@@ -113,8 +131,14 @@ export default function LoginContent() {
           prefeitura_id: funcionario.prefeitura_id,
           cargo: funcionario.cargo,
           tipo: "funcionario",
+          secretaria_id: secretariaId || null,
         };
 
+        console.log("🔐 FUNCIONÁRIO LOGIN");
+        console.log("📛 Nome:", funcionario.nome);
+        console.log("📧 Email:", funcionario.email);
+        console.log("🏢 Secretaria ID:", secretariaId || "NENHUMA");
+        console.log("🔑 Full sessionData:", sessionData);
         localStorage.setItem("prefeitura_session", JSON.stringify(sessionData));
 
         if (redirect) {
@@ -124,19 +148,8 @@ export default function LoginContent() {
 
         let redirectUrl = ``;
 
-        if (funcionario.secretaria_id) {
-          redirectUrl = `/secretaria/${funcionario.secretaria_id}`;
-        } else {
-          const { data: secretarias, error: secError } = await supabase
-            .from("funcionario_secretarias")
-            .select("secretaria_id")
-            .eq("funcionario_id", funcionario.id)
-            .limit(1)
-            .single();
-
-          if (secretarias && !secError) {
-            redirectUrl = `/secretaria/${secretarias.secretaria_id}`;
-          }
+        if (secretariaId) {
+          redirectUrl = `/secretaria/${secretariaId}`;
         }
 
         if (redirectUrl) {

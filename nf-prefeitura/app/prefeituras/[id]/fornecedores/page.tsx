@@ -21,6 +21,7 @@ interface Fornecedor {
   estado?: string;
   tipo?: string;
   prefeitura_id: string;
+  especialidades?: string[];
 }
 
 function FornecedoresContent() {
@@ -52,7 +53,9 @@ function FornecedoresContent() {
     cidade: "",
     estado: "",
     tipo: "PJ",
+    especialidades: [] as string[],
   });
+  const [novaEspecialidadeEdit, setNovaEspecialidadeEdit] = useState("");
   const [mostrarFormNovoFornecedor, setMostrarFormNovoFornecedor] = useState(false);
   const [novoFornecedor, setNovoFornecedor] = useState({
     nome: "",
@@ -65,7 +68,9 @@ function FornecedoresContent() {
     cidade: "",
     estado: "",
     tipo: "Pessoa Jurídica",
+    especialidades: [] as string[],
   });
+  const [novaEspecialidade, setNovaEspecialidade] = useState("");
   const [salvandoFornecedor, setSalvandoFornecedor] = useState(false);
 
   useEffect(() => {
@@ -132,6 +137,40 @@ function FornecedoresContent() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleAdicionarEspecialidade = () => {
+    if (novaEspecialidade.trim() && novoFornecedor.especialidades.length < 4) {
+      setNovoFornecedor(prev => ({
+        ...prev,
+        especialidades: [...prev.especialidades, novaEspecialidade.trim()]
+      }));
+      setNovaEspecialidade("");
+    }
+  };
+
+  const handleRemoverEspecialidade = (index: number) => {
+    setNovoFornecedor(prev => ({
+      ...prev,
+      especialidades: prev.especialidades.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAdicionarEspecialidadeEdit = () => {
+    if (novaEspecialidadeEdit.trim() && formData.especialidades.length < 4) {
+      setFormData(prev => ({
+        ...prev,
+        especialidades: [...prev.especialidades, novaEspecialidadeEdit.trim()]
+      }));
+      setNovaEspecialidadeEdit("");
+    }
+  };
+
+  const handleRemoverEspecialidadeEdit = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      especialidades: prev.especialidades.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -163,6 +202,7 @@ function FornecedoresContent() {
           cidade: formData.cidade || null,
           estado: formData.estado || null,
           tipo: formData.tipo,
+          especialidades: formData.especialidades.length > 0 ? formData.especialidades : null,
         },
       ]);
 
@@ -180,6 +220,7 @@ function FornecedoresContent() {
         cidade: "",
         estado: "",
         tipo: "PJ",
+        especialidades: [],
       });
       setMostrarFormulario(false);
       await loadFornecedores();
@@ -248,7 +289,9 @@ function FornecedoresContent() {
       cidade: fornecedor.cidade || "",
       estado: fornecedor.estado || "",
       tipo: fornecedor.tipo || "PJ",
+      especialidades: fornecedor.especialidades || [],
     });
+    setNovaEspecialidadeEdit("");
     setMostrarFormulario(true);
   };
 
@@ -277,6 +320,7 @@ function FornecedoresContent() {
           cidade: formData.cidade || null,
           estado: formData.estado || null,
           tipo: formData.tipo,
+          especialidades: formData.especialidades.length > 0 ? formData.especialidades : null,
         })
         .eq("id", editando.id);
 
@@ -294,7 +338,9 @@ function FornecedoresContent() {
         cidade: "",
         estado: "",
         tipo: "PJ",
+        especialidades: [],
       });
+      setNovaEspecialidadeEdit("");
       setEditando(null);
       setMostrarFormulario(false);
       await loadFornecedores();
@@ -387,6 +433,7 @@ function FornecedoresContent() {
             cidade: novoFornecedor.cidade || null,
             estado: novoFornecedor.estado || null,
             tipo: novoFornecedor.tipo || null,
+            especialidades: novoFornecedor.especialidades.length > 0 ? novoFornecedor.especialidades : null,
           },
         ])
         .select();
@@ -407,7 +454,9 @@ function FornecedoresContent() {
           cidade: "",
           estado: "",
           tipo: "Pessoa Jurídica",
+          especialidades: [],
         });
+        setNovaEspecialidade("");
         setMostrarFormNovoFornecedor(false);
       }
     } catch (error: any) {
@@ -653,6 +702,54 @@ function FornecedoresContent() {
                       <option value="MEI">MEI</option>
                     </select>
                   </div>
+
+                  <div className="lg:col-span-4">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      🎯 Especialidades (máximo 4)
+                    </label>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={novaEspecialidadeEdit}
+                        onChange={(e) => setNovaEspecialidadeEdit(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAdicionarEspecialidadeEdit();
+                          }
+                        }}
+                        placeholder="Ex: Redes, Manutenção..."
+                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-green-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAdicionarEspecialidadeEdit}
+                        disabled={formData.especialidades.length >= 4 || !novaEspecialidadeEdit.trim()}
+                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded text-xs font-medium transition"
+                      >
+                        +
+                      </button>
+                    </div>
+                    {formData.especialidades.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {formData.especialidades.map((esp, idx) => (
+                          <div
+                            key={idx}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium"
+                          >
+                            {esp}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoverEspecialidadeEdit(idx)}
+                              className="ml-0.5 text-green-700 hover:text-green-900 font-bold"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-2 pt-2 border-t border-gray-200 col-span-full">
@@ -660,6 +757,7 @@ function FornecedoresContent() {
                     type="button"
                     onClick={() => {
                       setMostrarFormulario(false);
+                      setEditando(null);
                       setFormData({
                         nome: "",
                         razao_social: "",
@@ -671,7 +769,9 @@ function FornecedoresContent() {
                         cidade: "",
                         estado: "",
                         tipo: "PJ",
+                        especialidades: [],
                       });
+                      setNovaEspecialidadeEdit("");
                     }}
                     className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-50 text-xs"
                   >
@@ -712,7 +812,9 @@ function FornecedoresContent() {
                       cidade: "",
                       estado: "",
                       tipo: "Pessoa Jurídica",
+                      especialidades: [],
                     });
+                    setNovaEspecialidade("");
                   }}
                   className="text-gray-400 hover:text-gray-600 transition"
                   title="Fechar formulário"
@@ -883,6 +985,54 @@ function FornecedoresContent() {
                       <option value="Pessoa Física">Pessoa Física</option>
                     </select>
                   </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      🎯 Especialidades (máximo 4)
+                    </label>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={novaEspecialidade}
+                        onChange={(e) => setNovaEspecialidade(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAdicionarEspecialidade();
+                          }
+                        }}
+                        placeholder="Ex: Redes, Manutenção de computador, Elétrica..."
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAdicionarEspecialidade}
+                        disabled={novoFornecedor.especialidades.length >= 4 || !novaEspecialidade.trim()}
+                        className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition"
+                      >
+                        +
+                      </button>
+                    </div>
+                    {novoFornecedor.especialidades.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {novoFornecedor.especialidades.map((esp, idx) => (
+                          <div
+                            key={idx}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-full text-sm font-medium"
+                          >
+                            {esp}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoverEspecialidade(idx)}
+                              className="ml-1 text-orange-700 hover:text-orange-900 font-bold"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-2">
@@ -908,7 +1058,9 @@ function FornecedoresContent() {
                         cidade: "",
                         estado: "",
                         tipo: "Pessoa Jurídica",
+                        especialidades: [],
                       });
+                      setNovaEspecialidade("");
                     }}
                     className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 px-4 rounded-lg transition"
                   >

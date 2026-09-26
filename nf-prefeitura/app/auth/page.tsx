@@ -175,7 +175,7 @@ export default function AuthPage() {
               ? "Carregando..."
               : isSignup
               ? "Criar conta de acesso"
-              : "Acesso Master"}
+              : "Login"}
           </p>
         </div>
 

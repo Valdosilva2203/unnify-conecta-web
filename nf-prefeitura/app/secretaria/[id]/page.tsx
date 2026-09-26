@@ -21,6 +21,7 @@ interface DashboardData {
   totalNotasFiscais: number;
   totalFornecedores: number;
   totalRequisicoes: number;
+  totalChamados: number;
   orcamentoAnual: number;
   gastoAcumulado: number;
 }
@@ -42,6 +43,7 @@ export default function SecretariaPage() {
     totalNotasFiscais: 0,
     totalFornecedores: 0,
     totalRequisicoes: 0,
+    totalChamados: 0,
     orcamentoAnual: 0,
     gastoAcumulado: 0,
   });
@@ -332,6 +334,9 @@ export default function SecretariaPage() {
         funcionario.secretaria_id === id &&
         funcionario.cargo?.toLowerCase().includes("secretario");
 
+      const ehAdmin = session?.role === "admin" || session?.tipo === "admin";
+      const ehPrefeito = session?.role === "prefeitura" || session?.tipo === "admin";
+
       // Buscar total de funcionários da secretaria
       const { data: funcionariosData } = await supabase
         .from("funcionarios")
@@ -356,11 +361,24 @@ export default function SecretariaPage() {
 
       const { data: requisicoes } = await queryReq;
 
+      // Buscar total de chamados: todos se admin/prefeito, apenas da secretaria se secretário
+      let queryChamados = supabase
+        .from("chamados")
+        .select("id")
+        .eq("prefeitura_id", prefeituraId);
+
+      if (!ehAdmin && !ehPrefeito) {
+        queryChamados = queryChamados.eq("secretaria_id", id);
+      }
+
+      const { data: chamados } = await queryChamados;
+
       setDashboardData((prev) => ({
         ...prev,
         totalFuncionarios: funcionariosData?.length || 0,
         totalFornecedores: fornecedores?.length || 0,
         totalRequisicoes: requisicoes?.length || 0,
+        totalChamados: chamados?.length || 0,
       }));
     } catch (error) {
       console.error("Erro ao carregar dados do dashboard:", error);
@@ -1133,6 +1151,19 @@ export default function SecretariaPage() {
                     <p className="text-3xl font-bold text-orange-600 mt-2">{dashboardData.totalRequisicoes}</p>
                   </div>
                   <div className="text-3xl">📋</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => secretaria && router.push(`/prefeituras/${secretaria.prefeitura_id}/chamados`)}
+                className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">Chamados</p>
+                    <p className="text-3xl font-bold text-red-600 mt-2">{dashboardData.totalChamados}</p>
+                  </div>
+                  <div className="text-3xl">📞</div>
                 </div>
               </div>
 

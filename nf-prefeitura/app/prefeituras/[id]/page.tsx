@@ -76,6 +76,7 @@ function DetalhePrefeituraContent() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [solicitacoesPendentes, setSolicitacoesPendentes] = useState<any[]>([]);
   const [processandoSolicitacao, setProcessandoSolicitacao] = useState<string | null>(null);
+  const [chamadosPendentes, setChamadosPendentes] = useState(0);
 
   const loadSolicitacoesPendentes = async () => {
     try {
@@ -97,6 +98,25 @@ function DetalhePrefeituraContent() {
       setSolicitacoesPendentes(data || []);
     } catch (error) {
       console.error("Erro ao carregar solicitações:", error);
+    }
+  };
+
+  const loadChamadosPendentes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("chamados")
+        .select("id")
+        .eq("prefeitura_id", id)
+        .eq("status", "pendente");
+
+      if (error) {
+        // Tabela pode não existir ainda
+        setChamadosPendentes(0);
+      } else {
+        setChamadosPendentes(data?.length || 0);
+      }
+    } catch (error) {
+      setChamadosPendentes(0);
     }
   };
 
@@ -194,6 +214,7 @@ function DetalhePrefeituraContent() {
       loadTodosFuncionarios();
       loadSecretarias();
       loadSolicitacoesPendentes();
+      loadChamadosPendentes();
     } else if (isPrefeituraUser) {
       // Usuário de prefeitura pode ver apenas sua prefeitura
       setIsAdmin(false);
@@ -202,6 +223,7 @@ function DetalhePrefeituraContent() {
       loadTodosFuncionarios();
       loadSecretarias();
       loadSolicitacoesPendentes();
+      loadChamadosPendentes();
     } else {
       // Não autenticado ou funcionário (será redirecionado acima)
       setLoading(false);
@@ -796,6 +818,19 @@ function DetalhePrefeituraContent() {
               <div className="bg-blue-100 p-3 rounded-lg text-2xl">📂</div>
             </div>
           </div>
+
+          {/* Card 5: Chamados */}
+          <button
+            onClick={() => router.push(`/prefeituras/${id}/chamados`)}
+            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition border border-gray-200 hover:border-orange-300 cursor-pointer group text-left"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-gray-600">Chamados</p>
+              <span className="text-2xl group-hover:scale-110 transition">🔔</span>
+            </div>
+            <p className="text-3xl font-bold text-orange-600">{chamadosPendentes}</p>
+            <p className="text-xs text-gray-500 mt-2">Pendentes</p>
+          </button>
 
           {/* Card 5: Prefeito - Apenas Admin Master */}
           {isAdmin && (

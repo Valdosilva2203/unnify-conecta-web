@@ -8,6 +8,7 @@ export interface PrefeituraSession {
   role?: string;
   tipo?: string;
   cargo?: string;
+  secretaria_id?: string | null;
 }
 
 export function usePrefeituraAuth() {

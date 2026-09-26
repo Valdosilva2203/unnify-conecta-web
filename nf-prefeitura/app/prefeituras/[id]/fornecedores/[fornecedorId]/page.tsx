@@ -20,6 +20,7 @@ interface Fornecedor {
   estado?: string;
   tipo?: string;
   prefeitura_id: string;
+  especialidades?: string[];
 }
 
 interface Contrato {
@@ -39,6 +40,12 @@ interface ObjetoTemporario {
   valor_unitario: number;
 }
 
+interface Chamado {
+  id: string;
+  status: string;
+  fornecedor_id: string;
+}
+
 export default function DetalhesFornecedorPage() {
   const router = useRouter();
   const params = useParams();
@@ -49,6 +56,7 @@ export default function DetalhesFornecedorPage() {
   const [fornecedor, setFornecedor] = useState<Fornecedor | null>(null);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [contratosAtivos, setContratosAtivos] = useState(0);
+  const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [mostrarFormEditar, setMostrarFormEditar] = useState(false);
@@ -67,7 +75,9 @@ export default function DetalhesFornecedorPage() {
     cidade: "",
     estado: "",
     tipo: "",
+    especialidades: [] as string[],
   });
+  const [novaEspecialidadeFormEdicao, setNovaEspecialidadeFormEdicao] = useState("");
 
   const [formData, setFormData] = useState({
     numero: "",
@@ -105,11 +115,29 @@ export default function DetalhesFornecedorPage() {
 
       // Carrega contratos
       await loadContratos();
+
+      // Carrega chamados
+      await loadChamados();
     } catch (error) {
       console.error("Erro ao carregar fornecedor:", error);
       setErro("Fornecedor não encontrado");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadChamados = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("chamados")
+        .select("id, status, fornecedor_id")
+        .eq("fornecedor_id", fornecedorId)
+        .eq("prefeitura_id", prefeituraId);
+
+      if (error) throw error;
+      setChamados(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar chamados:", error);
     }
   };
 
@@ -131,6 +159,23 @@ export default function DetalhesFornecedorPage() {
     }
   };
 
+  const handleAdicionarEspecialidadeEdicao = () => {
+    if (novaEspecialidadeFormEdicao.trim() && formEdicao.especialidades.length < 4) {
+      setFormEdicao(prev => ({
+        ...prev,
+        especialidades: [...prev.especialidades, novaEspecialidadeFormEdicao.trim()]
+      }));
+      setNovaEspecialidadeFormEdicao("");
+    }
+  };
+
+  const handleRemoverEspecialidadeEdicao = (index: number) => {
+    setFormEdicao(prev => ({
+      ...prev,
+      especialidades: prev.especialidades.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleAbrirEdicao = () => {
     if (fornecedor) {
       setFormEdicao({
@@ -144,7 +189,9 @@ export default function DetalhesFornecedorPage() {
         cidade: fornecedor.cidade || "",
         estado: fornecedor.estado || "",
         tipo: fornecedor.tipo || "",
+        especialidades: fornecedor.especialidades || [],
       });
+      setNovaEspecialidadeFormEdicao("");
       setMostrarFormEditar(true);
     }
   };
@@ -167,6 +214,7 @@ export default function DetalhesFornecedorPage() {
           cidade: formEdicao.cidade || null,
           estado: formEdicao.estado || null,
           tipo: formEdicao.tipo || null,
+          especialidades: formEdicao.especialidades.length > 0 ? formEdicao.especialidades : null,
         })
         .eq("id", fornecedorId);
 
@@ -417,6 +465,29 @@ export default function DetalhesFornecedorPage() {
                   : fornecedor.endereco || "—"}
               </p>
             </div>
+            <div className="md:col-span-2">
+              <p className="text-sm font-semibold text-gray-700 mb-2">🎯 Especialidades</p>
+              {fornecedor.especialidades && fornecedor.especialidades.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {fornecedor.especialidades.map((esp, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                    >
+                      {esp}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">Nenhuma especialidade cadastrada</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">📞 Chamados em Aberto</p>
+              <p className="text-gray-900 text-lg font-bold">
+                {chamados.filter(c => c.status === "pendente").length} aberto{chamados.filter(c => c.status === "pendente").length !== 1 ? "s" : ""}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -635,6 +706,52 @@ export default function DetalhesFornecedorPage() {
                     onChange={(e) => setFormEdicao((prev) => ({ ...prev, estado: e.target.value }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">🎯 Especialidades (máximo 4)</label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={novaEspecialidadeFormEdicao}
+                      onChange={(e) => setNovaEspecialidadeFormEdicao(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAdicionarEspecialidadeEdicao();
+                        }
+                      }}
+                      placeholder="Ex: Redes, Manutenção de computador..."
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAdicionarEspecialidadeEdicao}
+                      disabled={formEdicao.especialidades.length >= 4 || !novaEspecialidadeFormEdicao.trim()}
+                      className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition"
+                    >
+                      +
+                    </button>
+                  </div>
+                  {formEdicao.especialidades.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formEdicao.especialidades.map((esp, idx) => (
+                        <div
+                          key={idx}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-full text-sm font-medium"
+                        >
+                          {esp}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoverEspecialidadeEdicao(idx)}
+                            className="ml-1 text-orange-700 hover:text-orange-900 font-bold"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
