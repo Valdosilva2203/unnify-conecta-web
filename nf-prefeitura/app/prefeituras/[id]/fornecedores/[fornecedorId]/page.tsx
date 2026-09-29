@@ -230,6 +230,40 @@ export default function DetalhesFornecedorPage() {
     }
   };
 
+  const handleCompartilharAcesso = async () => {
+    if (!fornecedor?.email) {
+      alert("Fornecedor não possui email cadastrado");
+      return;
+    }
+
+    setSalvando(true);
+    try {
+      const response = await fetch("/api/fornecedor/compartilhar-acesso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fornecedorId: fornecedor.id,
+          fornecedorEmail: fornecedor.email,
+          fornecedorNome: fornecedor.nome,
+          prefeituraId: prefeituraId,
+          prefeituraNome: prefeituraSession?.nome || "Prefeitura",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.erro || "Erro ao enviar convite");
+      }
+
+      alert("✅ Link de cadastro enviado com sucesso para " + fornecedor.email);
+    } catch (error: any) {
+      alert(`❌ Erro: ${error?.message || "Erro desconhecido"}`);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
   const handleDeletar = async () => {
     if (!confirm("Tem certeza que deseja deletar este fornecedor?")) return;
 
@@ -415,6 +449,14 @@ export default function DetalhesFornecedorPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">📋 Informações do Fornecedor</h2>
             <div className="flex gap-3">
+              <button
+                onClick={handleCompartilharAcesso}
+                disabled={salvando}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition disabled:opacity-50"
+              >
+                📧
+                Compartilhar Acesso
+              </button>
               <button
                 onClick={handleAbrirEdicao}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
