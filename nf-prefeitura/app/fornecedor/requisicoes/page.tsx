@@ -13,11 +13,11 @@ interface SessionData {
 
 interface Requisicao {
   id: string;
-  numero: string;
-  data_criacao: string;
-  quantidade_itens: number;
+  numero_requisicao: string;
+  titulo: string;
+  descricao: string;
   status: string;
-  criador: string;
+  created_at: string;
 }
 
 export default function FornecedorRequisicoes() {
@@ -64,8 +64,8 @@ export default function FornecedorRequisicoes() {
   };
 
   const requisicoesFiltradas = requisicoes.filter((req) =>
-    req.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    req.criador?.toLowerCase().includes(searchTerm.toLowerCase())
+    req.numero_requisicao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    req.titulo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -166,13 +166,15 @@ export default function FornecedorRequisicoes() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-bold text-lg text-gray-900">{req.numero}</h3>
+                        <h3 className="font-bold text-lg text-gray-900">{req.numero_requisicao}</h3>
                         <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
-                          {new Date(req.data_criacao).toLocaleDateString("pt-BR")}
+                          {new Date(req.created_at).toLocaleDateString("pt-BR")}
                         </span>
                       </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
+                        <span className="font-medium">{req.titulo}</span>
+                      </div>
                       <div className="flex items-center gap-3 text-sm text-gray-600">
-                        <span>🔢 {req.quantidade_itens} item(ns)</span>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
                             req.status === "pendente"
@@ -184,7 +186,6 @@ export default function FornecedorRequisicoes() {
                         >
                           {req.status === "pendente" ? "⏳ Pendente" : req.status === "aprovada" ? "✅ Aprovada" : req.status}
                         </span>
-                        <span>👤 {req.criador || "—"}</span>
                       </div>
                     </div>
                     <div className="text-2xl">→</div>
