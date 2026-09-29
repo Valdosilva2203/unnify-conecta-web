@@ -523,7 +523,7 @@ export default function FornecedorDashboardPage() {
                   <p className="text-gray-500 text-lg">Nenhum chamado no momento</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto overflow-y-visible">
                   <table className="w-full">
                     <thead className="border-b-2 border-gray-300 bg-gradient-to-r from-indigo-50 to-blue-50">
                       <tr>
@@ -585,7 +585,7 @@ export default function FornecedorDashboardPage() {
                               🗑️
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-right relative" ref={menuRef}>
+                          <td className="px-6 py-4 text-right relative z-10" ref={menuRef}>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
