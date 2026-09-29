@@ -580,7 +580,7 @@ export default function FornecedorDashboardPage() {
                               🗑️
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-right relative" onClick={(e) => e.stopPropagation()}>
+                          <td className="px-6 py-4 text-right relative">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
