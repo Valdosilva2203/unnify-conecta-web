@@ -945,57 +945,81 @@ export default function FornecedorChamadosPage() {
         {/* Modal de Detalhes do Chamado */}
         {modalDetalhesAberto && chamadoDetalhes && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-96 overflow-y-auto">
-              <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-blue-600 p-6 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">📞 {chamadoDetalhes.titulo}</h2>
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white p-6 flex justify-between items-center border-b">
+                <h2 className="text-2xl font-bold text-gray-900">📞 {chamadoDetalhes.titulo}</h2>
                 <button
                   onClick={() => {
                     setModalDetalhesAberto(false);
                     setChamadoDetalhes(null);
                   }}
-                  className="text-white hover:bg-white hover:text-indigo-600 p-2 rounded-lg transition text-2xl"
+                  className="text-gray-500 hover:text-gray-700 text-3xl"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-6">
                 <div>
-                  <p className="text-sm font-semibold text-gray-600">📝 DESCRIÇÃO</p>
-                  <p className="text-gray-900 mt-1">{chamadoDetalhes.descricao || "—"}</p>
+                  <p className="text-sm font-semibold text-gray-600 uppercase mb-2">DESCRIÇÃO</p>
+                  <p className="text-gray-900">{chamadoDetalhes.descricao || "—"}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm font-semibold text-gray-600">🔴 PRIORIDADE</p>
-                    <span className={`inline-block px-3 py-1 rounded text-sm font-bold mt-1 border ${prioridadeConfig[chamadoDetalhes.prioridade as keyof typeof prioridadeConfig]?.badge || "bg-gray-100"}`}>
+                    <p className="text-sm font-semibold text-gray-600 uppercase mb-2">PRIORIDADE</p>
+                    <span className={`inline-block px-3 py-1 rounded text-sm font-bold border ${prioridadeConfig[chamadoDetalhes.prioridade as keyof typeof prioridadeConfig]?.badge || "bg-gray-100"}`}>
                       {prioridadeConfig[chamadoDetalhes.prioridade as keyof typeof prioridadeConfig]?.icon} {prioridadeConfig[chamadoDetalhes.prioridade as keyof typeof prioridadeConfig]?.label}
                     </span>
                   </div>
 
                   <div>
-                    <p className="text-sm font-semibold text-gray-600">• STATUS</p>
-                    <span className={`inline-block px-3 py-1 rounded text-sm font-bold mt-1 text-white bg-gradient-to-r ${statusConfig[chamadoDetalhes.status as keyof typeof statusConfig]?.color || "from-gray-500 to-gray-600"}`}>
+                    <p className="text-sm font-semibold text-gray-600 uppercase mb-2">STATUS</p>
+                    <span className={`inline-block px-3 py-1 rounded text-sm font-bold text-white bg-gradient-to-r ${statusConfig[chamadoDetalhes.status as keyof typeof statusConfig]?.color || "from-gray-500 to-gray-600"}`}>
                       {statusConfig[chamadoDetalhes.status as keyof typeof statusConfig]?.icon} {statusConfig[chamadoDetalhes.status as keyof typeof statusConfig]?.label}
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm font-semibold text-gray-600">👤 CRIADOR</p>
-                    <p className="text-gray-900 mt-1">{chamadoDetalhes.criador_nome || "—"}</p>
+                    <p className="text-sm font-semibold text-gray-600 uppercase mb-2">CRIADOR</p>
+                    <p className="text-gray-900">{chamadoDetalhes.criador_nome || "—"}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm font-semibold text-gray-600">📅 DATA DE CRIAÇÃO</p>
-                    <p className="text-gray-900 mt-1">
+                    <p className="text-sm font-semibold text-gray-600 uppercase mb-2">DATA DE CRIAÇÃO</p>
+                    <p className="text-gray-900">
                       {chamadoDetalhes.created_at || chamadoDetalhes.data_criacao
                         ? new Date(chamadoDetalhes.created_at || chamadoDetalhes.data_criacao).toLocaleDateString("pt-BR")
                         : "—"}
                     </p>
                   </div>
                 </div>
+
+                {justificativas.get(chamadoDetalhes.id) && justificativas.get(chamadoDetalhes.id)!.length > 0 && (
+                  <div className="border-t pt-6">
+                    <p className="text-sm font-semibold text-gray-600 uppercase mb-3">
+                      📝 Justificativas ({justificativas.get(chamadoDetalhes.id)!.length}/3)
+                    </p>
+                    <div className="space-y-3">
+                      {justificativas.get(chamadoDetalhes.id)!.map((just) => (
+                        <div key={just.id} className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                          <p className="text-gray-900 text-sm">{just.descricao}</p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {new Date(just.created_at).toLocaleDateString("pt-BR", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="border-t p-6 flex justify-end">
@@ -1004,7 +1028,7 @@ export default function FornecedorChamadosPage() {
                     setModalDetalhesAberto(false);
                     setChamadoDetalhes(null);
                   }}
-                  className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition"
+                  className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition"
                 >
                   Fechar
                 </button>
