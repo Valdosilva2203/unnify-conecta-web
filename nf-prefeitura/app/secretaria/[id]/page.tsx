@@ -1222,7 +1222,7 @@ export default function SecretariaPage() {
                     key={func.id}
                     onMouseEnter={() => setHoverFuncionarioId(func.id)}
                     onMouseLeave={() => setHoverFuncionarioId(null)}
-                    className={`rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border-2 ${
+                    className={`h-full flex flex-col rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border-2 ${
                       ehSecretario
                         ? "bg-gradient-to-br from-yellow-50 to-amber-50 border-amber-400 hover:border-amber-500 hover:shadow-lg"
                         : "bg-gradient-to-br from-white to-gray-50 border-gray-200 hover:border-orange-200"
@@ -1274,7 +1274,7 @@ export default function SecretariaPage() {
                     </div>
 
                     {/* Divider */}
-                    <div className="border-t border-gray-200 pt-4 flex gap-2">
+                    <div className="mt-auto border-t border-gray-200 pt-4 flex gap-2">
                       <button className="flex-1 text-center text-xs font-medium text-orange-600 hover:text-orange-700 py-2 rounded-lg hover:bg-orange-50 transition">
                         Ver perfil
                       </button>
