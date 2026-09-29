@@ -179,21 +179,22 @@ export default function FornecedorChamadosPage() {
     }
   };
 
+  const isMaster =
+    session?.role === "admin" ||
+    session?.role === "prefeitura" ||
+    (!session?.role && !session?.cargo && session?.id);
+
   const chamadosFiltrados = chamados.filter((n) => {
     const passouFiltroStatus = filtroStatus === "todos" || n.status === filtroStatus;
 
-    const isSecretario = session?.cargo?.toLowerCase().includes("secretario");
-    const isAdmin = session?.role === "admin" || session?.tipo === "admin";
-    const isPrefeito = session?.role === "prefeitura" || session?.tipo === "admin";
-
-    if (isAdmin || isPrefeito) {
-      // Prefeito/Admin vê todos os chamados
+    if (isMaster) {
+      // Master vê todos os chamados
       return passouFiltroStatus;
-    } else if (isSecretario) {
+    } else if (session?.cargo?.toLowerCase().includes("secretario")) {
       // Secretário vê chamados da sua secretaria
       return passouFiltroStatus && n.secretaria_id === session?.secretaria_id;
     } else {
-      // Não-secretário vê apenas seus chamados
+      // Não-master/não-secretário vê apenas seus chamados
       return passouFiltroStatus && n.criado_por === session?.id;
     }
   });
