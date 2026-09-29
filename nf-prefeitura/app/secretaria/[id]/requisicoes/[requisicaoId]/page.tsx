@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 
-export default function RequisicaoDetalhesPage({
+export default async function RequisicaoDetalhesPage({
   params,
 }: {
-  params: { id: string; requisicaoId: string };
+  params: Promise<{ id: string; requisicaoId: string }>;
 }) {
-  redirect(`/requisicoes/${params.requisicaoId}`);
+  const { requisicaoId } = await params;
+  redirect(`/requisicoes/${requisicaoId}`);
 }
