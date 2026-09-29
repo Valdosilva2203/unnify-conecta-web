@@ -607,7 +607,6 @@ export default function FornecedorDashboardPage() {
                         <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">STATUS</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">CRIADOR</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">VINCULADO A</th>
-                        <th className="px-6 py-4 text-center text-sm font-bold text-indigo-600">DELETAR</th>
                         <th className="px-6 py-4 text-right text-sm font-bold text-indigo-600">AÇÕES</th>
                       </tr>
                     </thead>
@@ -653,9 +652,6 @@ export default function FornecedorDashboardPage() {
                             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
                               Compras
                             </span>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="text-gray-400">—</span>
                           </td>
                           <td className="px-6 py-4 text-right relative z-10" ref={menuRef}>
                             <button
