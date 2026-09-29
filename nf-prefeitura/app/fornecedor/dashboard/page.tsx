@@ -650,7 +650,7 @@ export default function FornecedorDashboardPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
-                              {chamado.secretaria_nome || "Secretaria"}
+                              {chamado.secretarias?.nome || chamado.secretaria_nome || "Secretaria"}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right relative z-10" ref={menuRef}>
