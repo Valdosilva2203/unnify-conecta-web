@@ -48,10 +48,14 @@ export default function FornecedorRequisicoes() {
         `/api/fornecedor/requisicoes?fornecedor_id=${sessionData.id}&prefeitura_id=${sessionData.prefeitura_id}`
       );
 
-      if (!response.ok) throw new Error("Erro ao buscar requisições");
+      const json = await response.json();
 
-      const { requisicoes: reqData } = await response.json();
-      setRequisicoes(reqData || []);
+      if (!response.ok) {
+        console.error("Erro na API:", json);
+        throw new Error(json?.error || "Erro ao buscar requisições");
+      }
+
+      setRequisicoes(json?.requisicoes || []);
     } catch (error) {
       console.error("Erro ao buscar requisições:", error);
     } finally {
