@@ -162,7 +162,7 @@ export default function FornecedorRequisicoes() {
                   <div
                     key={req.id}
                     className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-teal-400 hover:bg-teal-50 transition cursor-pointer"
-                    onClick={() => router.push(`/prefeituras/${session?.prefeitura_id}/requisicoes/${req.id}`)}
+                    onClick={() => router.push(`/fornecedor/requisicoes/${req.id}`)}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
