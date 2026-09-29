@@ -82,6 +82,33 @@ export default function FornecedorChamadosPage() {
     loadSecretarias();
   }, []);
 
+  useEffect(() => {
+    if (modalDetalhesAberto && chamadoDetalhes && !justificativas.has(chamadoDetalhes.id)) {
+      loadJustificativasModal();
+    }
+  }, [modalDetalhesAberto, chamadoDetalhes?.id]);
+
+  const loadJustificativasModal = async () => {
+    if (!chamadoDetalhes) return;
+    try {
+      const { data, error } = await supabase
+        .from("justificativas_chamados")
+        .select("*")
+        .eq("chamado_id", chamadoDetalhes.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setJustificativas(prev => {
+          const map = new Map(prev);
+          map.set(chamadoDetalhes.id, data);
+          return map;
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao carregar justificativas:", error);
+    }
+  };
+
   const loadSecretarias = async () => {
     try {
       const { data, error } = await supabase
