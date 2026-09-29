@@ -84,6 +84,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Se não encontrou, procurar em fornecedor_credenciais
+    if (!user) {
+      const { data: fornecedor } = await supabase
+        .from("fornecedor_credenciais")
+        .select("id, email")
+        .eq("reset_token", tokenHash)
+        .gt("reset_token_expires", new Date().toISOString())
+        .single();
+
+      if (fornecedor) {
+        user = fornecedor;
+        userTable = "fornecedor_credenciais";
+      }
+    }
+
     if (!user) {
       return NextResponse.json(
         { error: "Link expirado ou inválido" },
@@ -95,9 +110,12 @@ export async function POST(req: NextRequest) {
     const senhaHash = await hashPassword(novaSenha);
 
     // Atualizar senha e limpar tokens
-    const updateData = userTable === "admins"
-      ? { senha_hash: senhaHash, reset_token: null, reset_token_expires: null }
-      : { senha: senhaHash, reset_token: null, reset_token_expires: null };
+    let updateData: any;
+    if (userTable === "admins" || userTable === "fornecedor_credenciais") {
+      updateData = { senha_hash: senhaHash, reset_token: null, reset_token_expires: null };
+    } else {
+      updateData = { senha: senhaHash, reset_token: null, reset_token_expires: null };
+    }
 
     const { error: updateError } = await supabase
       .from(userTable)

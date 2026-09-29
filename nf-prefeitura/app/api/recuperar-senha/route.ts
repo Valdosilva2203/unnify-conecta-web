@@ -82,6 +82,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Se não encontrou, procurar em fornecedor_credenciais
+    if (!user) {
+      const { data: fornecedor } = await supabase
+        .from("fornecedor_credenciais")
+        .select("id, email")
+        .eq("email", emailTrimmed)
+        .single();
+
+      if (fornecedor) {
+        user = fornecedor;
+        userTable = "fornecedor_credenciais";
+      }
+    }
+
     if (!user) {
       // Não revelar se o email existe ou não (segurança)
       return NextResponse.json(
