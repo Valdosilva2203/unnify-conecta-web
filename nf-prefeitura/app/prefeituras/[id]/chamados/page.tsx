@@ -177,6 +177,13 @@ export default function ChamadosPage() {
     }
 
     try {
+      // Buscar nome da secretaria se souber o ID
+      let secretariaNome = null;
+      if (session?.secretaria_id) {
+        const secretariaEncontrada = secretarias.find((s: any) => s.id === session.secretaria_id);
+        secretariaNome = secretariaEncontrada?.nome || null;
+      }
+
       const insertData: any = {
         prefeitura_id: prefeituraId,
         titulo: formData.titulo,
@@ -185,6 +192,7 @@ export default function ChamadosPage() {
         criado_por: session.id,
         criador_nome: session.nome,
         secretaria_id: session?.secretaria_id || null,
+        secretaria_nome: secretariaNome,
       };
 
       // Adicionar campos opcionais apenas se a tabela os suportar
