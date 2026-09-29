@@ -889,7 +889,10 @@ export default function SecretariaPage() {
         .select()
         .single();
 
-      if (vinculoError) throw vinculoError;
+      if (vinculoError) {
+        console.error("Erro ao criar vínculo:", vinculoError);
+        throw vinculoError;
+      }
 
       // Criar notificação para o Prefeito
       const { error: notifError } = await supabase
@@ -902,16 +905,19 @@ export default function SecretariaPage() {
           mensagem: `Solicitação de vinculação de ${funcSelecionado?.nome || "um funcionário"} à secretaria "${secretaria.nome}"`,
         });
 
-      if (notifError) throw notifError;
+      if (notifError) {
+        console.error("Erro ao criar notificação:", notifError);
+        throw notifError;
+      }
 
       setMostrarModalVincular(false);
       setFuncionarioSelecionado("");
 
       // Mostrar mensagem de sucesso
       alert("Solicitação enviada ao Prefeito! Aguarde aprovação.");
-    } catch (error) {
-      console.error("Erro ao criar solicitação:", error);
-      alert("Erro ao enviar solicitação");
+    } catch (error: any) {
+      console.error("Erro ao criar solicitação:", error?.message || error);
+      alert(`Erro ao enviar solicitação: ${error?.message || "Erro desconhecido"}`);
     } finally {
       setVinculando(false);
     }
