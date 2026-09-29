@@ -236,7 +236,7 @@ export default function FornecedorDashboardPage() {
 
   const buscarJustificativas = async (chamadoId: string) => {
     try {
-      const response = await fetch(`/api/fornecedor/chamados/${chamadoId}/justificativas`);
+      const response = await fetch(`/api/fornecedor/justificativas?chamado_id=${chamadoId}`);
       if (response.ok) {
         const { justificativas: justs } = await response.json();
         setJustificativas(prev => ({ ...prev, [chamadoId]: justs || [] }));
@@ -257,7 +257,7 @@ export default function FornecedorDashboardPage() {
 
     try {
       setAtualizando(modalJustificativas);
-      const response = await fetch(`/api/fornecedor/chamados/${modalJustificativas}/justificativas`, {
+      const response = await fetch(`/api/fornecedor/justificativas?chamado_id=${modalJustificativas}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ texto: novaJustificativa }),
