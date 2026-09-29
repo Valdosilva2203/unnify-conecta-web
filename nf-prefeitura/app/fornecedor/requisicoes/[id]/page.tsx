@@ -11,6 +11,7 @@ export default function RequisicaoDetalhesPage() {
 
   const [requisicao, setRequisicao] = useState<any>(null);
   const [prefeitura, setPrefeitura] = useState<any>(null);
+  const [secretaria, setSecretaria] = useState<any>(null);
   const [fornecedor, setFornecedor] = useState<any>(null);
   const [contrato, setContrato] = useState<any>(null);
   const [itensContrato, setItensContrato] = useState<any[]>([]);
@@ -38,6 +39,16 @@ export default function RequisicaoDetalhesPage() {
           .single();
         setPrefeitura(pref);
 
+        // Buscar secretaria se informação existir
+        if (req.secretaria_id) {
+          const { data: sec } = await supabase
+            .from("secretarias")
+            .select("*")
+            .eq("id", req.secretaria_id)
+            .single();
+          setSecretaria(sec);
+        }
+
         if (req.contrato_id) {
           const { data: cont } = await supabase
             .from("contratos")
@@ -56,15 +67,22 @@ export default function RequisicaoDetalhesPage() {
           setFornecedor(forn);
         }
 
-        // Buscar itens da requisição
+        // Buscar itens da requisição com descrição
         const { data: itensReq } = await supabase
           .from("requisicoes_itens")
-          .select("*")
+          .select("*, objetos_contratos(*)")
           .eq("requisicao_id", requisicaoId)
           .order("id", { ascending: true });
 
         if (itensReq) {
-          setItensContrato(itensReq);
+          const itensFormatados = itensReq.map((item: any) => ({
+            id: item.id,
+            descricao: item.objetos_contratos?.descricao || item.descricao || "-",
+            unidade: item.objetos_contratos?.unidade || item.unidade || "unid",
+            quantidade: item.quantidade,
+            valor_unitario: item.objetos_contratos?.valor_unitario || item.valor_unitario || 0,
+          }));
+          setItensContrato(itensFormatados);
         }
       }
     } catch (error) {
@@ -157,7 +175,7 @@ export default function RequisicaoDetalhesPage() {
             </tr>
             <tr>
               <td style={{ ...cellStyle, fontWeight: "bold", width: "15%" }}>SECRETARIA</td>
-              <td style={cellStyle}>{requisicao?.secretaria_nome || "-"}</td>
+              <td style={cellStyle}>{secretaria?.nome || requisicao?.secretaria_nome || "-"}</td>
             </tr>
           </tbody>
         </table>
