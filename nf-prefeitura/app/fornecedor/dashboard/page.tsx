@@ -655,9 +655,7 @@ export default function FornecedorDashboardPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <button className="p-2 hover:bg-red-100 rounded-full transition text-red-600 font-bold text-lg hover:scale-110">
-                              🗑️
-                            </button>
+                            <span className="text-gray-400">—</span>
                           </td>
                           <td className="px-6 py-4 text-right relative z-10" ref={menuRef}>
                             <button
