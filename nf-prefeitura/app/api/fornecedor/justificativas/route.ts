@@ -103,3 +103,40 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const justificativaId = request.nextUrl.searchParams.get("id");
+
+    if (!justificativaId) {
+      return NextResponse.json(
+        { error: "Missing justificativa ID" },
+        { status: 400 }
+      );
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { error } = await supabaseAdmin
+      .from("justificativas_chamados")
+      .delete()
+      .eq("id", justificativaId);
+
+    if (error) {
+      console.error("❌ Erro ao deletar justificativa:", error);
+      return NextResponse.json(
+        { error: "Erro ao deletar justificativa", details: error.message },
+        { status: 500 }
+      );
+    }
+
+    console.log("✅ Justificativa deletada:", justificativaId);
+    return NextResponse.json({ sucesso: true });
+  } catch (error) {
+    console.error("Erro na API de justificativas:", error);
+    return NextResponse.json(
+      { error: "Erro ao processar requisição", details: String(error) },
+      { status: 500 }
+    );
+  }
+}

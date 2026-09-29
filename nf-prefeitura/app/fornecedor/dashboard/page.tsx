@@ -252,6 +252,25 @@ export default function FornecedorDashboardPage() {
     buscarJustificativas(chamadoId);
   };
 
+  const deletarJustificativa = async (justificativaId: string) => {
+    try {
+      setAtualizando(justificativaId);
+      const response = await fetch(`/api/fornecedor/justificativas?id=${justificativaId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Erro ao deletar justificativa");
+
+      if (modalJustificativas) {
+        await buscarJustificativas(modalJustificativas);
+      }
+    } catch (error) {
+      console.error("Erro ao deletar justificativa:", error);
+    } finally {
+      setAtualizando(null);
+    }
+  };
+
   const adicionarJustificativa = async () => {
     if (!modalJustificativas || !novaJustificativa.trim()) return;
 
@@ -766,17 +785,27 @@ export default function FornecedorDashboardPage() {
             {justificativas[modalJustificativas] && justificativas[modalJustificativas].length > 0 ? (
               <div className="mb-8 space-y-3 max-h-64 overflow-y-auto">
                 {justificativas[modalJustificativas].map((just: any, idx: number) => (
-                  <div key={just.id || idx} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
-                    <p className="text-sm text-gray-700">{just.descricao}</p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {new Date(just.created_at).toLocaleDateString("pt-BR", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </p>
+                  <div key={just.id || idx} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500 flex justify-between items-start gap-3">
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-700">{just.descricao}</p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {new Date(just.created_at).toLocaleDateString("pt-BR", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => deletarJustificativa(just.id)}
+                      disabled={atualizando === just.id}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 rounded-full transition disabled:opacity-50 flex-shrink-0"
+                      title="Remover justificativa"
+                    >
+                      🗑️
+                    </button>
                   </div>
                 ))}
               </div>
