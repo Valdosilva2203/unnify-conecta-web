@@ -47,6 +47,7 @@ interface Chamado {
   data_finalizacao?: string;
   fornecedor_id: string;
   prefeitura_id: string;
+  criador_nome?: string;
 }
 
 export default function FornecedorDashboardPage() {
@@ -60,6 +61,9 @@ export default function FornecedorDashboardPage() {
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [menuAberto, setMenuAberto] = useState(true);
   const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
+  const [modalFinalizacao, setModalFinalizacao] = useState<string | null>(null);
+  const [justificativaText, setJustificativaText] = useState("");
+  const [atualizando, setAtualizando] = useState<string | null>(null);
 
   useEffect(() => {
     verificarSessao();
@@ -142,6 +146,65 @@ export default function FornecedorDashboardPage() {
   const handleLogout = () => {
     localStorage.removeItem("fornecedor_session");
     router.push("/login");
+  };
+
+  const atualizarStatusChamado = async (chamadoId: string, novoStatus: string) => {
+    try {
+      setAtualizando(chamadoId);
+      setMenuAbertoId(null);
+      const response = await fetch("/api/fornecedor/chamados/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: chamadoId, status: novoStatus }),
+      });
+
+      if (!response.ok) throw new Error("Erro ao atualizar status");
+
+      setChamados(chamados.map(c => c.id === chamadoId ? { ...c, status: novoStatus as any } : c));
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+    } finally {
+      setAtualizando(null);
+    }
+  };
+
+  const handleIniciar = (chamadoId: string) => {
+    atualizarStatusChamado(chamadoId, "em_andamento");
+  };
+
+  const handlePausar = (chamadoId: string) => {
+    atualizarStatusChamado(chamadoId, "pendente");
+  };
+
+  const handleFinalizarClick = (chamadoId: string) => {
+    setModalFinalizacao(chamadoId);
+    setJustificativaText("");
+  };
+
+  const handleFinalizarConfirmar = async () => {
+    if (!modalFinalizacao) return;
+    try {
+      setAtualizando(modalFinalizacao);
+      const response = await fetch("/api/fornecedor/chamados/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: modalFinalizacao,
+          status: "finalizada",
+          justificativa: justificativaText,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Erro ao finalizar chamado");
+
+      setChamados(chamados.map(c => c.id === modalFinalizacao ? { ...c, status: "finalizada" } : c));
+      setModalFinalizacao(null);
+      setJustificativaText("");
+    } catch (error) {
+      console.error("Erro ao finalizar:", error);
+    } finally {
+      setAtualizando(null);
+    }
   };
 
   if (loading) {
@@ -508,11 +571,44 @@ export default function FornecedorDashboardPage() {
                             {menuAbertoId === chamado.id && (
                               <div className="absolute right-0 bottom-full mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-48">
                                 <div className="py-2">
-                                  <button className="w-full text-left px-4 py-3 hover:bg-blue-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100">
-                                    ✏️ Editar
-                                  </button>
-                                  <button className="w-full text-left px-4 py-3 hover:bg-purple-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium">
-                                    📝 Justificativa
+                                  {chamado.status === "pendente" && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleIniciar(chamado.id);
+                                      }}
+                                      disabled={atualizando === chamado.id}
+                                      className="w-full text-left px-4 py-3 hover:bg-green-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 disabled:opacity-50"
+                                    >
+                                      ▶️ Iniciar
+                                    </button>
+                                  )}
+                                  {chamado.status === "em_andamento" && (
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handlePausar(chamado.id);
+                                        }}
+                                        disabled={atualizando === chamado.id}
+                                        className="w-full text-left px-4 py-3 hover:bg-yellow-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 disabled:opacity-50"
+                                      >
+                                        ⏸️ Pausar
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleFinalizarClick(chamado.id);
+                                        }}
+                                        disabled={atualizando === chamado.id}
+                                        className="w-full text-left px-4 py-3 hover:bg-blue-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 disabled:opacity-50"
+                                      >
+                                        ✅ Finalizar
+                                      </button>
+                                    </>
+                                  )}
+                                  <button className="w-full text-left px-4 py-3 hover:bg-purple-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium disabled:opacity-50">
+                                    📝 Justificativas
                                   </button>
                                 </div>
                               </div>
@@ -528,6 +624,41 @@ export default function FornecedorDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal Finalização */}
+      {modalFinalizacao && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setModalFinalizacao(null)}>
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">✅ Confirmar Finalização</h3>
+            <p className="text-gray-700 mb-6">
+              Deseja realmente finalizar este chamado? O criador receberá uma solicitação de confirmação.
+            </p>
+            <textarea
+              value={justificativaText}
+              onChange={(e) => setJustificativaText(e.target.value)}
+              placeholder="Adicione uma justificativa (opcional)"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-6 focus:border-blue-500 focus:outline-none resize-none"
+              rows={4}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setModalFinalizacao(null)}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium disabled:opacity-50"
+                disabled={atualizando === modalFinalizacao}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleFinalizarConfirmar}
+                disabled={atualizando === modalFinalizacao}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50"
+              >
+                {atualizando === modalFinalizacao ? "Finalizando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
