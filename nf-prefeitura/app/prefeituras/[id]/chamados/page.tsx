@@ -214,10 +214,10 @@ export default function ChamadosPage() {
     }
   };
 
-  const isMaster = session?.role === "admin" || session?.role === "prefeitura" || session?.role === "master" || !session?.role;
+  const isMaster = session?.role === "admin" || session?.role === "prefeitura" || session?.role === "master";
 
-  console.log("👤 Session:", session);
-  console.log("🔐 isMaster:", isMaster, "| role:", session?.role);
+  console.log("👤 Session completo:", JSON.stringify(session, null, 2));
+  console.log("🔐 isMaster:", isMaster, "| role:", session?.role, "| tipo:", session?.tipo);
 
   const chamadosVisiveis = isMaster
     ? chamados
