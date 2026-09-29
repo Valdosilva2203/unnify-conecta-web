@@ -86,9 +86,9 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (error) {
-      console.error("❌ Erro ao adicionar justificativa:", error);
+      console.error("❌ Erro ao adicionar justificativa:", JSON.stringify(error));
       return NextResponse.json(
-        { error: "Erro ao adicionar justificativa", details: error },
+        { error: "Erro ao adicionar justificativa", details: error.message },
         { status: 500 }
       );
     }
