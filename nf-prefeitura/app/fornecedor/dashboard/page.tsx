@@ -68,11 +68,18 @@ export default function FornecedorDashboardPage() {
   const [modalJustificativas, setModalJustificativas] = useState<string | null>(null);
   const [justificativas, setJustificativas] = useState<{ [key: string]: any[] }>({});
   const [novaJustificativa, setNovaJustificativa] = useState("");
+  const [modalDetalhes, setModalDetalhes] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     verificarSessao();
   }, []);
+
+  useEffect(() => {
+    if (modalDetalhes) {
+      buscarJustificativas(modalDetalhes);
+    }
+  }, [modalDetalhes]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -606,7 +613,7 @@ export default function FornecedorDashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {chamados.map((chamado) => (
-                        <tr key={chamado.id} className="hover:bg-blue-50 transition">
+                        <tr key={chamado.id} className="hover:bg-blue-50 transition cursor-pointer" onClick={() => setModalDetalhes(chamado.id)}>
                           <td className="px-6 py-4">
                             <span className="font-bold text-gray-900">{chamado.titulo}</span>
                           </td>
@@ -771,6 +778,108 @@ export default function FornecedorDashboardPage() {
                 {atualizando === modalFinalizacao ? "Finalizando..." : "Confirmar"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Detalhes do Chamado */}
+      {modalDetalhes && chamados.find(c => c.id === modalDetalhes) && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setModalDetalhes(null)}>
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {(() => {
+              const chamado = chamados.find(c => c.id === modalDetalhes);
+              return (
+                <>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">📞 {chamado?.titulo}</h3>
+
+                  {/* Detalhes do Chamado */}
+                  <div className="space-y-4 mb-8">
+                    <div>
+                      <p className="text-xs font-bold text-gray-600 uppercase">Descrição</p>
+                      <p className="text-gray-700 mt-1">{chamado?.descricao}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs font-bold text-gray-600 uppercase">Prioridade</p>
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border mt-1 ${
+                          chamado?.prioridade === "urgente"
+                            ? "bg-red-50 text-red-700 border-red-200"
+                            : chamado?.prioridade === "normal"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        }`}>
+                          🔴 {chamado?.prioridade === "urgente" ? "Urgente" : chamado?.prioridade === "normal" ? "Normal" : "Baixa"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold text-gray-600 uppercase">Status</p>
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mt-1 ${
+                          chamado?.status === "pendente"
+                            ? "bg-orange-100 text-orange-700"
+                            : chamado?.status === "em_andamento"
+                              ? "bg-blue-100 text-blue-700"
+                              : chamado?.status === "finalizada"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-700"
+                        }`}>
+                          • {chamado?.status === "em_andamento" ? "Em Andamento" : chamado?.status === "finalizada" ? "Finalizada" : chamado?.status === "pendente" ? "Pendente" : chamado?.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs font-bold text-gray-600 uppercase">Criador</p>
+                        <p className="text-gray-700 mt-1">{chamado?.criador_nome || "—"}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold text-gray-600 uppercase">Data de Criação</p>
+                        <p className="text-gray-700 mt-1">{new Date(chamado?.created_at).toLocaleDateString("pt-BR")}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Justificativas */}
+                  <div className="border-t pt-6">
+                    <h4 className="text-lg font-bold text-gray-900 mb-4">📝 Justificativas ({justificativas[modalDetalhes]?.length || 0}/3)</h4>
+
+                    {justificativas[modalDetalhes] && justificativas[modalDetalhes].length > 0 ? (
+                      <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
+                        {justificativas[modalDetalhes].map((just: any, idx: number) => (
+                          <div key={just.id || idx} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
+                            <p className="text-sm text-gray-700">{just.descricao}</p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              {new Date(just.created_at).toLocaleDateString("pt-BR", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-sm mb-4">Nenhuma justificativa adicionada</p>
+                    )}
+                  </div>
+
+                  {/* Botão Fechar */}
+                  <div className="border-t pt-6 flex justify-end">
+                    <button
+                      onClick={() => setModalDetalhes(null)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
