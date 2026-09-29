@@ -43,17 +43,15 @@ export default function FornecedorRequisicoes() {
       const sessionData: SessionData = JSON.parse(sessionStr);
       setSession(sessionData);
 
-      // Buscar requisições do fornecedor
-      const { data, error } = await supabase
-        .from("requisicoes")
-        .select("*")
-        .eq("fornecedor_id", sessionData.id)
-        .eq("prefeitura_id", sessionData.prefeitura_id)
-        .order("data_criacao", { ascending: false });
+      // Buscar requisições do fornecedor via API
+      const response = await fetch(
+        `/api/fornecedor/requisicoes?fornecedor_id=${sessionData.id}&prefeitura_id=${sessionData.prefeitura_id}`
+      );
 
-      if (error) throw error;
+      if (!response.ok) throw new Error("Erro ao buscar requisições");
 
-      setRequisicoes(data || []);
+      const { requisicoes: reqData } = await response.json();
+      setRequisicoes(reqData || []);
     } catch (error) {
       console.error("Erro ao buscar requisições:", error);
     } finally {
