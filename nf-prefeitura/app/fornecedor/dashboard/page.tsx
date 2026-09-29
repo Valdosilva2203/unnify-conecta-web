@@ -57,6 +57,7 @@ export default function FornecedorDashboardPage() {
   const [fornecedorInfo, setFornecedorInfo] = useState<FornecedorInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [chamadosCount, setChamadosCount] = useState(0);
+  const [requisicoesCriadas, setRequisicoesCriadas] = useState(0);
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [menuAberto, setMenuAberto] = useState(true);
@@ -107,6 +108,15 @@ export default function FornecedorDashboardPage() {
           .in("status", ["pendente", "em_andamento"]);
 
         setChamadosCount(count || 0);
+
+        // Buscar requisições criadas pelo fornecedor
+        const { count: reqCount } = await supabase
+          .from("requisicoes")
+          .select("*", { count: "exact", head: true })
+          .eq("fornecedor_id", sessionData.id)
+          .eq("prefeitura_id", sessionData.prefeitura_id);
+
+        setRequisicoesCriadas(reqCount || 0);
 
         // Buscar chamados do fornecedor nessa prefeitura via API
         try {
@@ -368,7 +378,7 @@ export default function FornecedorDashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-rose-600 font-semibold mb-2">Requisições</p>
-                    <p className="text-4xl font-bold text-rose-900">0</p>
+                    <p className="text-4xl font-bold text-rose-900">{requisicoesCriadas}</p>
                   </div>
                   <div className="text-6xl opacity-40">📋</div>
                 </div>
