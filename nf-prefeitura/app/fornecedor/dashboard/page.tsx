@@ -388,7 +388,7 @@ export default function FornecedorDashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-purple-600 font-semibold mb-2">Contratos Ativos</p>
-                    <p className="text-4xl font-bold text-purple-900">0</p>
+                    <p className="text-4xl font-bold text-purple-900">{contratos.filter(c => c.status === "ativo").length}</p>
                   </div>
                   <div className="text-6xl opacity-40">📄</div>
                 </div>
