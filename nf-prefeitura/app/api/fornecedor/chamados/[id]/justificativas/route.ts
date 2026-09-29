@@ -47,7 +47,10 @@ export async function POST(
 ) {
   try {
     const chamadoId = params.id;
-    const { texto } = await request.json();
+    const body = await request.json();
+    const { texto } = body;
+
+    console.log("📝 Adicionando justificativa:", { chamadoId, texto });
 
     if (!chamadoId || !texto) {
       return NextResponse.json(
@@ -59,10 +62,18 @@ export async function POST(
     const supabaseAdmin = getSupabaseAdmin();
 
     // Verificar quantas justificativas já existem
-    const { data: existentes } = await supabaseAdmin
+    const { data: existentes, error: checkError } = await supabaseAdmin
       .from("justificativas_chamados")
       .select("id", { count: "exact" })
       .eq("chamado_id", chamadoId);
+
+    if (checkError) {
+      console.error("❌ Erro ao verificar justificativas:", checkError);
+      return NextResponse.json(
+        { error: "Erro ao verificar justificativas", details: checkError },
+        { status: 500 }
+      );
+    }
 
     if ((existentes?.length || 0) >= 3) {
       return NextResponse.json(
@@ -89,11 +100,12 @@ export async function POST(
       );
     }
 
+    console.log("✅ Justificativa adicionada:", data?.[0]);
     return NextResponse.json({ sucesso: true, justificativa: data?.[0] });
   } catch (error) {
     console.error("Erro na API de justificativas:", error);
     return NextResponse.json(
-      { error: "Erro ao processar requisição" },
+      { error: "Erro ao processar requisição", details: String(error) },
       { status: 500 }
     );
   }
