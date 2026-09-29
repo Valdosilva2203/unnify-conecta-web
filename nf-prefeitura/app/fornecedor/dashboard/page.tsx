@@ -434,33 +434,36 @@ export default function FornecedorDashboardPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="border-b-2 border-gray-300">
+                    <thead className="border-b-2 border-gray-300 bg-gradient-to-r from-indigo-50 to-blue-50">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Título</th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Descrição</th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Prioridade</th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Status</th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Data Criação</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">CHAMADO</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">DESCRIÇÃO</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">PRIORIDADE</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">STATUS</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">CRIADOR</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-indigo-600">VINCULADO A</th>
+                        <th className="px-6 py-4 text-center text-sm font-bold text-indigo-600">DELETAR</th>
+                        <th className="px-6 py-4 text-right text-sm font-bold text-indigo-600">AÇÕES</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {chamados.map((chamado) => (
-                        <tr key={chamado.id} className="hover:bg-gray-50 transition">
+                        <tr key={chamado.id} className="hover:bg-blue-50 transition">
                           <td className="px-6 py-4">
-                            <span className="font-semibold text-gray-900">{chamado.titulo}</span>
+                            <span className="font-bold text-gray-900">{chamado.titulo}</span>
                           </td>
-                          <td className="px-6 py-4 text-gray-700 truncate max-w-xs">{chamado.descricao}</td>
+                          <td className="px-6 py-4 text-gray-700 line-clamp-2">{chamado.descricao}</td>
                           <td className="px-6 py-4">
                             <span
-                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${
                                 chamado.prioridade === "urgente"
-                                  ? "bg-red-100 text-red-700"
+                                  ? "bg-red-50 text-red-700 border-red-200"
                                   : chamado.prioridade === "normal"
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : "bg-green-100 text-green-700"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
                               }`}
                             >
-                              {chamado.prioridade}
+                              🔴 {chamado.prioridade === "urgente" ? "Urgente" : chamado.prioridade === "normal" ? "Normal" : "Baixa"}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -472,16 +475,29 @@ export default function FornecedorDashboardPage() {
                                     ? "bg-blue-100 text-blue-700"
                                     : chamado.status === "finalizada"
                                       ? "bg-green-100 text-green-700"
-                                      : chamado.status === "cancelada"
-                                        ? "bg-red-100 text-red-700"
-                                        : "bg-gray-100 text-gray-700"
+                                      : "bg-gray-100 text-gray-700"
                               }`}
                             >
-                              {chamado.status === "em_andamento" ? "em andamento" : chamado.status}
+                              • {chamado.status === "em_andamento" ? "Em Andamento" : chamado.status === "finalizada" ? "Finalizada" : chamado.status === "pendente" ? "Pendente" : chamado.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-gray-700">
-                            {new Date(chamado.created_at).toLocaleDateString("pt-BR")}
+                          <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                            —
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                              Compras
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button className="p-2 hover:bg-red-100 rounded-full transition text-red-600 font-bold text-lg hover:scale-110">
+                              🗑️
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button className="p-2 hover:bg-gray-200 rounded-full transition text-gray-600 font-bold text-lg">
+                              ⋮
+                            </button>
                           </td>
                         </tr>
                       ))}
