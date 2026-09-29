@@ -12,6 +12,7 @@ export default function RequisicaoDetalhesPage() {
   const [requisicao, setRequisicao] = useState<any>(null);
   const [prefeitura, setPrefeitura] = useState<any>(null);
   const [fornecedor, setFornecedor] = useState<any>(null);
+  const [contrato, setContrato] = useState<any>(null);
   const [itensContrato, setItensContrato] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +37,15 @@ export default function RequisicaoDetalhesPage() {
           .eq("id", req.prefeitura_id)
           .single();
         setPrefeitura(pref);
+
+        if (req.contrato_id) {
+          const { data: cont } = await supabase
+            .from("contratos")
+            .select("*")
+            .eq("id", req.contrato_id)
+            .single();
+          setContrato(cont);
+        }
 
         if (req.fornecedor_id) {
           const { data: forn } = await supabase
@@ -162,19 +172,19 @@ export default function RequisicaoDetalhesPage() {
             </tr>
             <tr>
               <td style={{ ...cellStyle, fontWeight: "bold", width: "15%" }}>MODALIDADE</td>
-              <td style={cellStyle}>{requisicao?.modalidade || "-"}</td>
+              <td style={cellStyle}>{contrato?.modalidade || requisicao?.modalidade || "-"}</td>
             </tr>
             <tr>
               <td style={{ ...cellStyle, fontWeight: "bold" }}>Nº PROCESSO</td>
-              <td style={cellStyle}>{requisicao?.numero_processo || "-"}</td>
+              <td style={cellStyle}>{requisicao?.numero_processo || requisicao?.contrato_numero || "-"}</td>
             </tr>
             <tr>
               <td style={{ ...cellStyle, fontWeight: "bold" }}>ORIGEM</td>
-              <td style={cellStyle}>{requisicao?.origem || "-"}</td>
+              <td style={cellStyle}>{contrato?.origem || requisicao?.origem || "-"}</td>
             </tr>
             <tr>
               <td style={{ ...cellStyle, fontWeight: "bold" }}>OBJETO</td>
-              <td style={cellStyle}>{requisicao?.objeto_contratacao || requisicao?.titulo || "-"}</td>
+              <td style={cellStyle}>{contrato?.descricao || requisicao?.objeto_contratacao || requisicao?.titulo || "-"}</td>
             </tr>
           </tbody>
         </table>
