@@ -607,68 +607,49 @@ export default function FornecedorDashboardPage() {
                                 </div>
 
                                 <div className="py-2">
-                                  {/* Editar */}
-                                  <button className="w-full text-left px-4 py-3 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100">
-                                    ✏️ Editar
+                                  {/* Ver Justificativas */}
+                                  <button className="w-full text-left px-4 py-3 hover:bg-purple-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 mb-2">
+                                    📝 Ver Justificativas
                                   </button>
 
-                                  {/* Justificativa */}
-                                  <button className="w-full text-left px-4 py-3 hover:bg-gray-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 mb-2">
-                                    📝 Justificativa
-                                  </button>
+                                  {/* Ações baseadas no status */}
+                                  {chamado.status === "pendente" && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleIniciar(chamado.id);
+                                      }}
+                                      disabled={atualizando === chamado.id}
+                                      className="w-full text-left px-4 py-3 hover:bg-green-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium disabled:opacity-50"
+                                    >
+                                      ▶️ Iniciar
+                                    </button>
+                                  )}
 
-                                  {/* Header MUDAR STATUS */}
-                                  <div className="px-4 py-2">
-                                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">Mudar Status</p>
-                                  </div>
-
-                                  {/* Status: Pendente */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      atualizarStatusChamado(chamado.id, "pendente");
-                                    }}
-                                    disabled={atualizando === chamado.id || chamado.status === "pendente"}
-                                    className="w-full text-left px-4 py-3 hover:bg-amber-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 disabled:opacity-50"
-                                  >
-                                    🔵 Pendente
-                                  </button>
-
-                                  {/* Status: Atribuída */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      atualizarStatusChamado(chamado.id, "atribuida");
-                                    }}
-                                    disabled={atualizando === chamado.id || chamado.status === "atribuida"}
-                                    className="w-full text-left px-4 py-3 hover:bg-blue-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 disabled:opacity-50"
-                                  >
-                                    👤 Atribuída
-                                  </button>
-
-                                  {/* Status: Em Andamento */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleIniciar(chamado.id);
-                                    }}
-                                    disabled={atualizando === chamado.id || chamado.status === "em_andamento"}
-                                    className="w-full text-left px-4 py-3 hover:bg-green-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 disabled:opacity-50"
-                                  >
-                                    📌 Em Andamento
-                                  </button>
-
-                                  {/* Status: Finalizada */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleFinalizarClick(chamado.id);
-                                    }}
-                                    disabled={atualizando === chamado.id || chamado.status === "finalizada"}
-                                    className="w-full text-left px-4 py-3 hover:bg-emerald-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium disabled:opacity-50"
-                                  >
-                                    ✅ Finalizada
-                                  </button>
+                                  {chamado.status === "em_andamento" && (
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handlePausar(chamado.id);
+                                        }}
+                                        disabled={atualizando === chamado.id}
+                                        className="w-full text-left px-4 py-3 hover:bg-yellow-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 disabled:opacity-50"
+                                      >
+                                        ⏸️ Pausar
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleFinalizarClick(chamado.id);
+                                        }}
+                                        disabled={atualizando === chamado.id}
+                                        className="w-full text-left px-4 py-3 hover:bg-blue-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium disabled:opacity-50"
+                                      >
+                                        ✅ Finalizar
+                                      </button>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             )}
