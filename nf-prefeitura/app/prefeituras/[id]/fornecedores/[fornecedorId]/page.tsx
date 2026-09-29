@@ -57,6 +57,7 @@ export default function DetalhesFornecedorPage() {
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [contratosAtivos, setContratosAtivos] = useState(0);
   const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [temCredencialAtiva, setTemCredencialAtiva] = useState(false);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [mostrarFormEditar, setMostrarFormEditar] = useState(false);
@@ -112,6 +113,16 @@ export default function DetalhesFornecedorPage() {
 
       if (error) throw error;
       setFornecedor(data);
+
+      // Verifica se existe credencial ativa
+      const { data: credenciais } = await supabase
+        .from("fornecedor_credenciais")
+        .select("id, status")
+        .eq("fornecedor_id", fornecedorId)
+        .eq("status", "ativo")
+        .single();
+
+      setTemCredencialAtiva(!!credenciais);
 
       // Carrega contratos
       await loadContratos();
@@ -451,11 +462,11 @@ export default function DetalhesFornecedorPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleCompartilharAcesso}
-                disabled={salvando}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition disabled:opacity-50"
+                disabled={salvando || temCredencialAtiva}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                📧
-                Compartilhar Acesso
+                {temCredencialAtiva ? "✅" : "📧"}
+                {temCredencialAtiva ? "Acesso compartilhado" : "Compartilhar Acesso"}
               </button>
               <button
                 onClick={handleAbrirEdicao}
