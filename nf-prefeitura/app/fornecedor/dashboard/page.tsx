@@ -516,7 +516,7 @@ export default function FornecedorDashboardPage() {
             </div>
 
             {/* Chamados Recentes */}
-            <div className="bg-white rounded-xl shadow-md p-8">
+            <div className="bg-white rounded-xl shadow-md p-8 overflow-visible">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">📞 Chamados Recentes ({chamados.length})</h2>
               {chamados.length === 0 ? (
                 <div className="text-center py-12">
