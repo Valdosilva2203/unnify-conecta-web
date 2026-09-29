@@ -146,34 +146,34 @@ export default function FornecedorChamadosPage() {
   const loadChamados = async () => {
     try {
       setLoading(true);
-      console.log("🔍 Carregando chamados para fornecedor:", fornecedorId);
 
       let query = supabase
         .from("chamados")
         .select("*")
         .eq("fornecedor_id", fornecedorId);
 
-      // Filtrar por tipo de usuário
-      if (session?.tipo === "secretario") {
-        // Secretário vê chamados da sua secretaria
-        query = query.eq("secretaria_id", session.secretaria_id);
-      } else if (session?.tipo !== "admin" && session?.id) {
-        // Usuário comum vê apenas seus chamados
-        query = query.eq("criado_por", session.id);
+      // Master vê todos os chamados do fornecedor
+      const isMaster =
+        session?.role === "admin" ||
+        session?.role === "prefeitura" ||
+        (!session?.role && !session?.cargo && session?.id);
+
+      // Filtrar por tipo de usuário (se não for master)
+      if (!isMaster) {
+        if (session?.tipo === "secretario" || session?.cargo?.toLowerCase().includes("secretario")) {
+          query = query.eq("secretaria_id", session.secretaria_id);
+        } else if (session?.id) {
+          query = query.eq("criado_por", session.id);
+        }
       }
-      // Admin vê todos (sem filtro adicional)
 
       const { data, error } = await query.order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("❌ Erro do Supabase:", error.message, error.code);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("✅ Chamados carregados:", data);
       setChamados(data || []);
     } catch (error: any) {
-      console.error("❌ Erro ao carregar chamados:", error?.message || error);
+      console.error("Erro ao carregar chamados:", error?.message || error);
     } finally {
       setLoading(false);
     }
