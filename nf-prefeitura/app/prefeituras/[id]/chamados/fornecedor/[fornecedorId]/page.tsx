@@ -539,56 +539,23 @@ export default function FornecedorChamadosPage() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-sm">
-            {/* Botão deletar múltiplos */}
-            {selecionados.size > 0 && (
-              <div className="px-6 py-3 bg-red-50 border-b-2 border-red-200 flex items-center justify-between">
-                <span className="text-sm font-semibold text-red-700">
-                  {selecionados.size} chamado(s) selecionado(s)
-                </span>
-                <button
-                  onClick={handleDeletarSelecionados}
-                  disabled={deletandoMultiplos}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg font-medium transition"
-                >
-                  🗑️ Deletar Selecionados
-                </button>
-              </div>
-            )}
 
             {/* Header da Tabela */}
-            <div className="hidden md:grid md:grid-cols-12 gap-4 px-6 py-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-b-2 border-gray-200 items-center">
-              <div className="md:col-span-1 flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  checked={selecionados.size === chamadosFiltrados.length && chamadosFiltrados.length > 0}
-                  onChange={toggleTodosSelecionados}
-                  className="w-4 h-4 cursor-pointer"
-                  title="Selecionar todos"
-                />
+            <div className="hidden md:grid md:grid-cols-5 gap-4 px-6 py-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-b-2 border-gray-200 items-center">
+              <div>
+                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Título</h4>
               </div>
-              <div className="md:col-span-2">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Chamado</h4>
-              </div>
-              <div className="md:col-span-2">
+              <div>
                 <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Descrição</h4>
               </div>
-              <div className="md:col-span-1">
+              <div>
                 <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Prioridade</h4>
               </div>
-              <div className="md:col-span-1">
+              <div>
                 <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Status</h4>
               </div>
-              <div className="md:col-span-1">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Criador</h4>
-              </div>
-              <div className="md:col-span-2">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Vinculado a</h4>
-              </div>
-              <div className="md:col-span-1 flex justify-center items-center">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Deletar</h4>
-              </div>
-              <div className="md:col-span-1 flex justify-end items-center">
-                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Ações</h4>
+              <div>
+                <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Data Criação</h4>
               </div>
             </div>
 
@@ -620,122 +587,34 @@ export default function FornecedorChamadosPage() {
                     </div>
 
                     {/* Desktop View */}
-                    <div className="hidden md:grid md:grid-cols-12 gap-4 items-center">
-                      <div className="md:col-span-1 flex items-center justify-center">
-                        <input
-                          type="checkbox"
-                          checked={selecionados.has(chamado.id)}
-                          onChange={() => toggleSelecionado(chamado.id)}
-                          className="w-4 h-4 cursor-pointer"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
+                    <div className="hidden md:grid md:grid-cols-5 gap-4 items-center">
+                      <div>
                         <h3 className="text-base font-bold text-gray-900">{chamado.titulo}</h3>
                       </div>
-                      <div className="md:col-span-2">
+                      <div>
                         <p className="text-sm text-gray-600 line-clamp-2">
                           {chamado.descricao || "—"}
                         </p>
                       </div>
-                      <div className="md:col-span-1">
+                      <div>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${prioridadeInfo.badge} border inline-block`}>
                           {prioridadeInfo.icon} {prioridadeInfo.label}
                         </span>
                       </div>
-                      <div className="md:col-span-1">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full bg-current`} style={{
-                            color: statusInfo.color.includes('orange') ? '#f59e0b' :
-                                   statusInfo.color.includes('green') ? '#10b981' :
-                                   statusInfo.color.includes('purple') ? '#a855f7' :
-                                   statusInfo.color.includes('blue') ? '#3b82f6' : '#6b7280'
-                          }}></div>
-                          <span className="text-sm font-semibold text-gray-700">
-                            {statusInfo.label}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="md:col-span-1">
-                        <p className="text-sm text-gray-700 font-medium">
-                          {chamado.criador_nome || "—"}
-                        </p>
-                      </div>
-                      <div className="md:col-span-2">
-                        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
-                          {chamado.secretaria_id ? secretarias.get(chamado.secretaria_id) || "—" : "—"}
+                      <div>
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          chamado.status === "pendente" ? "bg-orange-100 text-orange-700" :
+                          chamado.status === "em_andamento" ? "bg-blue-100 text-blue-700" :
+                          chamado.status === "finalizada" ? "bg-green-100 text-green-700" :
+                          "bg-gray-100 text-gray-700"
+                        }`}>
+                          {statusInfo.label}
                         </span>
                       </div>
-                      <div className="md:col-span-1 flex items-center justify-center">
-                        <button
-                          onClick={() => handleDeleteChamado(chamado.id, chamado.titulo)}
-                          className="p-2 hover:bg-red-100 rounded-full transition text-red-600 font-bold text-lg hover:scale-110"
-                          title="Deletar chamado"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                      <div className="md:col-span-1 flex items-center justify-end relative" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setMenuAberto(menuAberto === chamado.id ? null : chamado.id);
-                          }}
-                          className="p-2 hover:bg-gray-200 rounded-full transition text-gray-600 font-bold text-lg"
-                        >
-                          ⋮
-                        </button>
-
-                        {/* Menu de Ações */}
-                        {menuAberto === chamado.id && (
-                          <div
-                            className="absolute right-0 bottom-full mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-56 max-h-80 overflow-y-auto"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="py-2">
-                              <p className="px-4 py-3 text-xs font-bold text-gray-600 uppercase tracking-wide border-b border-gray-200">Ações</p>
-
-                              {/* Botão Editar */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAbrirEdicao(chamado);
-                                }}
-                                className="w-full text-left px-4 py-3 hover:bg-blue-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100"
-                              >
-                                ✏️ Editar
-                              </button>
-
-                              {/* Botão Justificativa */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  loadJustificativas(chamado.id);
-                                  setModalJustificativaAberto(chamado.id);
-                                  setMenuAberto(null);
-                                }}
-                                className="w-full text-left px-4 py-3 hover:bg-purple-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100"
-                              >
-                                📝 Justificativa {justificativas.get(chamado.id)?.length ? `(${justificativas.get(chamado.id)?.length})` : ""}
-                              </button>
-
-                              <p className="px-4 py-2 text-xs font-bold text-gray-600 uppercase tracking-wide border-t border-gray-200 mt-2">Mudar Status</p>
-                              <div className="pt-2">
-                                {Object.entries(statusConfig).map(([key, value]) => (
-                                  <button
-                                    key={key}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      atualizarStatus(chamado.id, key);
-                                    }}
-                                    className="w-full text-left px-4 py-3 hover:bg-blue-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 last:border-b-0"
-                                  >
-                                    {value.icon} {value.label}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                      <div>
+                        <p className="text-sm text-gray-600">
+                          {chamado.created_at ? new Date(chamado.created_at).toLocaleDateString("pt-BR") : "—"}
+                        </p>
                       </div>
                     </div>
                   </div>
