@@ -137,6 +137,19 @@ export default function LoginContent() {
             return;
           }
 
+          // Buscar funcionario_id do admin
+          let funcionarioId = null;
+          const { data: funcData } = await supabase
+            .from("funcionarios")
+            .select("id")
+            .eq("email", emailTrimmed)
+            .eq("prefeitura_id", admin.prefeitura_id)
+            .single();
+
+          if (funcData) {
+            funcionarioId = funcData.id;
+          }
+
           const sessionData = {
             id: admin.id,
             email: admin.email,
@@ -145,6 +158,7 @@ export default function LoginContent() {
             role: admin.role,
             tipo: "admin",
             secretaria_id: admin.secretaria_id || null,
+            funcionario_id: funcionarioId,
           };
 
           console.log("🔐 Admin login - sessionData:", sessionData);

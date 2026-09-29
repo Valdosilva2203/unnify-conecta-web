@@ -856,23 +856,15 @@ export default function SecretariaPage() {
         throw new Error("Não foi possível identificar o solicitante");
       }
 
-      // Se o solicitante for um funcionário, usar seu ID direto
-      // Se for prefeitura_user, buscar seu ID como funcionário
+      // Usar funcionario_id da sessão (armazenado no login)
       let solicitanteId = session?.id;
 
-      if (session?.tipo === "admin") {
-        // Se for admin/prefeitura_user, buscar como funcionário
-        const { data: funcData, error: funcError } = await supabase
-          .from("funcionarios")
-          .select("id")
-          .eq("prefeitura_id", secretaria.prefeitura_id)
-          .eq("email", session.email)
-          .single();
+      if (session?.tipo === "admin" && session?.funcionario_id) {
+        solicitanteId = session.funcionario_id;
+      }
 
-        if (funcError || !funcData) {
-          throw new Error("Não foi possível encontrar o perfil de funcionário do solicitante");
-        }
-        solicitanteId = funcData.id;
+      if (!solicitanteId) {
+        throw new Error("Não foi possível identificar o funcionário solicitante");
       }
 
       // Buscar ID do Prefeito da prefeitura
