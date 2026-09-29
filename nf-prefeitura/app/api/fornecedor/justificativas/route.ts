@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       .from("justificativas_chamados")
       .select("*")
       .eq("chamado_id", chamadoId)
-      .order("criado_em", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("❌ Erro ao buscar justificativas:", error);
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       .from("justificativas_chamados")
       .insert({
         chamado_id: chamadoId,
-        texto,
+        descricao: texto,
       })
       .select();
 
