@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -65,19 +65,24 @@ export default function FornecedorDashboardPage() {
   const [modalFinalizacao, setModalFinalizacao] = useState<string | null>(null);
   const [justificativaText, setJustificativaText] = useState("");
   const [atualizando, setAtualizando] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     verificarSessao();
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = () => {
-      setMenuAbertoId(null);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuAbertoId(null);
+      }
     };
 
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
+    if (menuAbertoId) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [menuAbertoId]);
 
   const verificarSessao = async () => {
     try {
@@ -580,7 +585,7 @@ export default function FornecedorDashboardPage() {
                               🗑️
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-right relative">
+                          <td className="px-6 py-4 text-right relative" ref={menuRef}>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -591,7 +596,7 @@ export default function FornecedorDashboardPage() {
                               ⋮
                             </button>
                             {menuAbertoId === chamado.id && (
-                              <div className="absolute right-0 bottom-full mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-48" onClick={(e) => e.stopPropagation()}>
+                              <div className="absolute right-0 bottom-full mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-48">
                                 <div className="py-2">
                                   {chamado.status === "pendente" && (
                                     <button
