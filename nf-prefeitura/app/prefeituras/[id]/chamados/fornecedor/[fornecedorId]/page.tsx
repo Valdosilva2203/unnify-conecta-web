@@ -73,6 +73,8 @@ export default function FornecedorChamadosPage() {
   const [chamadoEditando, setChamadoEditando] = useState<Chamado | null>(null);
   const [formEdicao, setFormEdicao] = useState({ titulo: "", descricao: "", prioridade: "normal", status: "pendente", secretaria_id: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [chamadoDetalhes, setChamadoDetalhes] = useState<Chamado | null>(null);
+  const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
 
   useEffect(() => {
     loadFornecedor();
@@ -620,7 +622,12 @@ export default function FornecedorChamadosPage() {
                     </div>
 
                     {/* Desktop View */}
-                    <div className="hidden md:grid md:grid-cols-12 gap-4 items-center">
+                    <div
+                      onClick={() => {
+                        setChamadoDetalhes(chamado);
+                        setModalDetalhesAberto(true);
+                      }}
+                      className="hidden md:grid md:grid-cols-12 gap-4 items-center cursor-pointer hover:bg-indigo-100 transition">
                       <div className="md:col-span-1 flex items-center justify-center">
                         <input
                           type="checkbox"
@@ -929,6 +936,77 @@ export default function FornecedorChamadosPage() {
                   className="px-8 py-3 text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   Adicionar Justificativa
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Detalhes do Chamado */}
+        {modalDetalhesAberto && chamadoDetalhes && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-96 overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-blue-600 p-6 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">📞 {chamadoDetalhes.titulo}</h2>
+                <button
+                  onClick={() => {
+                    setModalDetalhesAberto(false);
+                    setChamadoDetalhes(null);
+                  }}
+                  className="text-white hover:bg-white hover:text-indigo-600 p-2 rounded-lg transition text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-600">📝 DESCRIÇÃO</p>
+                  <p className="text-gray-900 mt-1">{chamadoDetalhes.descricao || "—"}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-600">🔴 PRIORIDADE</p>
+                    <span className={`inline-block px-3 py-1 rounded text-sm font-bold mt-1 border ${prioridadeConfig[chamadoDetalhes.prioridade as keyof typeof prioridadeConfig]?.badge || "bg-gray-100"}`}>
+                      {prioridadeConfig[chamadoDetalhes.prioridade as keyof typeof prioridadeConfig]?.icon} {prioridadeConfig[chamadoDetalhes.prioridade as keyof typeof prioridadeConfig]?.label}
+                    </span>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-gray-600">• STATUS</p>
+                    <span className={`inline-block px-3 py-1 rounded text-sm font-bold mt-1 text-white bg-gradient-to-r ${statusConfig[chamadoDetalhes.status as keyof typeof statusConfig]?.color || "from-gray-500 to-gray-600"}`}>
+                      {statusConfig[chamadoDetalhes.status as keyof typeof statusConfig]?.icon} {statusConfig[chamadoDetalhes.status as keyof typeof statusConfig]?.label}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-600">👤 CRIADOR</p>
+                    <p className="text-gray-900 mt-1">{chamadoDetalhes.criador_nome || "—"}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-gray-600">📅 DATA DE CRIAÇÃO</p>
+                    <p className="text-gray-900 mt-1">
+                      {chamadoDetalhes.created_at || chamadoDetalhes.data_criacao
+                        ? new Date(chamadoDetalhes.created_at || chamadoDetalhes.data_criacao).toLocaleDateString("pt-BR")
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t p-6 flex justify-end">
+                <button
+                  onClick={() => {
+                    setModalDetalhesAberto(false);
+                    setChamadoDetalhes(null);
+                  }}
+                  className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition"
+                >
+                  Fechar
                 </button>
               </div>
             </div>
