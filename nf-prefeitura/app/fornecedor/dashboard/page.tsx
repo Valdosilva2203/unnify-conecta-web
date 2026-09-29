@@ -374,7 +374,10 @@ export default function FornecedorDashboardPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl p-6 border border-rose-200 shadow-sm hover:shadow-md transition">
+              <button
+                onClick={() => router.push("/fornecedor/requisicoes")}
+                className="bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl p-6 border border-rose-200 shadow-sm hover:shadow-md transition cursor-pointer text-left w-full"
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-rose-600 font-semibold mb-2">Requisições</p>
@@ -382,7 +385,7 @@ export default function FornecedorDashboardPage() {
                   </div>
                   <div className="text-6xl opacity-40">📋</div>
                 </div>
-              </div>
+              </button>
 
               <div className="bg-gradient-to-br from-purple-50 to-violet-100 rounded-xl p-6 border border-purple-200 shadow-sm hover:shadow-md transition">
                 <div className="flex items-center justify-between">
