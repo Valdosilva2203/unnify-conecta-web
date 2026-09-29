@@ -70,6 +70,15 @@ export default function FornecedorDashboardPage() {
     verificarSessao();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setMenuAbertoId(null);
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
   const verificarSessao = async () => {
     try {
       const sessionStr = localStorage.getItem("fornecedor_session");
@@ -582,7 +591,7 @@ export default function FornecedorDashboardPage() {
                               ⋮
                             </button>
                             {menuAbertoId === chamado.id && (
-                              <div className="absolute right-0 bottom-full mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-48">
+                              <div className="absolute right-0 bottom-full mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-48" onClick={(e) => e.stopPropagation()}>
                                 <div className="py-2">
                                   {chamado.status === "pendente" && (
                                     <button
