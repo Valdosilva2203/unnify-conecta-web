@@ -767,9 +767,9 @@ export default function FornecedorDashboardPage() {
               <div className="mb-8 space-y-3 max-h-64 overflow-y-auto">
                 {justificativas[modalJustificativas].map((just: any, idx: number) => (
                   <div key={just.id || idx} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
-                    <p className="text-sm text-gray-700">{just.texto}</p>
+                    <p className="text-sm text-gray-700">{just.descricao}</p>
                     <p className="text-xs text-gray-500 mt-2">
-                      {new Date(just.criado_em).toLocaleDateString("pt-BR", {
+                      {new Date(just.created_at).toLocaleDateString("pt-BR", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
