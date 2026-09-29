@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
 
     const { data: requisicoes, error } = await supabaseAdmin
       .from("requisicoes")
-      .select("*")
+      .select("id, numero_requisicao, titulo, descricao, status, created_at, fornecedor_id, prefeitura_id")
       .eq("fornecedor_id", fornecedorId)
       .eq("prefeitura_id", prefeituraId)
-      .order("data_criacao", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("❌ Erro ao buscar requisições:", error);
