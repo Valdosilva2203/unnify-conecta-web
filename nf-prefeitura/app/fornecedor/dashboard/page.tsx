@@ -59,6 +59,7 @@ export default function FornecedorDashboardPage() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [menuAberto, setMenuAberto] = useState(true);
+  const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
 
   useEffect(() => {
     verificarSessao();
@@ -482,7 +483,7 @@ export default function FornecedorDashboardPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700 font-medium">
-                            —
+                            {chamado.criador_nome || "—"}
                           </td>
                           <td className="px-6 py-4">
                             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
@@ -494,10 +495,28 @@ export default function FornecedorDashboardPage() {
                               🗑️
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <button className="p-2 hover:bg-gray-200 rounded-full transition text-gray-600 font-bold text-lg">
+                          <td className="px-6 py-4 text-right relative" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMenuAbertoId(menuAbertoId === chamado.id ? null : chamado.id);
+                              }}
+                              className="p-2 hover:bg-gray-200 rounded-full transition text-gray-600 font-bold text-lg"
+                            >
                               ⋮
                             </button>
+                            {menuAbertoId === chamado.id && (
+                              <div className="absolute right-0 bottom-full mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-48">
+                                <div className="py-2">
+                                  <button className="w-full text-left px-4 py-3 hover:bg-blue-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100">
+                                    ✏️ Editar
+                                  </button>
+                                  <button className="w-full text-left px-4 py-3 hover:bg-purple-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium">
+                                    📝 Justificativa
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
