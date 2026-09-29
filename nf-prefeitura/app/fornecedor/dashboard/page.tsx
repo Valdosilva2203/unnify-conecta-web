@@ -596,7 +596,7 @@ export default function FornecedorDashboardPage() {
                               ⋮
                             </button>
                             {menuAbertoId === chamado.id && (
-                              <div className="absolute right-0 bottom-full mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-48">
+                              <div className="absolute right-0 top-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-[9999] w-48">
                                 <div className="py-2">
                                   {chamado.status === "pendente" && (
                                     <button
