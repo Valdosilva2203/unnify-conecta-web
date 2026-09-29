@@ -82,7 +82,6 @@ export async function POST(request: NextRequest) {
       .insert({
         chamado_id: chamadoId,
         texto,
-        criado_em: new Date().toISOString(),
       })
       .select();
 
