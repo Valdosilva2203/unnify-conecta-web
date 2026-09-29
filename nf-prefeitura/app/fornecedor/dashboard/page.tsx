@@ -263,7 +263,12 @@ export default function FornecedorDashboardPage() {
         body: JSON.stringify({ texto: novaJustificativa }),
       });
 
-      if (!response.ok) throw new Error("Erro ao adicionar justificativa");
+      const json = await response.json();
+
+      if (!response.ok) {
+        console.error("Erro na API:", json);
+        throw new Error(json?.error || "Erro ao adicionar justificativa");
+      }
 
       await buscarJustificativas(modalJustificativas);
       setNovaJustificativa("");
