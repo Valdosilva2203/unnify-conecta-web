@@ -214,7 +214,7 @@ export default function ChamadosPage() {
     }
   };
 
-  const isMaster = session?.role === "admin" || session?.role === "prefeitura" || session?.role === "master";
+  const isMaster = session?.role === "admin" || session?.role === "prefeitura" || session?.role === "master" || !session?.role;
 
   console.log("👤 Session:", session);
   console.log("🔐 isMaster:", isMaster, "| role:", session?.role);
