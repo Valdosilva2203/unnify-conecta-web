@@ -218,10 +218,7 @@ export default function ChamadosPage() {
     session?.role === "admin" ||
     session?.role === "prefeitura" ||
     session?.role === "master" ||
-    (!session?.role && !session?.cargo && session?.id);  // Admin master: sem role, sem cargo, mas tem id
-
-  console.log("👤 Session completo:", JSON.stringify(session, null, 2));
-  console.log("🔐 isMaster:", isMaster, "| role:", session?.role, "| tipo:", session?.tipo);
+    (!session?.role && !session?.cargo && session?.id);
 
   const chamadosVisiveis = isMaster
     ? chamados
