@@ -65,6 +65,9 @@ export default function FornecedorDashboardPage() {
   const [modalFinalizacao, setModalFinalizacao] = useState<string | null>(null);
   const [justificativaText, setJustificativaText] = useState("");
   const [atualizando, setAtualizando] = useState<string | null>(null);
+  const [modalJustificativas, setModalJustificativas] = useState<string | null>(null);
+  const [justificativas, setJustificativas] = useState<{ [key: string]: any[] }>({});
+  const [novaJustificativa, setNovaJustificativa] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -226,6 +229,46 @@ export default function FornecedorDashboardPage() {
       setJustificativaText("");
     } catch (error) {
       console.error("Erro ao finalizar:", error);
+    } finally {
+      setAtualizando(null);
+    }
+  };
+
+  const buscarJustificativas = async (chamadoId: string) => {
+    try {
+      const response = await fetch(`/api/fornecedor/chamados/${chamadoId}/justificativas`);
+      if (response.ok) {
+        const { justificativas: justs } = await response.json();
+        setJustificativas(prev => ({ ...prev, [chamadoId]: justs || [] }));
+      }
+    } catch (error) {
+      console.error("Erro ao buscar justificativas:", error);
+    }
+  };
+
+  const abrirModalJustificativas = (chamadoId: string) => {
+    setModalJustificativas(chamadoId);
+    setNovaJustificativa("");
+    buscarJustificativas(chamadoId);
+  };
+
+  const adicionarJustificativa = async () => {
+    if (!modalJustificativas || !novaJustificativa.trim()) return;
+
+    try {
+      setAtualizando(modalJustificativas);
+      const response = await fetch(`/api/fornecedor/chamados/${modalJustificativas}/justificativas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto: novaJustificativa }),
+      });
+
+      if (!response.ok) throw new Error("Erro ao adicionar justificativa");
+
+      await buscarJustificativas(modalJustificativas);
+      setNovaJustificativa("");
+    } catch (error) {
+      console.error("Erro ao adicionar justificativa:", error);
     } finally {
       setAtualizando(null);
     }
@@ -608,8 +651,16 @@ export default function FornecedorDashboardPage() {
 
                                 <div className="py-2">
                                   {/* Ver Justificativas */}
-                                  <button className="w-full text-left px-4 py-3 hover:bg-purple-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 mb-2">
-                                    📝 Ver Justificativas
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      abrirModalJustificativas(chamado.id);
+                                      setMenuAbertoId(null);
+                                    }}
+                                    disabled={(justificativas[chamado.id]?.length || 0) >= 3}
+                                    className="w-full text-left px-4 py-3 hover:bg-purple-50 transition flex items-center gap-2 text-sm text-gray-700 font-medium border-b border-gray-100 mb-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    📝 {(justificativas[chamado.id]?.length || 0) >= 3 ? "Acabou suas Justificativas" : "Ver Justificativas"}
                                   </button>
 
                                   {/* Ações baseadas no status */}
@@ -696,6 +747,82 @@ export default function FornecedorDashboardPage() {
                 {atualizando === modalFinalizacao ? "Finalizando..." : "Confirmar"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Justificativas */}
+      {modalJustificativas && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setModalJustificativas(null)}>
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-gray-900 mb-6">📝 Justificativas</h3>
+
+            {/* Lista de Justificativas */}
+            {justificativas[modalJustificativas] && justificativas[modalJustificativas].length > 0 ? (
+              <div className="mb-8 space-y-3 max-h-64 overflow-y-auto">
+                {justificativas[modalJustificativas].map((just: any, idx: number) => (
+                  <div key={just.id || idx} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
+                    <p className="text-sm text-gray-700">{just.texto}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(just.criado_em).toLocaleDateString("pt-BR", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mb-8 text-center py-6 text-gray-500">
+                Nenhuma justificativa adicionada ainda
+              </div>
+            )}
+
+            {/* Formulário para Adicionar */}
+            {(justificativas[modalJustificativas]?.length || 0) < 3 && (
+              <div className="border-t pt-6">
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  Adicionar Justificativa ({justificativas[modalJustificativas]?.length || 0}/3)
+                </p>
+                <textarea
+                  value={novaJustificativa}
+                  onChange={(e) => setNovaJustificativa(e.target.value)}
+                  placeholder="Descreva a justificativa..."
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-4 focus:border-blue-500 focus:outline-none resize-none"
+                  rows={3}
+                />
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => setModalJustificativas(null)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+                  >
+                    Fechar
+                  </button>
+                  <button
+                    onClick={adicionarJustificativa}
+                    disabled={!novaJustificativa.trim() || atualizando === modalJustificativas}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50"
+                  >
+                    {atualizando === modalJustificativas ? "Adicionando..." : "Adicionar"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(justificativas[modalJustificativas]?.length || 0) >= 3 && (
+              <div className="border-t pt-6 text-center">
+                <p className="text-sm font-medium text-gray-700 mb-4">✅ Você atingiu o limite de 3 justificativas</p>
+                <button
+                  onClick={() => setModalJustificativas(null)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+                >
+                  Fechar
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
