@@ -330,7 +330,7 @@ export default function FornecedorDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <div className={`${menuAberto ? "w-64" : "w-20"} bg-gradient-to-b from-teal-500 to-teal-600 text-white transition-all duration-300 flex flex-col shadow-lg`}>
+      <div className={`${menuAberto ? "w-64" : "w-20"} bg-white text-gray-900 border-r border-gray-200 transition-all duration-300 flex flex-col shadow-sm`}>
         <div className="p-6 flex items-center justify-between">
           <div className={`flex items-center gap-2 ${!menuAberto && "justify-center w-full"}`}>
             <span className="text-3xl">📦</span>
@@ -339,50 +339,50 @@ export default function FornecedorDashboardPage() {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2">
-          <div className={menuAberto ? "text-xs font-bold text-teal-200 uppercase mb-4" : "hidden"}>
+          <div className={menuAberto ? "text-xs font-bold text-gray-600 uppercase mb-4" : "hidden"}>
             Menu
           </div>
           <a
             href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-teal-600 hover:bg-teal-700 transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-900 transition"
           >
             <span className="text-xl">📊</span>
             {menuAberto && <span>Dashboard</span>}
           </a>
           <a
             href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-teal-600 transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-900 transition"
           >
             <span className="text-xl">📞</span>
             {menuAberto && <span>Chamados</span>}
           </a>
           <a
             href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-teal-600 transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-900 transition"
           >
             <span className="text-xl">📋</span>
             {menuAberto && <span>Requisições</span>}
           </a>
           <a
             href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-teal-600 transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-900 transition"
           >
             <span className="text-xl">📄</span>
             {menuAberto && <span>Contratos</span>}
           </a>
         </nav>
 
-        <div className="p-4 space-y-2 border-t border-teal-600">
+        <div className="p-4 space-y-2 border-t border-gray-200">
           <a
             href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-teal-600 transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-900 transition"
           >
             <span className="text-xl">⚙️</span>
             {menuAberto && <span>Configurações</span>}
           </a>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-left"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-100 text-red-700 transition text-left"
           >
             <span className="text-xl">🚪</span>
             {menuAberto && <span>Sair</span>}
@@ -586,7 +586,7 @@ export default function FornecedorDashboardPage() {
                             <td className="px-6 py-4">
                               <button
                                 onClick={() => router.push(`/prefeituras/${session?.prefeitura_id}/contratos/${contrato.id}`)}
-                                className="text-teal-600 hover:text-teal-700 font-semibold text-sm hover:underline transition"
+                                className="text-gray-600 hover:text-gray-900 font-semibold text-sm hover:underline transition"
                               >
                                 Visualizar
                               </button>

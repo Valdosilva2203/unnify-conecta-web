@@ -82,7 +82,7 @@ export default function FornecedorRequisicoes() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <div className={`${menuAberto ? "w-64" : "w-20"} bg-gradient-to-b from-teal-500 to-teal-600 text-white transition-all duration-300 flex flex-col shadow-lg`}>
+      <div className={`${menuAberto ? "w-64" : "w-20"} bg-white text-gray-900 border-r border-gray-200 transition-all duration-300 flex flex-col shadow-sm`}>
         <div className="p-6 flex items-center justify-between">
           <div className={`flex items-center gap-2 ${!menuAberto && "justify-center w-full"}`}>
             <span className="text-3xl">📦</span>
@@ -91,32 +91,32 @@ export default function FornecedorRequisicoes() {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2">
-          <div className={menuAberto ? "text-xs font-bold text-teal-200 uppercase mb-4" : "hidden"}>
+          <div className={menuAberto ? "text-xs font-bold text-gray-600 uppercase mb-4" : "hidden"}>
             Menu
           </div>
           <button
             onClick={() => router.push("/fornecedor/dashboard")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-teal-600 transition"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-900 transition"
           >
             <span className="text-xl">📊</span>
             {menuAberto && <span>Dashboard</span>}
           </button>
           <button
             onClick={() => router.push("/fornecedor/requisicoes")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-teal-600 hover:bg-teal-700 transition"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-900 transition"
           >
             <span className="text-xl">📋</span>
             {menuAberto && <span>Requisições</span>}
           </button>
         </nav>
 
-        <div className="p-6 border-t border-teal-400">
+        <div className="p-6 border-t border-gray-200">
           <button
             onClick={() => {
               localStorage.removeItem("fornecedor_session");
               router.push("/login");
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-teal-600 transition text-sm font-medium"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-100 text-red-700 transition text-sm font-medium"
           >
             <span>🚪</span>
             {menuAberto && <span>Sair</span>}
@@ -144,7 +144,7 @@ export default function FornecedorRequisicoes() {
               placeholder="Buscar por número, nome, fornecedor ou criador..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-6 py-3 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-lg"
+              className="w-full px-6 py-3 border-2 border-gray-300 rounded-lg focus:border-gray-400 focus:outline-none text-lg"
             />
           </div>
 
@@ -161,7 +161,7 @@ export default function FornecedorRequisicoes() {
                 {requisicoesFiltradas.map((req) => (
                   <div
                     key={req.id}
-                    className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-teal-400 hover:bg-teal-50 transition cursor-pointer"
+                    className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition cursor-pointer"
                     onClick={() => router.push(`/fornecedor/requisicoes/${req.id}`)}
                   >
                     <div className="flex-1">
