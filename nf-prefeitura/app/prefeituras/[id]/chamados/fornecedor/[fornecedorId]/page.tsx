@@ -11,7 +11,7 @@ interface Chamado {
   titulo: string;
   descricao: string;
   prioridade: "baixa" | "normal" | "urgente";
-  status: "pendente" | "atribuida" | "em_andamento" | "finalizada" | "cancelada";
+  status: "pendente" | "atribuida" | "em_andamento" | "em_requisicao" | "finalizada" | "cancelada";
   data_criacao?: string;
   created_at?: string;
   criado_por: string;
@@ -42,6 +42,7 @@ const statusConfig = {
   pendente: { icon: "⏳", label: "Pendente", color: "from-orange-500 to-orange-600" },
   atribuida: { icon: "👤", label: "Atribuída", color: "from-blue-500 to-blue-600" },
   em_andamento: { icon: "⚙️", label: "Em Andamento", color: "from-purple-500 to-purple-600" },
+  em_requisicao: { icon: "📄", label: "Em Requisição", color: "from-cyan-500 to-cyan-600" },
   finalizada: { icon: "✅", label: "Finalizada", color: "from-green-500 to-green-600" },
   cancelada: { icon: "❌", label: "Cancelada", color: "from-gray-400 to-gray-600" },
 };
@@ -75,6 +76,8 @@ export default function FornecedorChamadosPage() {
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const [chamadoDetalhes, setChamadoDetalhes] = useState<Chamado | null>(null);
   const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
+  const [chamadoParaConfirmarFinalizacao, setChamadoParaConfirmarFinalizacao] = useState<Chamado | null>(null);
+  const [enviandoNotificacao, setEnviandoNotificacao] = useState(false);
 
   useEffect(() => {
     loadFornecedor();
@@ -229,6 +232,15 @@ export default function FornecedorChamadosPage() {
   });
 
   const atualizarStatus = async (chamadoId: string, novoStatus: string) => {
+    if (novoStatus === "finalizada") {
+      const chamado = chamados.find(c => c.id === chamadoId);
+      if (chamado) {
+        setChamadoParaConfirmarFinalizacao(chamado);
+      }
+      setMenuAberto(null);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("chamados")
@@ -248,6 +260,34 @@ export default function FornecedorChamadosPage() {
     } catch (error) {
       console.error("❌ Erro ao atualizar status:", error);
       alert("Erro ao atualizar status");
+    }
+  };
+
+  const confirmarFinalizacao = async () => {
+    if (!chamadoParaConfirmarFinalizacao) return;
+
+    setEnviandoNotificacao(true);
+    try {
+      const { error } = await supabase
+        .from("notificacoes")
+        .insert([{
+          tipo: "chamado_aguardando_confirmacao",
+          usuario_id: chamadoParaConfirmarFinalizacao.criado_por,
+          prefeitura_id: prefeituraId,
+          referencia_id: chamadoParaConfirmarFinalizacao.id,
+          mensagem: `O fornecedor finalizou o chamado "${chamadoParaConfirmarFinalizacao.titulo}". Confirme se o serviço foi realmente concluído.`,
+          lida: false
+        }]);
+
+      if (error) throw error;
+
+      alert("✅ Notificação enviada! Aguardando confirmação do criador.");
+      setChamadoParaConfirmarFinalizacao(null);
+    } catch (error: any) {
+      console.error("❌ Erro ao enviar notificação:", error);
+      alert(`Erro ao enviar notificação: ${error?.message || "Erro desconhecido"}`);
+    } finally {
+      setEnviandoNotificacao(false);
     }
   };
 
@@ -416,13 +456,18 @@ export default function FornecedorChamadosPage() {
 
     setSalvandoEdicao(true);
     try {
+      let statusFinal = formEdicao.status;
+      if (statusFinal === "finalizada") {
+        statusFinal = "em_requisicao";
+      }
+
       const { error } = await supabase
         .from("chamados")
         .update({
           titulo: formEdicao.titulo,
           descricao: formEdicao.descricao,
           prioridade: formEdicao.prioridade,
-          status: formEdicao.status,
+          status: statusFinal,
           secretaria_id: formEdicao.secretaria_id || null
         })
         .eq("id", chamadoEditando.id);
@@ -550,6 +595,7 @@ export default function FornecedorChamadosPage() {
             <option value="pendente">⏳ Pendente</option>
             <option value="atribuida">👤 Atribuída</option>
             <option value="em_andamento">⚙️ Em Andamento</option>
+            <option value="em_requisicao">📄 Em Requisição</option>
             <option value="finalizada">✅ Finalizada</option>
           </select>
         </div>
@@ -843,6 +889,7 @@ export default function FornecedorChamadosPage() {
                       <option value="pendente">⏳ Pendente</option>
                       <option value="atribuida">👤 Atribuída</option>
                       <option value="em_andamento">⚙️ Em Andamento</option>
+                      <option value="em_requisicao">📄 Em Requisição</option>
                       <option value="finalizada">✅ Finalizada</option>
                       <option value="cancelada">❌ Cancelada</option>
                     </select>
@@ -877,6 +924,43 @@ export default function FornecedorChamadosPage() {
                   className="px-8 py-3 text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   {salvandoEdicao ? "Salvando..." : "Salvar Edição"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Confirmação de Finalização */}
+        {chamadoParaConfirmarFinalizacao && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
+            <div className="bg-white rounded-3xl max-w-2xl w-full p-10 border-2 border-gray-300 shadow-2xl animate-in zoom-in-95">
+              <div className="flex items-start gap-6">
+                <div className="text-6xl">✅</div>
+                <div className="flex-1">
+                  <h3 className="text-3xl font-black text-gray-900">Confirmar Finalização</h3>
+                  <p className="text-gray-600 text-base mt-3 leading-relaxed">
+                    Deixe realmente finalizar este chamado? O criador receberá uma notificação de confirmação.
+                  </p>
+                  <p className="text-gray-700 font-medium mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                    "{chamadoParaConfirmarFinalizacao.titulo}"
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-8">
+                <button
+                  onClick={() => setChamadoParaConfirmarFinalizacao(null)}
+                  disabled={enviandoNotificacao}
+                  className="px-8 py-3 text-gray-700 border-2 border-gray-300 hover:bg-gray-100 rounded-lg transition font-bold text-base disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarFinalizacao}
+                  disabled={enviandoNotificacao}
+                  className="px-8 py-3 text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100"
+                >
+                  {enviandoNotificacao ? "Enviando..." : "✅ Confirmar"}
                 </button>
               </div>
             </div>

@@ -41,7 +41,7 @@ interface Chamado {
   id: string;
   titulo: string;
   descricao: string;
-  status: "pendente" | "atribuida" | "em_andamento" | "finalizada" | "cancelada";
+  status: "pendente" | "atribuida" | "em_andamento" | "em_requisicao" | "finalizada" | "cancelada";
   prioridade: "baixa" | "normal" | "urgente";
   created_at: string;
   data_finalizacao?: string;
@@ -186,17 +186,18 @@ export default function FornecedorDashboardPage() {
     try {
       setAtualizando(chamadoId);
       setMenuAbertoId(null);
-      const response = await fetch("/api/fornecedor/chamados/update", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: chamadoId, status: novoStatus }),
-      });
 
-      if (!response.ok) throw new Error("Erro ao atualizar status");
+      const { error } = await supabase
+        .from("chamados")
+        .update({ status: novoStatus })
+        .eq("id", chamadoId);
+
+      if (error) throw error;
 
       setChamados(chamados.map(c => c.id === chamadoId ? { ...c, status: novoStatus as any } : c));
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
+      alert("Erro ao atualizar status");
     } finally {
       setAtualizando(null);
     }
@@ -219,23 +220,33 @@ export default function FornecedorDashboardPage() {
     if (!modalFinalizacao) return;
     try {
       setAtualizando(modalFinalizacao);
-      const response = await fetch("/api/fornecedor/chamados/update", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: modalFinalizacao,
-          status: "finalizada",
-          justificativa: justificativaText,
-        }),
-      });
 
-      if (!response.ok) throw new Error("Erro ao finalizar chamado");
+      const chamado = chamados.find(c => c.id === modalFinalizacao);
+      if (!chamado) throw new Error("Chamado não encontrado");
 
-      setChamados(chamados.map(c => c.id === modalFinalizacao ? { ...c, status: "finalizada" } : c));
+      console.log("📧 Enviando notificação para usuario_id:", chamado.criado_por, "chamado:", chamado.id);
+      const { error } = await supabase
+        .from("notificacoes")
+        .insert([{
+          tipo: "chamado_aguardando_confirmacao",
+          usuario_id: chamado.criado_por || "unknown",
+          prefeitura_id: chamado.prefeitura_id,
+          referencia_id: chamado.id,
+          mensagem: `O fornecedor finalizou o chamado "${chamado.titulo}". Confirme se o serviço foi realmente concluído.`,
+          lida: false
+        }]);
+
+      if (error) {
+        console.error("❌ Erro ao inserir notificação:", error);
+        throw error;
+      }
+
+      console.log("✅ Notificação enviada com sucesso!");
+      alert("✅ Notificação enviada! Aguardando confirmação do criador.");
       setModalFinalizacao(null);
       setJustificativaText("");
     } catch (error) {
-      console.error("Erro ao finalizar:", error);
+      console.error("❌ Erro ao finalizar:", error);
     } finally {
       setAtualizando(null);
     }
@@ -659,7 +670,12 @@ export default function FornecedorDashboardPage() {
                                 e.stopPropagation();
                                 setMenuAbertoId(menuAbertoId === chamado.id ? null : chamado.id);
                               }}
-                              className="p-2 hover:bg-gray-200 rounded-full transition text-gray-600 font-bold text-lg"
+                              disabled={chamado.status === "em_requisicao"}
+                              className={`p-2 rounded-full transition font-bold text-lg ${
+                                chamado.status === "em_requisicao"
+                                  ? "text-gray-300 cursor-not-allowed opacity-50"
+                                  : "hover:bg-gray-200 text-gray-600"
+                              }`}
                             >
                               ⋮
                             </button>

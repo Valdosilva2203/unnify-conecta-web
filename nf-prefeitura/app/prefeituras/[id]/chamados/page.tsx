@@ -11,7 +11,7 @@ interface Chamado {
   titulo: string;
   descricao: string;
   prioridade: "baixa" | "normal" | "urgente";
-  status: "pendente" | "atribuida" | "em_andamento" | "finalizada" | "cancelada";
+  status: "pendente" | "atribuida" | "em_andamento" | "em_requisicao" | "finalizada" | "cancelada";
   data_criacao: string;
   data_atribuicao?: string;
   data_inicio?: string;
@@ -21,10 +21,19 @@ interface Chamado {
   fornecedor_nome?: string;
 }
 
+interface Notificacao {
+  id: string;
+  tipo: string;
+  referencia_id: string;
+  mensagem: string;
+  lida: boolean;
+}
+
 const statusConfig = {
   pendente: { icon: "⏳", label: "Pendente", color: "from-orange-500 to-orange-600" },
   atribuida: { icon: "👤", label: "Atribuída", color: "from-blue-500 to-blue-600" },
   em_andamento: { icon: "⚙️", label: "Em Andamento", color: "from-purple-500 to-purple-600" },
+  em_requisicao: { icon: "📄", label: "Em Requisição", color: "from-cyan-500 to-cyan-600" },
   finalizada: { icon: "✅", label: "Finalizada", color: "from-green-500 to-green-600" },
   cancelada: { icon: "❌", label: "Cancelada", color: "from-gray-400 to-gray-600" },
 };
@@ -45,6 +54,7 @@ export default function ChamadosPage() {
   const [fornecedores, setFornecedores] = useState<any[]>([]);
   const [secretarias, setSecretarias] = useState<any[]>([]);
   const [funcionariosSecretaria, setFuncionariosSecretaria] = useState<string[]>([]);
+  const [notificacoesAguardandoConfirmacao, setNotificacoesAguardandoConfirmacao] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [filtroPrioridade, setFiltroPrioridade] = useState("todos");
@@ -57,6 +67,11 @@ export default function ChamadosPage() {
     prioridade: "normal" as const,
     fornecedor_id: "",
   });
+  const [modalAguardandoConfirmacao, setModalAguardandoConfirmacao] = useState(false);
+  const [confirmandoChamado, setConfirmandoChamado] = useState<string | null>(null);
+  const [chamadoParaNegar, setChamadoParaNegar] = useState<Chamado | null>(null);
+  const [justificativaNegacao, setJustificativaNegacao] = useState("");
+  const [negandoChamado, setNegandoChamado] = useState<string | null>(null);
 
   // Filtrar fornecedores por nome ou CNPJ/CPF
   const fornecedoresFiltrados = fornecedores.filter((forn) => {
@@ -74,9 +89,152 @@ export default function ChamadosPage() {
     loadFuncionariosSecretaria();
   }, []);
 
+  useEffect(() => {
+    if (session?.id) {
+      loadNotificacoesAguardandoConfirmacao();
+
+      // Monitora mudanças nas notificações em tempo real
+      const subscription = supabase
+        .channel("notificacoes-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notificacoes",
+            filter: `usuario_id=eq.${session.id}`,
+          },
+          () => {
+            loadNotificacoesAguardandoConfirmacao();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [session?.id]);
+
+  const loadNotificacoesAguardandoConfirmacao = async () => {
+    if (!session?.id) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/prefeitura/notificacoes?usuario_id=${session.id}&prefeitura_id=${prefeituraId}`);
+      const json = await response.json();
+
+      if (!response.ok) {
+        setNotificacoesAguardandoConfirmacao([]);
+      } else {
+        setNotificacoesAguardandoConfirmacao(json.notificacoes || []);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar notificações:", error);
+      setNotificacoesAguardandoConfirmacao([]);
+    }
+  };
+
+  const confirmarFinalizacaoChamado = async (chamadoId: string) => {
+    try {
+      setConfirmandoChamado(chamadoId);
+
+      const notificacao = notificacoesAguardandoConfirmacao.find(n => n.referencia_id === chamadoId);
+
+      if (!notificacao) {
+        alert("Notificação não encontrada!");
+        return;
+      }
+
+      // Usar API com admin privileges
+      const response = await fetch("/api/prefeitura/chamados/confirmar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chamado_id: chamadoId,
+          notificacao_id: notificacao.id
+        })
+      });
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.error || "Erro ao confirmar");
+      }
+
+      setChamados(
+        chamados.map(c => c.id === chamadoId ? { ...c, status: "em_requisicao" } : c)
+      );
+
+      setNotificacoesAguardandoConfirmacao(
+        notificacoesAguardandoConfirmacao.filter(n => n.referencia_id !== chamadoId)
+      );
+
+      alert("✅ Finalização confirmada!");
+    } catch (error) {
+      console.error("Erro ao confirmar finalização:", error);
+      alert("Erro ao confirmar finalização");
+    } finally {
+      setConfirmandoChamado(null);
+    }
+  };
+
+  const negarFinalizacaoChamado = async () => {
+    if (!chamadoParaNegar || !justificativaNegacao.trim()) {
+      alert("Adicione uma justificativa!");
+      return;
+    }
+
+    try {
+      setNegandoChamado(chamadoParaNegar.id);
+
+      const notificacao = notificacoesAguardandoConfirmacao.find(n => n.referencia_id === chamadoParaNegar.id);
+
+      if (!notificacao) {
+        alert("Notificação não encontrada!");
+        return;
+      }
+
+      // Usar API com admin privileges
+      const response = await fetch("/api/prefeitura/chamados/negar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chamado_id: chamadoParaNegar.id,
+          notificacao_id: notificacao.id,
+          justificativa: justificativaNegacao
+        })
+      });
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.error || "Erro ao registrar recusa");
+      }
+
+      setChamados(
+        chamados.map(c => c.id === chamadoParaNegar.id ? { ...c, status: "pendente" } : c)
+      );
+
+      setNotificacoesAguardandoConfirmacao(
+        notificacoesAguardandoConfirmacao.filter(n => n.referencia_id !== chamadoParaNegar.id)
+      );
+
+      alert("✅ Serviço recusado! Status voltou para pendente.");
+      setChamadoParaNegar(null);
+      setJustificativaNegacao("");
+      setModalAguardandoConfirmacao(false);
+    } catch (error) {
+      console.error("Erro ao negar finalização:", error);
+      alert("Erro ao registrar recusa");
+    } finally {
+      setNegandoChamado(null);
+    }
+  };
+
   const loadFornecedores = async () => {
     try {
-      console.log("🔍 Carregando fornecedores para prefeitura_id:", prefeituraId);
 
       const { data, error } = await supabase
         .from("fornecedores")
@@ -143,7 +301,6 @@ export default function ChamadosPage() {
   const loadChamados = async () => {
     try {
       setLoading(true);
-      console.log("🔍 Carregando chamados...");
 
       const { data, error } = await supabase
         .from("chamados")
@@ -239,6 +396,13 @@ export default function ChamadosPage() {
     return statusMatch && prioridadeMatch && searchMatch;
   });
 
+  const contagemAguardandoConfirmacaoPorFornecedor = (fornecedorId: string) => {
+    return notificacoesAguardandoConfirmacao.filter(notif => {
+      const chamado = chamados.find(c => c.id === notif.referencia_id);
+      return chamado && chamado.fornecedor_id === fornecedorId;
+    }).length;
+  };
+
   const stats = [
     {
       label: "Pendentes",
@@ -259,11 +423,23 @@ export default function ChamadosPage() {
       color: "from-green-500 to-green-600",
     },
     {
+      label: "Em Requisição",
+      value: chamadosVisiveis.filter((n) => n.status === "em_requisicao").length,
+      icon: "📄",
+      color: "from-cyan-500 to-cyan-600",
+    },
+    {
       label: "Urgentes",
       value: chamadosVisiveis.filter((n) => n.prioridade === "urgente").length,
       icon: "🔴",
       color: "from-red-500 to-red-600",
     },
+    ...(notificacoesAguardandoConfirmacao.length > 0 ? [{
+      label: "Aguardando Confirmação",
+      value: notificacoesAguardandoConfirmacao.length,
+      icon: "⏸️",
+      color: "from-yellow-500 to-yellow-600",
+    }] : []),
   ];
 
   return (
@@ -280,11 +456,35 @@ export default function ChamadosPage() {
       />
 
       <div className="p-8 w-full max-w-[2280px] mx-auto">
+        {/* Banner de Notificações Aguardando Confirmação */}
+        {notificacoesAguardandoConfirmacao.length > 0 && (
+          <div className="mb-8 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-2xl p-6 border-2 border-yellow-600 shadow-lg animate-pulse">
+            <div className="flex items-center gap-4">
+              <span className="text-5xl">⏸️</span>
+              <div className="flex-1">
+                <p className="text-xl font-black">Você tem {notificacoesAguardandoConfirmacao.length} chamado{notificacoesAguardandoConfirmacao.length > 1 ? 's' : ''} aguardando sua confirmação de finalização</p>
+                <p className="text-sm mt-2 font-medium">O fornecedor já finalizou e está aguardando você confirmar se o serviço foi realmente concluído.</p>
+              </div>
+              <button
+                onClick={() => setModalAguardandoConfirmacao(true)}
+                className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg transition transform hover:scale-105"
+              >
+                Ver Chamados
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards - Design Premium */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           {stats.map((stat, idx) => (
             <div
               key={idx}
+              onClick={() => {
+                if (stat.label === "Em Requisição") {
+                  router.push(`/prefeituras/${prefeituraId}/chamados/em-requisicao`);
+                }
+              }}
               className={`bg-gradient-to-br ${stat.color} rounded-2xl p-7 text-white shadow-xl hover:shadow-2xl transition duration-300 transform hover:-translate-y-1 cursor-pointer group overflow-hidden relative`}
             >
               <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition duration-300"></div>
@@ -377,7 +577,10 @@ export default function ChamadosPage() {
                   return map;
                 }, new Map<string, Chamado[]>())
                 .entries()
-            ).map(([fornecedorId, chamadosForn]) => {
+            ).filter(([fornecedorId, chamadosForn]) => {
+              const chamadosAbertas = chamadosForn.filter(n => n.status === "pendente").length;
+              return chamadosAbertas > 0;
+            }).map(([fornecedorId, chamadosForn]) => {
               const f = fornecedores.find(forn => forn.id === fornecedorId);
               const chamadosAbertas = chamadosForn.filter(n => n.status === "pendente").length;
               const contratoAtivo = chamadosForn[0]?.titulo || f?.tipo || "Contrato";
@@ -436,9 +639,16 @@ export default function ChamadosPage() {
 
                   {/* Badge Chamados em Aberto */}
                   <div className="px-6 py-3 border-t border-gray-100">
-                    <span className="inline-block px-3 py-1.5 rounded-full text-sm font-bold bg-orange-100 text-orange-700">
-                      🔔 {chamadosAbertas} chamados
-                    </span>
+                    <div className="flex gap-2 flex-wrap">
+                      <span className="inline-block px-3 py-1.5 rounded-full text-sm font-bold bg-orange-100 text-orange-700">
+                        🔔 {chamadosAbertas} chamados
+                      </span>
+                      {contagemAguardandoConfirmacaoPorFornecedor(fornecedorId!) > 0 && (
+                        <span className="inline-block px-3 py-1.5 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700 animate-pulse">
+                          ⏸️ {contagemAguardandoConfirmacaoPorFornecedor(fornecedorId!)} aguardando
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Espaçador flexível */}
@@ -601,6 +811,119 @@ export default function ChamadosPage() {
                 Criar Chamado
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Chamados Aguardando Confirmação */}
+      {modalAguardandoConfirmacao && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-3xl w-full p-10 border-2 border-gray-300 shadow-2xl animate-in zoom-in-95 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-3xl font-black text-gray-900">⏸️ Confirmar Finalizações</h3>
+                <p className="text-gray-600 text-base mt-2">Revise e confirme os chamados finalizados pelos fornecedores</p>
+              </div>
+              <button
+                onClick={() => setModalAguardandoConfirmacao(false)}
+                className="text-gray-500 hover:text-gray-900 text-3xl transition transform hover:rotate-90"
+              >
+                ✕
+              </button>
+            </div>
+
+            {notificacoesAguardandoConfirmacao.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-6xl mb-4">✅</p>
+                <p className="text-gray-900 text-lg font-bold">Nenhum chamado aguardando confirmação!</p>
+                <p className="text-gray-600 mt-2">Todos os serviços foram confirmados.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notificacoesAguardandoConfirmacao.map((notif) => {
+                  const chamado = chamados.find(c => c.id === notif.referencia_id);
+                  if (!chamado) return null;
+
+                  const fornecedor = fornecedores.find(f => f.id === chamado.fornecedor_id);
+
+                  return (
+                    <div key={notif.id} className={`border-2 rounded-lg p-6 transition ${
+                      chamadoParaNegar?.id === chamado.id
+                        ? "bg-red-50 border-red-300"
+                        : "bg-gray-50 border-yellow-200 hover:bg-yellow-50"
+                    }`}>
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                          <h4 className="text-lg font-bold text-gray-900">{chamado.titulo}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{chamado.descricao}</p>
+                          <div className="mt-4 flex gap-3">
+                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                              🏢 {fornecedor?.nome || "Desconhecido"}
+                            </span>
+                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                              chamado.prioridade === "urgente" ? "bg-red-100 text-red-700" :
+                              chamado.prioridade === "normal" ? "bg-amber-100 text-amber-700" :
+                              "bg-emerald-100 text-emerald-700"
+                            }`}>
+                              {chamado.prioridade === "urgente" ? "🔴 Urgente" :
+                               chamado.prioridade === "normal" ? "🟡 Normal" :
+                               "🟢 Baixa"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          {chamadoParaNegar?.id === chamado.id ? (
+                            <button
+                              onClick={() => {
+                                setChamadoParaNegar(null);
+                                setJustificativaNegacao("");
+                              }}
+                              className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition"
+                            >
+                              ← Voltar
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setChamadoParaNegar(chamado)}
+                              className="px-4 py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-lg transition"
+                            >
+                              ❌ Negar
+                            </button>
+                          )}
+                          <button
+                            onClick={() => confirmarFinalizacaoChamado(chamado.id)}
+                            disabled={confirmandoChamado === chamado.id || chamadoParaNegar?.id === chamado.id}
+                            className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition transform hover:scale-105 whitespace-nowrap"
+                          >
+                            {confirmandoChamado === chamado.id ? "Confirmando..." : "✅ Confirmar"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {chamadoParaNegar?.id === chamado.id && (
+                        <div className="mt-6 pt-6 border-t-2 border-red-200">
+                          <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">📝 Justificativa *</label>
+                          <textarea
+                            value={justificativaNegacao}
+                            onChange={(e) => setJustificativaNegacao(e.target.value)}
+                            placeholder="Explique por que o serviço não foi finalizado corretamente..."
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-lg text-gray-900 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 resize-none font-medium"
+                            rows={4}
+                          />
+                          <button
+                            onClick={negarFinalizacaoChamado}
+                            disabled={!justificativaNegacao.trim() || negandoChamado === chamado.id}
+                            className="mt-4 w-full px-6 py-3 text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition font-bold shadow-lg hover:shadow-xl"
+                          >
+                            {negandoChamado === chamado.id ? "Processando..." : "❌ Recusar Serviço"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
