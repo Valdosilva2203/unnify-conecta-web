@@ -27,9 +27,9 @@ export default function FornecedorSidebar({
   };
 
   const menuItems = [
+    { id: "prefeituras", icon: "🏛️", label: "Minhas Prefeituras", path: "/fornecedor/prefeituras" },
     { id: "dashboard", icon: "📊", label: "Dashboard", path: "/fornecedor/dashboard" },
     { id: "requisicoes", icon: "📋", label: "Requisições", path: "/fornecedor/requisicoes" },
-    { id: "prefeituras", icon: "🏛️", label: "Minhas Prefeituras", path: "/fornecedor/prefeituras" },
   ];
 
   return (
