@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import FornecedorSidebar from "@/app/components/FornecedorSidebar";
 
 interface SessionData {
   id: string;
@@ -81,48 +82,15 @@ export default function FornecedorRequisicoes() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
-      <div className={`${menuAberto ? "w-64" : "w-20"} bg-white text-gray-900 border-r border-gray-200 transition-all duration-300 flex flex-col shadow-sm`}>
-        <div className="p-6 flex items-center justify-between">
-          <div className={`flex items-center gap-2 ${!menuAberto && "justify-center w-full"}`}>
-            <span className="text-3xl">📦</span>
-            {menuAberto && <span className="text-xl font-bold">Unnify</span>}
-          </div>
-        </div>
-
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          <div className={menuAberto ? "text-xs font-bold text-gray-600 uppercase mb-4" : "hidden"}>
-            Menu
-          </div>
-          <button
-            onClick={() => router.push("/fornecedor/dashboard")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-900 transition"
-          >
-            <span className="text-xl">📊</span>
-            {menuAberto && <span>Dashboard</span>}
-          </button>
-          <button
-            onClick={() => router.push("/fornecedor/requisicoes")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-900 transition"
-          >
-            <span className="text-xl">📋</span>
-            {menuAberto && <span>Requisições</span>}
-          </button>
-        </nav>
-
-        <div className="p-6 border-t border-gray-200">
-          <button
-            onClick={() => {
-              localStorage.removeItem("fornecedor_session");
-              router.push("/login");
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-100 text-red-700 transition text-sm font-medium"
-          >
-            <span>🚪</span>
-            {menuAberto && <span>Sair</span>}
-          </button>
-        </div>
-      </div>
+      <FornecedorSidebar
+        menuAberto={menuAberto}
+        onToggleMenu={() => setMenuAberto(!menuAberto)}
+        currentPage="requisicoes"
+        onLogout={() => {
+          localStorage.removeItem("fornecedor_session");
+          router.push("/login");
+        }}
+      />
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
