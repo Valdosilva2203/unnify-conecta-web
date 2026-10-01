@@ -419,26 +419,6 @@ export default function ChamadosEmRequisicaoPage() {
                   </div>
                 )}
 
-                {/* Contratos Adicionados */}
-                {contratosModal.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Contratos Adicionados
-                    </label>
-                    <div className="space-y-2">
-                      {contratosModal.map((contrato) => (
-                        <div key={contrato.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                          <p className="font-semibold text-gray-900">{contrato.numero}</p>
-                          <p className="text-sm text-gray-600">{contrato.descricao}</p>
-                          <p className="text-sm text-gray-700 mt-1">
-                            <strong>Valor:</strong> R$ {(contrato.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Observações */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
