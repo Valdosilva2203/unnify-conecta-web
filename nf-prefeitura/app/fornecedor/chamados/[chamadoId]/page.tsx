@@ -230,14 +230,14 @@ export default function DetalheChamadoPage() {
           chamado_id: chamado?.id
         });
 
-        // Tenta registrar o consumo no banco de dados
+        // Tenta registrar o consumo no banco de dados (sem requisicao_id, só para chamados)
         const { error, data } = await supabase
           .from("consumo_objetos")
           .insert([{
             objeto_id: objetoSelecionado.id,
             quantidade_usada: parseFloat(quantidadeObjeto),
-            requisicao_id: chamado?.id || null,
             tipo: "chamado"
+            // requisicao_id não é preenchido pois este é para chamado, não requisição
           }]);
 
         if (error) {
