@@ -70,11 +70,20 @@ export default function RequisicoesPage() {
 
   const loadRequisicoes = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("requisicoes")
         .select("*")
-        .eq("secretaria_id", secretariaId)
-        .order("created_at", { ascending: false });
+        .eq("secretaria_id", secretariaId);
+
+      // Se usuário NÃO é secretário, mostrar apenas suas requisições
+      const prefeituraSession = localStorage.getItem("prefeitura_session");
+      const session = prefeituraSession ? JSON.parse(prefeituraSession) : null;
+
+      if (session && session.cargo !== "Secretário" && session.cargo !== "secretario") {
+        query = query.eq("criada_por", session.id);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
       setRequisicoes(data || []);

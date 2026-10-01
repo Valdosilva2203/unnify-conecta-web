@@ -243,6 +243,7 @@ export default function ChamadosEmRequisicaoPage() {
           contrato_numero: primeiroContrato?.numero,
           prefeitura_id: prefeituraId,
           secretaria_id: secretariaId,
+          criada_por: session?.id,
           status: "pendente"
         }])
         .select();
