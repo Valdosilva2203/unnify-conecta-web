@@ -74,6 +74,8 @@ export default function DetalheChamadoPage() {
 
   const carregarObjetos = async () => {
     try {
+      console.log("📥 Carregando objetos para chamado:", chamadoId);
+
       const { data, error } = await supabase
         .from("consumo_objetos")
         .select("id, quantidade_usada, objeto_id")
@@ -81,29 +83,43 @@ export default function DetalheChamadoPage() {
         .eq("chamado_id", chamadoId);
 
       if (error) {
-        console.warn("Aviso ao carregar objetos:", error);
+        console.error("❌ Erro ao carregar consumo_objetos:", error);
         return;
       }
 
+      console.log("📊 Registros encontrados:", data?.length);
+
       if (!data || data.length === 0) {
+        console.log("ℹ️ Nenhum objeto vinculado ainda");
         setObjetos([]);
         return;
       }
 
       const detalhes: any[] = [];
       for (const consumo of data) {
-        const { data: obj } = await supabase
+        console.log("🔍 Buscando detalhes do objeto:", consumo.objeto_id);
+
+        const { data: obj, error: erroObj } = await supabase
           .from("objetos_contratos")
           .select("nome, contrato_id")
           .eq("id", consumo.objeto_id)
           .single();
 
+        if (erroObj) {
+          console.warn("⚠️ Erro ao buscar objeto:", erroObj);
+          continue;
+        }
+
         if (obj) {
-          const { data: contrato } = await supabase
+          const { data: contrato, error: erroContrato } = await supabase
             .from("contratos")
             .select("numero")
             .eq("id", obj.contrato_id)
             .single();
+
+          if (erroContrato) {
+            console.warn("⚠️ Erro ao buscar contrato:", erroContrato);
+          }
 
           detalhes.push({
             consumo_id: consumo.id,
@@ -115,9 +131,9 @@ export default function DetalheChamadoPage() {
         }
       }
       setObjetos(detalhes);
-      console.log("✅ Objetos carregados:", detalhes.length);
+      console.log("✅ Objetos carregados:", detalhes.length, detalhes);
     } catch (error) {
-      console.error("Erro ao carregar objetos:", error);
+      console.error("❌ Erro geral ao carregar objetos:", error);
     }
   };
 
