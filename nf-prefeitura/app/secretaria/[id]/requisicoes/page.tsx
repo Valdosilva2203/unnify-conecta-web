@@ -84,7 +84,6 @@ export default function RequisicoesPage() {
       const { data, error } = await supabase
         .from("requisicoes")
         .select("id, titulo, descricao, status, created_at, numero_requisicao, secretaria_id, fornecedor_nome")
-        .eq("secretaria_id", secretariaId)
         .order("created_at", { ascending: false });
 
       console.log("📋 Requisições encontradas para esta secretaria:", data?.length || 0, error);
