@@ -32,6 +32,9 @@ export default function DetalheChamadoPage() {
   const [loading, setLoading] = useState(true);
   const [novaJustificativa, setNovaJustificativa] = useState("");
   const [adicionando, setAdicionando] = useState(false);
+  const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(false);
+  const [novoObjeto, setNovoObjeto] = useState("");
+  const [objetos, setObjetos] = useState<string[]>([]);
 
   useEffect(() => {
     carregarChamado();
@@ -102,6 +105,18 @@ export default function DetalheChamadoPage() {
     } catch (error) {
       console.error("Erro ao deletar justificativa:", error);
     }
+  };
+
+  const adicionarObjeto = () => {
+    if (novoObjeto.trim()) {
+      setObjetos([...objetos, novoObjeto]);
+      setNovoObjeto("");
+      setAbrirFormularioObjeto(false);
+    }
+  };
+
+  const removerObjeto = (index: number) => {
+    setObjetos(objetos.filter((_, i) => i !== index));
   };
 
   if (loading) {
@@ -218,6 +233,77 @@ export default function DetalheChamadoPage() {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Objetos */}
+            <div className="border-t pt-8 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">📦 Objetos</h3>
+                <button
+                  onClick={() => setAbrirFormularioObjeto(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                >
+                  + Adicionar Objeto
+                </button>
+              </div>
+
+              {objetos.length > 0 ? (
+                <div className="space-y-3 mb-6">
+                  {objetos.map((objeto, index) => (
+                    <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <p className="text-gray-700 font-medium">{objeto}</p>
+                      </div>
+                      <button
+                        onClick={() => removerObjeto(index)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 rounded-full transition flex-shrink-0"
+                        title="Remover objeto"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500 mb-6">
+                  Nenhum objeto adicionado
+                </div>
+              )}
+
+              {abrirFormularioObjeto && (
+                <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-6">
+                  <p className="text-sm font-medium text-gray-700 mb-3">Novo Objeto</p>
+                  <input
+                    type="text"
+                    value={novoObjeto}
+                    onChange={(e) => setNovoObjeto(e.target.value)}
+                    placeholder="Descreva o objeto..."
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-4 focus:border-blue-500 focus:outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") adicionarObjeto();
+                    }}
+                    autoFocus
+                  />
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => {
+                        setAbrirFormularioObjeto(false);
+                        setNovoObjeto("");
+                      }}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={adicionarObjeto}
+                      disabled={!novoObjeto.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Justificativas */}
