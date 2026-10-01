@@ -571,10 +571,18 @@ export default function DetalheChamadoPage() {
                               })} | Qtd Disponível: {objeto.disponivel || 0}/{objeto.quantidade || 0}
                             </p>
 
-                            {/* Barra de Progresso */}
+                            {/* Barra de Progresso com cores dinâmicas */}
                             <div className="w-full h-2 bg-gray-300 rounded-full mb-3 overflow-hidden">
                               <div
-                                className="h-full bg-blue-500 transition-all"
+                                className={`h-full rounded-full transition-all ${
+                                  objeto.percentualUsado < 25
+                                    ? "bg-green-500"
+                                    : objeto.percentualUsado < 50
+                                    ? "bg-blue-500"
+                                    : objeto.percentualUsado < 75
+                                    ? "bg-orange-500"
+                                    : "bg-red-500"
+                                }`}
                                 style={{ width: `${objeto.percentualUsado || 0}%` }}
                               ></div>
                             </div>
