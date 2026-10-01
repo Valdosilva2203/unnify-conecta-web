@@ -234,43 +234,31 @@ export default function DetalheChamadoPage() {
 
       if (erroStatus) throw erroStatus;
 
-      // 2. Busca secretario_id do chamado para enviar notificação
-      if (chamado?.secretaria_id) {
-        console.log("🔍 Buscando secretário da secretaria:", chamado.secretaria_id);
+      // 2. Envia notificação para o criador do chamado
+      if (chamado?.usuario_id && chamado?.prefeitura_id) {
+        console.log("🔍 Enviando notificação para criador do chamado:", chamado.usuario_id);
 
-        const { data: secretario } = await supabase
-          .from("funcionarios")
-          .select("id")
-          .eq("secretaria_id", chamado.secretaria_id)
-          .ilike("cargo", "%secretario%")
-          .single();
+        const notifPayload = {
+          usuario_id: chamado.usuario_id,
+          prefeitura_id: chamado.prefeitura_id,
+          tipo: "chamado_aguardando_confirmacao",
+          mensagem: `Chamado "${chamado.titulo}" aguardando confirmação. O fornecedor finalizou o trabalho.`,
+          referencia_id: chamadoId
+        };
+        console.log("📨 Criando notificação:", notifPayload);
 
-        console.log("👤 Secretário encontrado:", secretario?.id);
+        const response = await fetch("/api/prefeitura/notificacoes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(notifPayload)
+        });
 
-        if (secretario?.id) {
-          // 3. Cria notificação de confirmação para o secretário
-          const notifPayload = {
-            usuario_id: secretario.id,
-            prefeitura_id: chamado.prefeitura_id,
-            tipo: "chamado_aguardando_confirmacao",
-            mensagem: `Chamado "${chamado.titulo}" aguardando confirmação. O fornecedor finalizou o trabalho.`,
-            referencia_id: chamadoId
-          };
-          console.log("📨 Criando notificação:", notifPayload);
-
-          const response = await fetch("/api/prefeitura/notificacoes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(notifPayload)
-          });
-
-          console.log("📊 Resposta da notificação:", response.status);
-          const result = await response.json();
-          console.log("✅ Notificação criada:", result);
-        }
+        console.log("📊 Resposta da notificação:", response.status);
+        const result = await response.json();
+        console.log("✅ Notificação criada:", result);
       }
 
-      alert("✅ Chamado enviado! Aguardando confirmação do secretário.");
+      alert("✅ Chamado enviado! Aguardando confirmação.");
       await carregarChamado();
     } catch (error) {
       console.error("Erro ao finalizar chamado:", error);
