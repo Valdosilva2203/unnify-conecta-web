@@ -237,7 +237,7 @@ export default function ChamadosEmRequisicaoPage() {
         .from("requisicoes")
         .insert([{
           numero_requisicao: numeroRequisicao,
-          titulo: modalChamado.titulo || "Requisição do Chamado",
+          titulo: `Requisição ${numeroRequisicao}`,
           descricao: modalChamado.descricao || observacoes,
           fornecedor_id: modalChamado.fornecedor_id,
           fornecedor_nome: fornecedorBusca,
