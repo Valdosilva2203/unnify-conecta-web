@@ -86,6 +86,15 @@ export default function RequisicoesPage() {
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
+
+      // Log para debugar criador_nome
+      if (data && data.length > 0) {
+        console.log("📋 Primeiras requisições:", data.slice(0, 3).map((r: any) => ({
+          id: r.id,
+          criador_nome: r.criador_nome
+        })));
+      }
+
       setRequisicoes(data || []);
     } catch (error) {
       console.error("Erro ao carregar requisições:", error);
