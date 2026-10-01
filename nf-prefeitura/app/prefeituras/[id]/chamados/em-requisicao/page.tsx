@@ -48,6 +48,7 @@ export default function ChamadosEmRequisicaoPage() {
   const [fornecedorBusca, setFornecedorBusca] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [contratoModal, setContratoModal] = useState<any>(null);
+  const [objetosModal, setObjetosModal] = useState<any[]>([]);
 
   useEffect(() => {
     if (session?.id) {
@@ -165,30 +166,31 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratoDoModal = async (chamadoId: string) => {
     try {
-      // Buscar consumo_objetos do chamado
-      const { data: consumo } = await supabase
+      // Buscar todos os consumo_objetos do chamado
+      const { data: consumos } = await supabase
         .from("consumo_objetos")
-        .select("objeto_id")
+        .select("objeto_id, quantidade_usada")
         .eq("chamado_id", chamadoId)
-        .eq("tipo", "chamado")
-        .limit(1);
+        .eq("tipo", "chamado");
 
-      if (!consumo || consumo.length === 0) {
+      if (!consumos || consumos.length === 0) {
         setContratoModal(null);
+        setObjetosModal([]);
         return;
       }
 
-      const objetoId = consumo[0].objeto_id;
+      const objetoId = consumos[0].objeto_id;
 
       // Buscar contrato via objeto
       const { data: objetos } = await supabase
         .from("objetos_contratos")
-        .select("contrato_id")
+        .select("contrato_id, id, nome, descricao, valor_unitario, quantidade_disponivel")
         .eq("id", objetoId)
         .limit(1);
 
       if (!objetos || objetos.length === 0) {
         setContratoModal(null);
+        setObjetosModal([]);
         return;
       }
 
@@ -202,9 +204,32 @@ export default function ChamadosEmRequisicaoPage() {
         .single();
 
       setContratoModal(contrato);
+
+      // Buscar todos os objetos deste contrato que foram adicionados ao chamado
+      const { data: objetosConsumo } = await supabase
+        .from("consumo_objetos")
+        .select("objeto_id, quantidade_usada, objetos_contratos!inner(id, nome, descricao, valor_unitario, quantidade_disponivel)")
+        .eq("chamado_id", chamadoId)
+        .eq("tipo", "chamado");
+
+      if (objetosConsumo) {
+        const objetosFormatados = objetosConsumo
+          .map((item: any) => ({
+            id: item.objeto_id,
+            nome: item.objetos_contratos?.nome || "Objeto",
+            descricao: item.objetos_contratos?.descricao,
+            valor_unitario: item.objetos_contratos?.valor_unitario,
+            quantidade_disponivel: item.objetos_contratos?.quantidade_disponivel,
+            quantidade_consumida: item.quantidade_usada
+          }))
+          .filter(obj => obj.nome !== "Objeto");
+
+        setObjetosModal(objetosFormatados);
+      }
     } catch (error) {
       console.error("Erro ao carregar contrato:", error);
       setContratoModal(null);
+      setObjetosModal([]);
     }
   };
 
@@ -409,13 +434,33 @@ export default function ChamadosEmRequisicaoPage() {
 
                 {/* Contrato */}
                 {contratoModal && (
-                  <div className="bg-cyan-50 border border-cyan-300 rounded-lg p-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Contrato</p>
-                    <p className="font-semibold text-gray-900">✓ {contratoModal.numero}</p>
-                    <p className="text-sm text-gray-600">{contratoModal.descricao}</p>
-                    <p className="text-sm text-gray-700 mt-2">
-                      <strong>Valor:</strong> R$ {(contratoModal.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </p>
+                  <div>
+                    <div className="bg-cyan-50 border border-cyan-300 rounded-lg p-4 mb-4">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Contrato</p>
+                      <p className="font-semibold text-gray-900">✓ {contratoModal.numero}</p>
+                      <p className="text-sm text-gray-600">{contratoModal.descricao}</p>
+                      <p className="text-sm text-gray-700 mt-2">
+                        <strong>Valor:</strong> R$ {(contratoModal.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+
+                    {/* Objetos do Contrato */}
+                    {objetosModal.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 mb-3">Objetos do Contrato:</p>
+                        <div className="space-y-2">
+                          {objetosModal.map((objeto) => (
+                            <div key={objeto.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                              <p className="font-medium text-gray-900">{objeto.nome}</p>
+                              <p className="text-xs text-gray-600">
+                                Valor Unit.: R$ {(objeto.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} |
+                                Qtd: {objeto.quantidade_consumida}/{objeto.quantidade_disponivel}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
