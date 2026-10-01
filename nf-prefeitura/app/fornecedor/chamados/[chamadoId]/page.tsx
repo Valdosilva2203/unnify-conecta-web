@@ -267,7 +267,8 @@ export default function DetalheChamadoPage() {
             quantidade_usada: parseFloat(quantidadeObjeto),
             tipo: "chamado"
             // requisicao_id não é preenchido pois este é para chamado, não requisição
-          }]);
+          }])
+          .select();
 
         if (error) {
           console.error("Erro completo:", JSON.stringify(error, null, 2));
