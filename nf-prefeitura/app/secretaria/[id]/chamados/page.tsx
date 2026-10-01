@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import TopNavBar from "@/components/TopNavBar";
+import { Clock, Phone, Bell, ChevronDown } from "lucide-react";
 
 interface Chamado {
   id: string;
@@ -96,9 +96,47 @@ export default function ChamadosPage() {
   };
 
   return (
-    <div>
-      <TopNavBar />
-      <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Simple Header */}
+      <div className="w-full bg-white border-b border-gray-200">
+        <div className="px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">📞 Meus Chamados</h1>
+              <p className="text-sm text-gray-600 mt-1">Todos os chamados que você criou</p>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <button className="text-gray-600 hover:text-gray-800 transition">
+                <Clock size={20} />
+              </button>
+              <button className="text-gray-600 hover:text-gray-800 transition">
+                <Phone size={20} />
+              </button>
+              <button className="text-gray-600 hover:text-gray-800 transition relative">
+                <Bell size={20} />
+                <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full"></span>
+              </button>
+
+              <button
+                onClick={() => router.push("/minha-conta")}
+                className="flex items-center gap-3 pl-6 border-l border-gray-200 hover:opacity-80 transition"
+              >
+                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                  U
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-sm font-medium text-gray-900">Usuário</span>
+                  <span className="text-xs text-gray-600">Comum</span>
+                </div>
+                <ChevronDown size={16} className="text-gray-600" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <button
@@ -107,8 +145,7 @@ export default function ChamadosPage() {
             >
               ← Voltar
             </button>
-            <h1 className="text-4xl font-bold text-gray-900">📞 Meus Chamados</h1>
-            <p className="text-gray-600 mt-2">Total: {chamados.length} chamados</p>
+            <p className="text-gray-600">Total: {chamados.length} chamados</p>
           </div>
 
           {loading ? (
