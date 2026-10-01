@@ -70,11 +70,15 @@ export default function RequisicoesPage() {
 
   const loadRequisicoes = async () => {
     try {
+      console.log("🔍 Buscando requisições para secretaria_id:", secretariaId);
+
       const { data, error } = await supabase
         .from("requisicoes")
-        .select("id, titulo, descricao, status, created_at, numero_requisicao")
+        .select("id, titulo, descricao, status, created_at, numero_requisicao, secretaria_id, fornecedor_nome")
         .eq("secretaria_id", secretariaId)
         .order("created_at", { ascending: false });
+
+      console.log("📋 Requisições encontradas:", data?.length || 0, error);
 
       if (error) throw error;
       setRequisicoes(data || []);
