@@ -46,7 +46,7 @@ export default function DetalheChamadoPage() {
   const [loading, setLoading] = useState(true);
   const [novaJustificativa, setNovaJustificativa] = useState("");
   const [adicionando, setAdicionando] = useState(false);
-  const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(false);
+  const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(true);
   const [novoObjeto, setNovoObjeto] = useState("");
   const [objetos, setObjetos] = useState<{ id: string; numero: string; descricao: string }[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
@@ -60,6 +60,7 @@ export default function DetalheChamadoPage() {
 
   useEffect(() => {
     carregarChamado();
+    carregarContratos();
   }, [chamadoId]);
 
   const carregarChamado = async () => {
@@ -338,20 +339,9 @@ export default function DetalheChamadoPage() {
 
             {/* Objetos */}
             <div className="border-t pt-8 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">📦 Objetos</h3>
-                <button
-                  onClick={() => {
-                    setAbrirFormularioObjeto(true);
-                    carregarContratos();
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-                >
-                  + Adicionar Objeto
-                </button>
-              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">📦 Objetos</h3>
 
-              {objetos.length > 0 ? (
+              {objetos.length > 0 && (
                 <div className="space-y-3 mb-6">
                   {objetos.map((objeto, index) => (
                     <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-start gap-4">
@@ -368,10 +358,6 @@ export default function DetalheChamadoPage() {
                       </button>
                     </div>
                   ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-gray-500 mb-6">
-                  Nenhum objeto adicionado
                 </div>
               )}
 
