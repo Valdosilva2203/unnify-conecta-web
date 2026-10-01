@@ -50,6 +50,7 @@ export default function DetalheChamadoPage() {
   const [adicionando, setAdicionando] = useState(false);
   const [mostrarFormJustificativa, setMostrarFormJustificativa] = useState(false);
   const [finalizandoChamado, setFinalizandoChamado] = useState(false);
+  const [mostrarContratos, setMostrarContratos] = useState(false);
 
   // Objetos vinculados ao chamado (lista única)
   const [objetos, setObjetos] = useState<any[]>([]);
@@ -589,7 +590,15 @@ export default function DetalheChamadoPage() {
 
             {/* Objetos e Contratos */}
             <div className="border-t pt-8 mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Contratos</h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">Contratos</h3>
+                <button
+                  onClick={() => setMostrarContratos(!mostrarContratos)}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition"
+                >
+                  {mostrarContratos ? "Ocultar Contratos" : "Visualizar Contratos"}
+                </button>
+              </div>
 
               {/* Lista de Objetos do Chamado */}
               {objetos.length > 0 && (
@@ -620,7 +629,7 @@ export default function DetalheChamadoPage() {
                 </div>
               )}
 
-              {!contratoSelecionado ? (
+              {mostrarContratos && !contratoSelecionado ? (
                 /* Lista de Contratos - Grade sem scroll */
                 <>
                   <p className="text-sm font-medium text-gray-700 mb-4">Selecione um Contrato:</p>
