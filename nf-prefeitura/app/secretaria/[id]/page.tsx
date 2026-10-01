@@ -85,6 +85,8 @@ export default function SecretariaPage() {
   const [fornecedorDetalhes, setFornecedorDetalhes] = useState<any>(null);
   const [secretarioResponsavel, setSecretarioResponsavel] = useState<any>(null);
   const [termoBusca, setTermoBusca] = useState("");
+  const [mostrarChamados, setMostrarChamados] = useState(false);
+  const [chamadosList, setChamadosList] = useState<any[]>([]);
 
   useEffect(() => {
     // Recarregar prefeitura para obter logo_url atualizada
@@ -379,6 +381,30 @@ export default function SecretariaPage() {
       }));
     } catch (error) {
       console.error("Erro ao carregar dados do dashboard:", error);
+    }
+  };
+
+  const loadChamadosModal = async () => {
+    try {
+      const sessionKey = localStorage.getItem("admin_session") ? "admin_session" : "prefeitura_session";
+      const sessionData = localStorage.getItem(sessionKey);
+      const session = sessionData ? JSON.parse(sessionData) : null;
+
+      if (!session?.id || !secretaria?.prefeitura_id) return;
+
+      const { data, error } = await supabase
+        .from("chamados")
+        .select("id, titulo, descricao, status, prioridade, criador_nome, fornecedor_id, criado_por, created_at")
+        .eq("prefeitura_id", secretaria.prefeitura_id)
+        .eq("criado_por", session.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setChamadosList(data || []);
+      setMostrarChamados(true);
+    } catch (error) {
+      console.error("Erro ao carregar chamados:", error);
+      setChamadosList([]);
     }
   };
 
@@ -1168,7 +1194,7 @@ export default function SecretariaPage() {
               </div>
 
               <div
-                onClick={() => secretaria && router.push(`/prefeituras/${secretaria.prefeitura_id}/chamados`)}
+                onClick={() => loadChamadosModal()}
                 className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-start justify-between">
@@ -1784,6 +1810,65 @@ export default function SecretariaPage() {
       </div>
       </div>
 
+
+      {/* Modal Chamados */}
+      {mostrarChamados && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-96 overflow-y-auto p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">📞 Seus Chamados</h3>
+              <button
+                onClick={() => setMostrarChamados(false)}
+                className="text-2xl text-gray-500 hover:text-gray-700 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {chamadosList.length > 0 ? (
+              <div className="space-y-4">
+                {chamadosList.map((chamado) => (
+                  <div key={chamado.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 mb-2">{chamado.titulo}</h4>
+                        {chamado.descricao && (
+                          <p className="text-sm text-gray-600 mb-3">{chamado.descricao}</p>
+                        )}
+                        <div className="flex gap-4 text-xs">
+                          <span className="text-gray-600">
+                            <strong>Criador:</strong> {chamado.criador_nome}
+                          </span>
+                          <span className={`px-2 py-1 rounded font-medium ${
+                            chamado.status === "pendente"
+                              ? "bg-orange-100 text-orange-800"
+                              : chamado.status === "em_andamento"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-green-100 text-green-800"
+                          }`}>
+                            {chamado.status}
+                          </span>
+                          <span className={`px-2 py-1 rounded font-medium ${
+                            chamado.prioridade === "urgente"
+                              ? "bg-red-100 text-red-800"
+                              : chamado.prioridade === "normal"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-green-100 text-green-800"
+                          }`}>
+                            {chamado.prioridade || "sem prioridade"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 text-center py-8">Nenhum chamado encontrado.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Modal Vincular Funcionário */}
       {mostrarModalVincular && (
