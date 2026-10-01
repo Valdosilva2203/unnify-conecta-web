@@ -62,14 +62,6 @@ export default function FornecedorTopNavBar({
       </div>
 
       <div className="flex items-center gap-4" ref={menuRef}>
-        <button
-          onClick={() => onMenuToggle?.()}
-          className="text-2xl hover:bg-gray-100 p-2 rounded-lg transition"
-          title="Toggle sidebar"
-        >
-          ☰
-        </button>
-
         <div className="relative">
           <button
             onClick={() => setMenuAberto(!menuAberto)}
