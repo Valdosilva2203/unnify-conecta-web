@@ -168,7 +168,7 @@ export default function DetalheChamadoPage() {
     try {
       setCarregandoObjetos(true);
       const { data, error } = await supabase
-        .from("contrato_itens")
+        .from("objetos_contratos")
         .select("id, nome, descricao")
         .eq("contrato_id", contratoId);
 
