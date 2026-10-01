@@ -212,11 +212,9 @@ export default function ChamadosEmRequisicaoPage() {
       const { data: requisicaoData, error: reqError } = await supabase
         .from("requisicoes")
         .insert([{
-          chamado_id: modalChamado.id,
           fornecedor_id: modalChamado.fornecedor_id,
           prefeitura_id: prefeituraId,
           secretaria_id: session?.secretaria_id,
-          observacoes: observacoes,
           status: "pendente"
         }])
         .select();
