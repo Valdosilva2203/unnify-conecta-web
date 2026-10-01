@@ -21,6 +21,14 @@ interface Justificativa {
   created_at: string;
 }
 
+interface Contrato {
+  id: string;
+  numero: string;
+  descricao: string;
+  valor: number;
+  status: "ativo" | "concluido" | "cancelado";
+}
+
 export default function DetalheChamadoPage() {
   const params = useParams();
   const router = useRouter();
@@ -34,7 +42,9 @@ export default function DetalheChamadoPage() {
   const [adicionando, setAdicionando] = useState(false);
   const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(false);
   const [novoObjeto, setNovoObjeto] = useState("");
-  const [objetos, setObjetos] = useState<string[]>([]);
+  const [objetos, setObjetos] = useState<{ id: string; numero: string; descricao: string }[]>([]);
+  const [contratos, setContratos] = useState<Contrato[]>([]);
+  const [carregandoContratos, setCarregandoContratos] = useState(false);
 
   useEffect(() => {
     carregarChamado();
@@ -117,6 +127,39 @@ export default function DetalheChamadoPage() {
 
   const removerObjeto = (index: number) => {
     setObjetos(objetos.filter((_, i) => i !== index));
+  };
+
+  const carregarContratos = async () => {
+    try {
+      setCarregandoContratos(true);
+      const sessionStr = localStorage.getItem("fornecedor_session");
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
+
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from("contratos")
+        .select("*")
+        .eq("fornecedor_id", session.id)
+        .eq("prefeitura_id", session.prefeitura_id)
+        .eq("status", "ativo");
+
+      if (error) throw error;
+      setContratos(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar contratos:", error);
+    } finally {
+      setCarregandoContratos(false);
+    }
+  };
+
+  const adicionarContratoComoObjeto = (contrato: Contrato) => {
+    setObjetos([...objetos, {
+      id: contrato.id,
+      numero: contrato.numero,
+      descricao: contrato.descricao
+    }]);
+    setAbrirFormularioObjeto(false);
   };
 
   if (loading) {
@@ -240,7 +283,10 @@ export default function DetalheChamadoPage() {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">📦 Objetos</h3>
                 <button
-                  onClick={() => setAbrirFormularioObjeto(true)}
+                  onClick={() => {
+                    setAbrirFormularioObjeto(true);
+                    carregarContratos();
+                  }}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
                 >
                   + Adicionar Objeto
@@ -252,7 +298,8 @@ export default function DetalheChamadoPage() {
                   {objetos.map((objeto, index) => (
                     <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-start gap-4">
                       <div className="flex-1">
-                        <p className="text-gray-700 font-medium">{objeto}</p>
+                        <p className="text-gray-700 font-bold">{objeto.numero}</p>
+                        <p className="text-sm text-gray-600 mt-1">{objeto.descricao}</p>
                       </div>
                       <button
                         onClick={() => removerObjeto(index)}
@@ -272,36 +319,45 @@ export default function DetalheChamadoPage() {
 
               {abrirFormularioObjeto && (
                 <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-6">
-                  <p className="text-sm font-medium text-gray-700 mb-3">Novo Objeto</p>
-                  <input
-                    type="text"
-                    value={novoObjeto}
-                    onChange={(e) => setNovoObjeto(e.target.value)}
-                    placeholder="Descreva o objeto..."
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg mb-4 focus:border-blue-500 focus:outline-none"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") adicionarObjeto();
-                    }}
-                    autoFocus
-                  />
-                  <div className="flex gap-3 justify-end">
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-sm font-medium text-gray-700">Selecione um Contrato</p>
                     <button
-                      onClick={() => {
-                        setAbrirFormularioObjeto(false);
-                        setNovoObjeto("");
-                      }}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium"
+                      onClick={() => setAbrirFormularioObjeto(false)}
+                      className="text-gray-600 hover:text-gray-900 text-xl"
                     >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={adicionarObjeto}
-                      disabled={!novoObjeto.trim()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50"
-                    >
-                      Adicionar
+                      ✕
                     </button>
                   </div>
+
+                  {carregandoContratos ? (
+                    <div className="text-center py-4 text-gray-600">
+                      <div className="animate-spin inline-block text-2xl mb-2">⏳</div>
+                      <p>Carregando contratos...</p>
+                    </div>
+                  ) : contratos.length > 0 ? (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {contratos.map((contrato) => (
+                        <button
+                          key={contrato.id}
+                          onClick={() => adicionarContratoComoObjeto(contrato)}
+                          className="w-full text-left p-3 bg-white border border-gray-300 rounded-lg hover:bg-blue-100 hover:border-blue-500 transition"
+                        >
+                          <p className="font-bold text-gray-900">{contrato.numero}</p>
+                          <p className="text-sm text-gray-600 mt-1">{contrato.descricao}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            R$ {(contrato.valor || 0).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-600">
+                      <p>Nenhum contrato ativo vinculado a essa prefeitura</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
