@@ -137,12 +137,26 @@ export default function DetalheChamadoPage() {
   const finalizarChamado = async () => {
     try {
       setFinalizandoChamado(true);
-      const { error } = await supabase
+
+      // Atualiza status do chamado
+      const { error: erroStatus } = await supabase
         .from("chamados")
         .update({ status: "finalizada" })
         .eq("id", chamadoId);
 
-      if (error) throw error;
+      if (erroStatus) throw erroStatus;
+
+      // Vincula objetos adicionados ao chamado (preenche chamado_id)
+      const { error: erroVinculo } = await supabase
+        .from("consumo_objetos")
+        .update({ chamado_id: chamadoId })
+        .eq("tipo", "chamado")
+        .is("chamado_id", null);
+
+      if (erroVinculo) {
+        console.warn("Aviso ao vincular objetos:", erroVinculo);
+      }
+
       alert("✅ Chamado finalizado com sucesso!");
       await carregarChamado();
     } catch (error) {
@@ -296,6 +310,7 @@ export default function DetalheChamadoPage() {
           const qtdTotal = qtdAnterior + novaQuantidade;
 
           // Cria novo consumo com a quantidade somada
+          // chamado_id será preenchido quando finalizar o chamado
           const { error, data } = await supabase
             .from("consumo_objetos")
             .insert([{
@@ -324,6 +339,7 @@ export default function DetalheChamadoPage() {
           console.log(`✅ Quantidade atualizada para ${qtdTotal}!`);
         } else {
           // Se não existe, adiciona normalmente
+          // chamado_id será preenchido quando finalizar o chamado
           const { error, data } = await supabase
             .from("consumo_objetos")
             .insert([{

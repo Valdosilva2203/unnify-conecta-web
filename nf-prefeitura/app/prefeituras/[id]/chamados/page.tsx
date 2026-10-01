@@ -72,6 +72,8 @@ export default function ChamadosPage() {
   const [chamadoParaNegar, setChamadoParaNegar] = useState<Chamado | null>(null);
   const [justificativaNegacao, setJustificativaNegacao] = useState("");
   const [negandoChamado, setNegandoChamado] = useState<string | null>(null);
+  const [objetosAdicionados, setObjetosAdicionados] = useState<any[]>([]);
+  const [chamadoSelecionado, setChamadoSelecionado] = useState<string | null>(null);
 
   // Filtrar fornecedores por nome ou CNPJ/CPF
   const fornecedoresFiltrados = fornecedores.filter((forn) => {
@@ -115,6 +117,31 @@ export default function ChamadosPage() {
       };
     }
   }, [session?.id]);
+
+  const carregarObjetosAdicionados = async (chamadoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("consumo_objetos")
+        .select(`
+          id,
+          quantidade_usada,
+          objetos_contratos!objeto_id(
+            id,
+            nome,
+            descricao,
+            valor_unitario,
+            contratos!contrato_id(id, numero, descricao)
+          )
+        `)
+        .eq("chamado_id", chamadoId);
+
+      if (error) throw error;
+      setObjetosAdicionados(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar objetos:", error);
+      setObjetosAdicionados([]);
+    }
+  };
 
   const loadNotificacoesAguardandoConfirmacao = async () => {
     if (!session?.id) {
@@ -844,6 +871,12 @@ export default function ChamadosPage() {
                   const chamado = chamados.find(c => c.id === notif.referencia_id);
                   if (!chamado) return null;
 
+                  // Carregar objetos quando o modal abrir
+                  if (chamadoSelecionado !== chamado.id) {
+                    setChamadoSelecionado(chamado.id);
+                    carregarObjetosAdicionados(chamado.id);
+                  }
+
                   const fornecedor = fornecedores.find(f => f.id === chamado.fornecedor_id);
 
                   return (
@@ -856,6 +889,29 @@ export default function ChamadosPage() {
                         <div className="flex-1">
                           <h4 className="text-lg font-bold text-gray-900">{chamado.titulo}</h4>
                           <p className="text-sm text-gray-600 mt-1">{chamado.descricao}</p>
+
+                          {/* Objetos Adicionados */}
+                          {objetosAdicionados.length > 0 && chamadoSelecionado === chamado.id && (
+                            <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                              <p className="text-sm font-bold text-gray-900 mb-2">📦 Objetos Adicionados:</p>
+                              <div className="space-y-2">
+                                {objetosAdicionados.map((item) => (
+                                  <div key={item.id} className="bg-white p-2 rounded border-l-4 border-yellow-400 text-xs">
+                                    <p className="font-bold text-gray-900">
+                                      Contrato: {item.objetos_contratos?.contratos?.numero}
+                                    </p>
+                                    <p className="text-gray-600">
+                                      {item.objetos_contratos?.nome} - Qtd: {item.quantidade_usada}
+                                    </p>
+                                    <p className="text-gray-500 mt-1">
+                                      R$ {((item.objetos_contratos?.valor_unitario || 0) * item.quantidade_usada).toFixed(2)}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           <div className="mt-4 flex gap-3">
                             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
                               🏢 {fornecedor?.nome || "Desconhecido"}
