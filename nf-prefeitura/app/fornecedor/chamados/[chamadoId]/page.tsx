@@ -73,31 +73,40 @@ export default function DetalheChamadoPage() {
       // Busca consumos já adicionados a este chamado (sem vincular ainda)
       const { data, error } = await supabase
         .from("consumo_objetos")
-        .select(`
-          id,
-          quantidade_usada,
-          objetos_contratos!objeto_id(
-            id,
-            nome,
-            descricao,
-            contratos!contrato_id(numero)
-          )
-        `)
+        .select("*")
         .eq("tipo", "chamado")
         .is("chamado_id", null);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro na query consumo_objetos:", error);
+        return;
+      }
 
       // Reconstrói o estado local com os objetos já adicionados
       if (data && data.length > 0) {
-        const objetosReconstruidos = data.map((item: any) => ({
-          id: item.objetos_contratos?.id,
-          objeto_id: item.objetos_contratos?.id,
-          consumo_id: item.id,
-          numero: item.objetos_contratos?.contratos?.numero,
-          descricao: `${item.objetos_contratos?.nome || item.objetos_contratos?.descricao} (Qtd: ${item.quantidade_usada})`
-        }));
+        // Para cada consumo, busca os dados do objeto
+        const objetosReconstruidos: any[] = [];
+
+        for (const consumo of data) {
+          const { data: objetoData } = await supabase
+            .from("objetos_contratos")
+            .select("id, nome, descricao, contratos!contrato_id(numero)")
+            .eq("id", consumo.objeto_id)
+            .single();
+
+          if (objetoData) {
+            objetosReconstruidos.push({
+              id: objetoData.id,
+              objeto_id: objetoData.id,
+              consumo_id: consumo.id,
+              numero: (objetoData.contratos as any)?.numero,
+              descricao: `${objetoData.nome || objetoData.descricao} (Qtd: ${consumo.quantidade_usada})`
+            });
+          }
+        }
+
         setObjetos(objetosReconstruidos);
+        console.log("✅ Objetos já adicionados carregados:", objetosReconstruidos.length);
       }
     } catch (error) {
       console.error("Erro ao carregar objetos já adicionados:", error);
