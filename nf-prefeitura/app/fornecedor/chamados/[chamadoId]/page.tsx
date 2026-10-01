@@ -224,8 +224,14 @@ export default function DetalheChamadoPage() {
   const adicionarObjetoAoChamado = async () => {
     if (contratoSelecionado && objetoSelecionado && quantidadeObjeto) {
       try {
+        console.log("Tentando adicionar objeto:", {
+          objeto_id: objetoSelecionado.id,
+          quantidade: parseFloat(quantidadeObjeto),
+          chamado_id: chamado?.id
+        });
+
         // Tenta registrar o consumo no banco de dados
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from("consumo_objetos")
           .insert([{
             objeto_id: objetoSelecionado.id,
@@ -235,16 +241,11 @@ export default function DetalheChamadoPage() {
           }]);
 
         if (error) {
-          console.error("Erro ao registrar consumo detalhado:", {
-            error,
-            message: error?.message,
-            details: error?.details,
-            hint: error?.hint
-          });
-          // Continua mesmo se falhar no consumo_objetos (pode não estar criada ainda)
+          console.error("Erro completo:", JSON.stringify(error, null, 2));
+          console.error("Erro ao registrar consumo:", error?.message || error?.code || "Erro desconhecido");
           console.warn("Continuando sem registrar consumo no banco...");
         } else {
-          console.log("Consumo registrado com sucesso");
+          console.log("✅ Consumo registrado com sucesso:", data);
         }
 
         // Atualiza a lista local
@@ -262,7 +263,7 @@ export default function DetalheChamadoPage() {
         setQuantidadeObjeto("");
         alert("✅ Objeto adicionado com sucesso!");
       } catch (error) {
-        console.error("Erro ao adicionar objeto:", error);
+        console.error("Erro geral ao adicionar objeto:", error);
         // Ainda assim adiciona localmente mesmo se falhar no banco
         setObjetos([...objetos, {
           id: objetoSelecionado.id,
