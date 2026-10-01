@@ -86,7 +86,44 @@ export default function RequisicoesPage() {
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
-      setRequisicoes(data || []);
+
+      // Buscar nomes dos criadores
+      if (data && data.length > 0) {
+        const criadoresIds = [...new Set(data.map((r: any) => r.criada_por))];
+
+        // Buscar em funcionarios
+        const { data: funcionarios } = await supabase
+          .from("funcionarios")
+          .select("id, nome")
+          .in("id", criadoresIds);
+
+        const criadoresMap = new Map(
+          (funcionarios || []).map((f: any) => [f.id, f.nome])
+        );
+
+        // Buscar em prefeitura_users se não encontrou em funcionarios
+        const naoEncontrados = criadoresIds.filter(id => !criadoresMap.has(id));
+        if (naoEncontrados.length > 0) {
+          const { data: usuarios } = await supabase
+            .from("prefeitura_users")
+            .select("id, nome")
+            .in("id", naoEncontrados);
+
+          (usuarios || []).forEach((u: any) => {
+            criadoresMap.set(u.id, u.nome);
+          });
+        }
+
+        // Adicionar criador_nome a cada requisição
+        const dataComCriadores = (data || []).map((r: any) => ({
+          ...r,
+          criador_nome: criadoresMap.get(r.criada_por) || "Desconhecido"
+        }));
+
+        setRequisicoes(dataComCriadores);
+      } else {
+        setRequisicoes(data || []);
+      }
     } catch (error) {
       console.error("Erro ao carregar requisições:", error);
     } finally {
@@ -357,6 +394,9 @@ export default function RequisicoesPage() {
                             : "bg-red-100 text-red-800"
                         }`}>
                           {req.status}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {req.criador_nome}
                         </span>
                         <span className="text-sm text-gray-500">
                           {new Date(req.created_at).toLocaleDateString("pt-BR")}
