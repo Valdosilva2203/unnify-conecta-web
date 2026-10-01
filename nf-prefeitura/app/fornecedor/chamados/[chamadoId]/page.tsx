@@ -204,7 +204,7 @@ export default function DetalheChamadoPage() {
       setObjetos([...objetos, {
         id: objetoSelecionado.id,
         numero: contratoSelecionado.numero,
-        descricao: `${objetoSelecionado.nome} (Qtd: ${quantidadeObjeto})`
+        descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
       }]);
       setContratoSelecionado(null);
       setObjetoSelecionado(null);
@@ -215,9 +215,10 @@ export default function DetalheChamadoPage() {
     }
   };
 
-  const objetosFiltrados = objetosContrato.filter(obj =>
-    obj.nome.toLowerCase().includes(buscaObjeto.toLowerCase())
-  );
+  const objetosFiltrados = objetosContrato.filter(obj => {
+    const nomeObjeto = (obj.nome || obj.descricao || "").toLowerCase();
+    return nomeObjeto.includes(buscaObjeto.toLowerCase());
+  });
 
   if (loading) {
     return (
@@ -455,7 +456,7 @@ export default function DetalheChamadoPage() {
                             >
                               <div className="flex justify-between items-start mb-2">
                                 <div className="flex-1">
-                                  <p className="font-bold text-gray-900">{objeto.nome}</p>
+                                  <p className="font-bold text-gray-900">{objeto.nome || objeto.descricao}</p>
                                   <p className="text-xs text-gray-600 mt-1">{objeto.descricao || ""}</p>
                                 </div>
                                 {objetoSelecionado?.id === objeto.id && (
