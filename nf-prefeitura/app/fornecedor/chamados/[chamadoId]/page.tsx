@@ -131,7 +131,7 @@ export default function DetalheChamadoPage() {
         .from("consumo_objetos")
         .select("id, quantidade_usada, objeto_id")
         .eq("tipo", "chamado")
-        .is("chamado_id", null);
+        .eq("chamado_id", chamadoId);
 
       if (error) {
         console.warn("Aviso ao carregar objetos:", error);
@@ -167,6 +167,7 @@ export default function DetalheChamadoPage() {
         }
       }
       setObjetosAdicionados(detalhes);
+      console.log("✅ Objetos adicionados carregados:", detalhes.length);
     } catch (error) {
       console.error("Erro ao carregar objetos adicionados:", error);
     }
