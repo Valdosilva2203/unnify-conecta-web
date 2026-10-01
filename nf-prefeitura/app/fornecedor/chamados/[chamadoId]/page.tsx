@@ -253,39 +253,77 @@ export default function DetalheChamadoPage() {
   const adicionarObjetoAoChamado = async () => {
     if (contratoSelecionado && objetoSelecionado && quantidadeObjeto) {
       try {
-        console.log("Tentando adicionar objeto:", {
-          objeto_id: objetoSelecionado.id,
-          quantidade: parseFloat(quantidadeObjeto),
-          chamado_id: chamado?.id
-        });
+        const novaQuantidade = parseFloat(quantidadeObjeto);
 
-        // Tenta registrar o consumo no banco de dados (sem requisicao_id, só para chamados)
-        const { error, data } = await supabase
-          .from("consumo_objetos")
-          .insert([{
+        // Verifica se o objeto já foi adicionado
+        const objetoExistente = objetos.find(o => o.objeto_id === objetoSelecionado.id);
+
+        if (objetoExistente) {
+          // Se já existe, remove o consumo anterior e cria um novo com a soma
+          if (objetoExistente.consumo_id) {
+            await supabase
+              .from("consumo_objetos")
+              .delete()
+              .eq("id", objetoExistente.consumo_id);
+          }
+
+          // Extrai a quantidade anterior do texto
+          const qtdAnterior = parseFloat(objetoExistente.descricao.match(/Qtd: (\d+)/)?.[1] || "0");
+          const qtdTotal = qtdAnterior + novaQuantidade;
+
+          // Cria novo consumo com a quantidade somada
+          const { error, data } = await supabase
+            .from("consumo_objetos")
+            .insert([{
+              objeto_id: objetoSelecionado.id,
+              quantidade_usada: qtdTotal,
+              tipo: "chamado"
+            }])
+            .select();
+
+          if (error) {
+            console.error("Erro ao atualizar consumo:", error);
+            return;
+          }
+
+          // Atualiza a lista removendo o anterior e adicionando o novo
+          const novoObjetos = objetos.filter(o => o.objeto_id !== objetoSelecionado.id);
+          novoObjetos.push({
+            id: objetoSelecionado.id,
             objeto_id: objetoSelecionado.id,
-            quantidade_usada: parseFloat(quantidadeObjeto),
-            tipo: "chamado"
-            // requisicao_id não é preenchido pois este é para chamado, não requisição
-          }])
-          .select();
+            consumo_id: data?.[0]?.id,
+            numero: contratoSelecionado.numero,
+            descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${qtdTotal})`
+          });
+          setObjetos(novoObjetos);
 
-        if (error) {
-          console.error("Erro completo:", JSON.stringify(error, null, 2));
-          console.error("Erro ao registrar consumo:", error?.message || error?.code || "Erro desconhecido");
-          console.warn("Continuando sem registrar consumo no banco...");
+          console.log(`✅ Quantidade atualizada para ${qtdTotal}!`);
         } else {
-          console.log("✅ Consumo registrado com sucesso:", data);
-        }
+          // Se não existe, adiciona normalmente
+          const { error, data } = await supabase
+            .from("consumo_objetos")
+            .insert([{
+              objeto_id: objetoSelecionado.id,
+              quantidade_usada: novaQuantidade,
+              tipo: "chamado"
+            }])
+            .select();
 
-        // Atualiza a lista local com o ID do consumo para deletar depois
-        setObjetos([...objetos, {
-          id: objetoSelecionado.id,
-          objeto_id: objetoSelecionado.id,
-          consumo_id: data?.[0]?.id,
-          numero: contratoSelecionado.numero,
-          descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
-        }]);
+          if (error) {
+            console.error("Erro ao registrar consumo:", error);
+            return;
+          }
+
+          setObjetos([...objetos, {
+            id: objetoSelecionado.id,
+            objeto_id: objetoSelecionado.id,
+            consumo_id: data?.[0]?.id,
+            numero: contratoSelecionado.numero,
+            descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${novaQuantidade})`
+          }]);
+
+          console.log("✅ Objeto adicionado com sucesso!");
+        }
 
         // Recarrega objetos para atualizar quantidades disponíveis
         await carregarObjetosContrato(contratoSelecionado.id);
@@ -296,16 +334,7 @@ export default function DetalheChamadoPage() {
         alert("✅ Objeto adicionado com sucesso!");
       } catch (error) {
         console.error("Erro geral ao adicionar objeto:", error);
-        // Ainda assim adiciona localmente mesmo se falhar no banco
-        setObjetos([...objetos, {
-          id: objetoSelecionado.id,
-          objeto_id: objetoSelecionado.id,
-          consumo_id: undefined,
-          numero: contratoSelecionado.numero,
-          descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
-        }]);
-        setObjetoSelecionado(null);
-        setQuantidadeObjeto("");
+        alert("Erro ao adicionar objeto");
       }
     }
   };
