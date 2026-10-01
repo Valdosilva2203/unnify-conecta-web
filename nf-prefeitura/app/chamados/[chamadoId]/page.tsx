@@ -53,12 +53,32 @@ export default function DetalheChamadoPage() {
   const [justificativas, setJustificativas] = useState<Justificativa[]>([]);
   const [objetos, setObjetos] = useState<Objeto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    carregarChamado();
-    carregarJustificativas();
-    carregarObjetos();
+    validarAcessoECarregar();
   }, [chamadoId]);
+
+  const validarAcessoECarregar = async () => {
+    try {
+      // Verificar autenticação
+      const prefeituraSession = localStorage.getItem("prefeitura_session");
+      const fornecedorSession = localStorage.getItem("fornecedor_session");
+
+      if (!prefeituraSession && !fornecedorSession) {
+        router.push("/login");
+        return;
+      }
+
+      // Carrega dados
+      await carregarChamado();
+      await carregarJustificativas();
+      await carregarObjetos();
+    } catch (err) {
+      console.error("Erro:", err);
+      setErro("Erro ao carregar chamado");
+    }
+  };
 
   const carregarChamado = async () => {
     try {
@@ -154,6 +174,23 @@ export default function DetalheChamadoPage() {
         <div className="text-center">
           <div className="text-6xl mb-4">⏳</div>
           <p className="text-xl font-semibold text-gray-600">Carregando chamado...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <p className="text-xl font-semibold text-gray-600 mb-6">{erro}</p>
+          <button
+            onClick={() => router.back()}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+          >
+            ← Voltar
+          </button>
         </div>
       </div>
     );
