@@ -47,6 +47,7 @@ export default function ChamadosEmRequisicaoPage() {
   const [modalChamado, setModalChamado] = useState<Chamado | null>(null);
   const [fornecedorBusca, setFornecedorBusca] = useState("");
   const [observacoes, setObservacoes] = useState("");
+  const [contratosModal, setContratosModal] = useState<any[]>([]);
 
   useEffect(() => {
     if (session?.id) {
@@ -64,6 +65,54 @@ export default function ChamadosEmRequisicaoPage() {
       return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [menuAbertoId]);
+
+  useEffect(() => {
+    if (modalChamado) {
+      carregarContratosDoModal(modalChamado.id);
+    }
+  }, [modalChamado]);
+
+  const carregarContratosDoModal = async (chamadoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("consumo_objetos")
+        .select(`
+          id,
+          objeto_id,
+          quantidade_usada,
+          objetos_contratos (
+            id,
+            numero,
+            descricao,
+            valor_unitario,
+            contratos (
+              id,
+              numero,
+              descricao,
+              valor
+            )
+          )
+        `)
+        .eq("chamado_id", chamadoId)
+        .eq("tipo", "chamado");
+
+      if (error) throw error;
+
+      // Agrupar por contrato
+      const contratoMap = new Map();
+      (data || []).forEach((item: any) => {
+        const contrato = item.objetos_contratos?.contratos;
+        if (contrato && !contratoMap.has(contrato.id)) {
+          contratoMap.set(contrato.id, contrato);
+        }
+      });
+
+      setContratosModal(Array.from(contratoMap.values()));
+    } catch (error) {
+      console.error("❌ Erro ao carregar contratos:", error);
+      setContratosModal([]);
+    }
+  };
 
   const loadChamados = async () => {
     try {
@@ -292,6 +341,26 @@ export default function ChamadosEmRequisicaoPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                   />
                 </div>
+
+                {/* Contratos Adicionados */}
+                {contratosModal.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Contratos Adicionados
+                    </label>
+                    <div className="space-y-2">
+                      {contratosModal.map((contrato) => (
+                        <div key={contrato.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <p className="font-semibold text-gray-900">{contrato.numero}</p>
+                          <p className="text-sm text-gray-600">{contrato.descricao}</p>
+                          <p className="text-sm text-gray-700 mt-1">
+                            <strong>Valor:</strong> R$ {(contrato.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Observações */}
                 <div>
