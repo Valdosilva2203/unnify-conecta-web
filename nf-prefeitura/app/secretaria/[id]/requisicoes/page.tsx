@@ -70,23 +70,15 @@ export default function RequisicoesPage() {
 
   const loadRequisicoes = async () => {
     try {
-      console.log("🔍 Buscando requisições para secretaria_id:", secretariaId);
-
-      // Primeiro, busca TODAS para debugar
-      const { data: todas } = await supabase
-        .from("requisicoes")
-        .select("id, titulo, secretaria_id, fornecedor_nome, numero_requisicao")
-        .limit(20);
-
-      console.log("📦 TODAS as requisições no banco:", todas);
-      console.log("🔎 Procurando secretaria_id:", secretariaId);
-
       const { data, error } = await supabase
         .from("requisicoes")
-        .select("id, titulo, descricao, status, created_at, numero_requisicao, secretaria_id, fornecedor_nome")
+        .select("*")
         .order("created_at", { ascending: false });
 
-      console.log("📋 Requisições encontradas para esta secretaria:", data?.length || 0, error);
+      console.log("✅ Total de requisições:", data?.length);
+      if (data) {
+        console.table(data.slice(0, 5));
+      }
 
       if (error) throw error;
       setRequisicoes(data || []);
