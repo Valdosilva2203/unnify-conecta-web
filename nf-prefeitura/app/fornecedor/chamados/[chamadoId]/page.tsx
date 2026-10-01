@@ -598,7 +598,7 @@ export default function DetalheChamadoPage() {
                 </div>
               )}
 
-              {!contratoSelecionado && abrirFormularioObjeto ? (
+              {!contratoSelecionado ? (
                 /* Lista de Contratos - Grade sem scroll */
                 <>
                   <p className="text-sm font-medium text-gray-700 mb-4">Selecione um Contrato:</p>
