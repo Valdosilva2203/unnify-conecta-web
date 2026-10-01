@@ -65,7 +65,7 @@ export default function DetalheChamadoPage() {
   useEffect(() => {
     carregarChamado();
     carregarContratos();
-    carregarObjetosJaAdicionados();
+    // carregarObjetosJaAdicionados disabled due to RLS/API issues
   }, [chamadoId]);
 
   const carregarObjetosJaAdicionados = async () => {
