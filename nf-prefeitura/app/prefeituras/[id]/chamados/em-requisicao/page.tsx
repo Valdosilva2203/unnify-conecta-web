@@ -211,10 +211,15 @@ export default function ChamadosEmRequisicaoPage() {
       // 1. Pegar contrato_id do primeiro objeto
       const primeiroContrato = contratosDoFornecedor[0];
 
+      // Gerar número da requisição (REQ-YYYYMMDD-XXXX)
+      const agora = new Date();
+      const numeroRequisicao = `REQ-${agora.getFullYear()}${String(agora.getMonth() + 1).padStart(2, "0")}${String(agora.getDate()).padStart(2, "0")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
       // 1. Criar requisição
       const { data: requisicaoData, error: reqError } = await supabase
         .from("requisicoes")
         .insert([{
+          numero_requisicao: numeroRequisicao,
           titulo: modalChamado.titulo || "Requisição do Chamado",
           descricao: modalChamado.descricao || observacoes,
           fornecedor_id: modalChamado.fornecedor_id,
