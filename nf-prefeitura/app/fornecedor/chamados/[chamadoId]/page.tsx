@@ -50,82 +50,28 @@ export default function DetalheChamadoPage() {
   const [adicionando, setAdicionando] = useState(false);
   const [mostrarFormJustificativa, setMostrarFormJustificativa] = useState(false);
   const [finalizandoChamado, setFinalizandoChamado] = useState(false);
-  const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(true);
-  const [novoObjeto, setNovoObjeto] = useState("");
-  const [objetos, setObjetos] = useState<{ id: string; objeto_id: string; consumo_id?: string; numero: string; descricao: string }[]>([]);
-  const [objetosAdicionados, setObjetosAdicionados] = useState<any[]>([]);
+
+  // Objetos vinculados ao chamado (lista única)
+  const [objetos, setObjetos] = useState<any[]>([]);
+
+  // Contratos disponíveis
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [carregandoContratos, setCarregandoContratos] = useState(false);
+
+  // Seleção para adicionar novo objeto
   const [contratoSelecionado, setContratoSelecionado] = useState<Contrato | null>(null);
   const [objetosContrato, setObjetosContrato] = useState<ObjetoContrato[]>([]);
   const [carregandoObjetos, setCarregandoObjetos] = useState(false);
-  const [buscaObjeto, setBuscaObjeto] = useState("");
   const [objetoSelecionado, setObjetoSelecionado] = useState<ObjetoContrato | null>(null);
   const [quantidadeObjeto, setQuantidadeObjeto] = useState("");
 
   useEffect(() => {
     carregarChamado();
     carregarContratos();
-    carregarObjetosAdicionados();
+    carregarObjetos();
   }, [chamadoId]);
 
-  const carregarObjetosJaAdicionados = async () => {
-    try {
-      // Busca consumos já adicionados a este chamado (sem vincular ainda)
-      const { data, error } = await supabase
-        .from("consumo_objetos")
-        .select("*")
-        .eq("tipo", "chamado")
-        .is("chamado_id", null);
-
-      if (error) {
-        console.warn("⚠️ Aviso ao carregar objetos:", JSON.stringify(error));
-        console.log("Nota: Se a migration não foi rodada, é normal este erro. Continuando sem carregar objetos persistidos.");
-        return;
-      }
-
-      // Reconstrói o estado local com os objetos já adicionados
-      if (data && data.length > 0) {
-        // Para cada consumo, busca os dados do objeto
-        const objetosReconstruidos: any[] = [];
-
-        for (const consumo of data) {
-          try {
-            const { data: objetoData } = await supabase
-              .from("objetos_contratos")
-              .select("id, nome, descricao, contrato_id")
-              .eq("id", consumo.objeto_id)
-              .single();
-
-            if (objetoData) {
-              const { data: contratoData } = await supabase
-                .from("contratos")
-                .select("numero")
-                .eq("id", objetoData.contrato_id)
-                .single();
-
-              objetosReconstruidos.push({
-                id: objetoData.id,
-                objeto_id: objetoData.id,
-                consumo_id: consumo.id,
-                numero: contratoData?.numero,
-                descricao: `${objetoData.nome || objetoData.descricao} (Qtd: ${consumo.quantidade_usada})`
-              });
-            }
-          } catch (err) {
-            console.warn(`⚠️ Erro ao carregar objeto ${consumo.objeto_id}:`, err);
-          }
-        }
-
-        setObjetos(objetosReconstruidos);
-        console.log("✅ Objetos já adicionados carregados:", objetosReconstruidos.length);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar objetos já adicionados:", error);
-    }
-  };
-
-  const carregarObjetosAdicionados = async () => {
+  const carregarObjetos = async () => {
     try {
       const { data, error } = await supabase
         .from("consumo_objetos")
@@ -139,7 +85,7 @@ export default function DetalheChamadoPage() {
       }
 
       if (!data || data.length === 0) {
-        setObjetosAdicionados([]);
+        setObjetos([]);
         return;
       }
 
@@ -159,17 +105,18 @@ export default function DetalheChamadoPage() {
             .single();
 
           detalhes.push({
-            id: consumo.id,
+            consumo_id: consumo.id,
+            objeto_id: consumo.objeto_id,
             nome: obj.nome,
             quantidade: consumo.quantidade_usada,
             contrato_numero: contrato?.numero
           });
         }
       }
-      setObjetosAdicionados(detalhes);
-      console.log("✅ Objetos adicionados carregados:", detalhes.length);
+      setObjetos(detalhes);
+      console.log("✅ Objetos carregados:", detalhes.length);
     } catch (error) {
-      console.error("Erro ao carregar objetos adicionados:", error);
+      console.error("Erro ao carregar objetos:", error);
     }
   };
 
@@ -244,28 +191,35 @@ export default function DetalheChamadoPage() {
     try {
       setFinalizandoChamado(true);
 
-      // Atualiza status do chamado
+      // Verifica se há objetos adicionados
+      if (objetos.length === 0) {
+        alert("⚠️ Adicione pelo menos um objeto antes de finalizar!");
+        return;
+      }
+
+      // Atualiza status do chamado para "em_requisicao"
       const { error: erroStatus } = await supabase
         .from("chamados")
-        .update({ status: "finalizada" })
+        .update({ status: "em_requisicao" })
         .eq("id", chamadoId);
 
       if (erroStatus) throw erroStatus;
 
-      // Vincula objetos adicionados ao chamado (preenche chamado_id)
-      const { error: erroVinculo } = await supabase
-        .from("consumo_objetos")
-        .update({ chamado_id: chamadoId })
-        .eq("tipo", "chamado")
-        .is("chamado_id", null);
-
-      if (erroVinculo) {
-        console.warn("Aviso ao vincular objetos:", erroVinculo);
+      // Envia notificação para o criador do chamado
+      if (chamado?.id) {
+        await fetch("/api/notificacoes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chamado_id: chamadoId,
+            tipo: "requisicao_enviada",
+            mensagem: `Chamado "${chamado.titulo}" foi enviado para requisição`
+          })
+        });
       }
 
-      alert("✅ Chamado finalizado com sucesso!");
+      alert("✅ Chamado enviado para requisição!");
       await carregarChamado();
-      await carregarObjetosAdicionados();
     } catch (error) {
       console.error("Erro ao finalizar chamado:", error);
       alert("Erro ao finalizar chamado");
@@ -282,33 +236,27 @@ export default function DetalheChamadoPage() {
     }
   };
 
-  const removerObjeto = async (index: number) => {
+  const removerObjeto = async (consumoId: string, contratoId: string) => {
     try {
-      const objetoARemover = objetos[index];
+      // DELETE do consumo
+      const { error } = await supabase
+        .from("consumo_objetos")
+        .delete()
+        .eq("id", consumoId);
 
-      // Deleta apenas esse consumo específico usando o ID
-      if (objetoARemover.consumo_id) {
-        const { error } = await supabase
-          .from("consumo_objetos")
-          .delete()
-          .eq("id", objetoARemover.consumo_id);
-
-        if (error) {
-          console.error("Erro ao deletar consumo:", error);
-          alert("Erro ao remover objeto do chamado");
-          return;
-        }
+      if (error) {
+        console.error("Erro ao remover objeto:", error);
+        alert("Erro ao remover objeto");
+        return;
       }
 
-      // Remove da lista local
-      setObjetos(objetos.filter((_, i) => i !== index));
+      console.log("✅ Objeto removido! Saldo atualizado.");
 
-      // Recarrega os objetos do contrato para atualizar quantidades disponíveis
-      if (contratoSelecionado) {
-        await carregarObjetosContrato(contratoSelecionado.id);
-      }
+      // Recarrega objetos do chamado
+      await carregarObjetos();
 
-      console.log("✅ Objeto removido com sucesso!");
+      // Recarrega objetos disponíveis do contrato
+      await carregarObjetosContrato(contratoId);
     } catch (error) {
       console.error("Erro ao remover objeto:", error);
       alert("Erro ao remover objeto");
@@ -396,93 +344,69 @@ export default function DetalheChamadoPage() {
   };
 
   const adicionarObjetoAoChamado = async () => {
-    if (contratoSelecionado && objetoSelecionado && quantidadeObjeto) {
-      try {
-        const novaQuantidade = parseFloat(quantidadeObjeto);
+    if (!contratoSelecionado || !objetoSelecionado || !quantidadeObjeto) return;
 
-        // Verifica se o objeto já foi adicionado
-        const objetoExistente = objetos.find(o => o.objeto_id === objetoSelecionado.id);
+    try {
+      const novaQuantidade = parseFloat(quantidadeObjeto);
 
-        if (objetoExistente) {
-          // Se já existe, remove o consumo anterior e cria um novo com a soma
-          if (objetoExistente.consumo_id) {
-            await supabase
-              .from("consumo_objetos")
-              .delete()
-              .eq("id", objetoExistente.consumo_id);
-          }
+      // Busca se o objeto já existe neste chamado
+      const { data: consumoExistente } = await supabase
+        .from("consumo_objetos")
+        .select("id, quantidade_usada")
+        .eq("tipo", "chamado")
+        .eq("chamado_id", chamadoId)
+        .eq("objeto_id", objetoSelecionado.id)
+        .single();
 
-          // Extrai a quantidade anterior do texto
-          const qtdAnterior = parseFloat(objetoExistente.descricao.match(/Qtd: (\d+)/)?.[1] || "0");
-          const qtdTotal = qtdAnterior + novaQuantidade;
+      if (consumoExistente) {
+        // Objeto já existe: UPDATE quantidade
+        const novaQtd = (consumoExistente.quantidade_usada || 0) + novaQuantidade;
+        const { error } = await supabase
+          .from("consumo_objetos")
+          .update({ quantidade_usada: novaQtd })
+          .eq("id", consumoExistente.id);
 
-          // Cria novo consumo com a quantidade somada
-          // chamado_id será preenchido quando finalizar o chamado
-          const { error, data } = await supabase
-            .from("consumo_objetos")
-            .insert([{
-              objeto_id: objetoSelecionado.id,
-              quantidade_usada: qtdTotal,
-              tipo: "chamado"
-            }])
-            .select();
-
-          if (error) {
-            console.error("Erro ao atualizar consumo:", error);
-            return;
-          }
-
-          // Atualiza a lista removendo o anterior e adicionando o novo
-          const novoObjetos = objetos.filter(o => o.objeto_id !== objetoSelecionado.id);
-          novoObjetos.push({
-            id: objetoSelecionado.id,
-            objeto_id: objetoSelecionado.id,
-            consumo_id: data?.[0]?.id,
-            numero: contratoSelecionado.numero,
-            descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${qtdTotal})`
-          });
-          setObjetos(novoObjetos);
-
-          console.log(`✅ Quantidade atualizada para ${qtdTotal}!`);
-        } else {
-          // Se não existe, adiciona normalmente
-          // chamado_id será preenchido quando finalizar o chamado
-          const { error, data } = await supabase
-            .from("consumo_objetos")
-            .insert([{
-              objeto_id: objetoSelecionado.id,
-              quantidade_usada: novaQuantidade,
-              tipo: "chamado"
-            }])
-            .select();
-
-          if (error) {
-            console.error("Erro ao registrar consumo:", error);
-            return;
-          }
-
-          setObjetos([...objetos, {
-            id: objetoSelecionado.id,
-            objeto_id: objetoSelecionado.id,
-            consumo_id: data?.[0]?.id,
-            numero: contratoSelecionado.numero,
-            descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${novaQuantidade})`
-          }]);
-
-          console.log("✅ Objeto adicionado com sucesso!");
+        if (error) {
+          console.error("Erro ao atualizar quantidade:", error);
+          alert("Erro ao atualizar quantidade");
+          return;
         }
 
-        // Recarrega objetos para atualizar quantidades disponíveis
-        await carregarObjetosContrato(contratoSelecionado.id);
+        console.log(`✅ Quantidade atualizada para ${novaQtd}!`);
+      } else {
+        // Novo objeto: INSERT
+        const { error } = await supabase
+          .from("consumo_objetos")
+          .insert([{
+            objeto_id: objetoSelecionado.id,
+            quantidade_usada: novaQuantidade,
+            tipo: "chamado",
+            chamado_id: chamadoId
+          }]);
 
-        setObjetoSelecionado(null);
-        setBuscaObjeto("");
-        setQuantidadeObjeto("");
-        alert("✅ Objeto adicionado com sucesso!");
-      } catch (error) {
-        console.error("Erro geral ao adicionar objeto:", error);
-        alert("Erro ao adicionar objeto");
+        if (error) {
+          console.error("Erro ao adicionar objeto:", error);
+          alert("Erro ao adicionar objeto");
+          return;
+        }
+
+        console.log("✅ Objeto adicionado com sucesso!");
       }
+
+      // Recarrega a lista de objetos do chamado
+      await carregarObjetos();
+
+      // Recarrega objetos disponíveis do contrato
+      await carregarObjetosContrato(contratoSelecionado.id);
+
+      // Limpa formulário
+      setObjetoSelecionado(null);
+      setBuscaObjeto("");
+      setQuantidadeObjeto("");
+      alert("✅ Objeto adicionado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao adicionar objeto:", error);
+      alert("Erro ao adicionar objeto");
     }
   };
 
@@ -645,44 +569,32 @@ export default function DetalheChamadoPage() {
             <div className="border-t pt-8 mb-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Contratos</h3>
 
-              {/* Objetos Adicionados (do banco) */}
-              {objetosAdicionados.length > 0 && (
+              {/* Lista de Objetos do Chamado */}
+              {objetos.length > 0 && (
                 <div className="mb-8 p-4 bg-green-50 rounded-lg border-2 border-green-200">
-                  <p className="font-bold text-gray-900 mb-3">📦 Objetos Adicionados:</p>
-                  <div className="space-y-2">
-                    {objetosAdicionados.map((obj) => (
-                      <div key={obj.id} className="bg-white p-3 rounded border border-green-300">
-                        <p className="text-sm font-bold text-gray-900">
-                          Contrato: {obj.contrato_numero}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {obj.nome} - Qtd: {obj.quantidade}
-                        </p>
+                  <p className="font-bold text-gray-900 mb-4">📦 Objetos do Chamado:</p>
+                  <div className="space-y-3">
+                    {objetos.map((objeto) => (
+                      <div key={objeto.consumo_id} className="bg-white p-4 rounded-lg border border-green-300 flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-gray-900">
+                            Contrato: {objeto.contrato_numero}
+                          </p>
+                          <p className="text-gray-700 mt-1">{objeto.nome}</p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Quantidade: <strong>{objeto.quantidade}</strong>
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removerObjeto(objeto.consumo_id, objeto.contrato_numero)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 rounded-full transition flex-shrink-0"
+                          title="Remover objeto e recuperar saldo"
+                        >
+                          🗑️
+                        </button>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Objetos na lista local (para remover) */}
-              {objetos.length > 0 && (
-                <div className="space-y-3 mb-8">
-                  <p className="text-sm font-medium text-gray-700 mb-2">✏️ Objetos em Edição:</p>
-                  {objetos.map((objeto, index) => (
-                    <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-start gap-4">
-                      <div className="flex-1">
-                        <p className="text-gray-700 font-bold">{objeto.numero}</p>
-                        <p className="text-sm text-gray-600 mt-1">{objeto.descricao}</p>
-                      </div>
-                      <button
-                        onClick={() => removerObjeto(index)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 rounded-full transition flex-shrink-0"
-                        title="Remover objeto"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  ))}
                 </div>
               )}
 
