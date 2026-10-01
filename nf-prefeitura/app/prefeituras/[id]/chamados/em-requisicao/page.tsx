@@ -72,67 +72,6 @@ export default function ChamadosEmRequisicaoPage() {
     }
   }, [modalChamado]);
 
-  const carregarContratosDoModal = async (chamadoId: string) => {
-    try {
-      console.log("🔍 Buscando consumo_objetos para chamadoId:", chamadoId);
-
-      // Buscar objetos consumidos no chamado
-      const { data: consumoData, error: consumoError } = await supabase
-        .from("consumo_objetos")
-        .select("objeto_id")
-        .eq("chamado_id", chamadoId)
-        .eq("tipo", "chamado");
-
-      console.log("📦 Consumo data:", consumoData, "Error:", consumoError);
-
-      if (consumoError) throw consumoError;
-
-      if (!consumoData || consumoData.length === 0) {
-        console.log("⚠️ Nenhum objeto consumido encontrado");
-        setContratosModal([]);
-        return;
-      }
-
-      // Extrair IDs de objetos
-      const objetoIds = consumoData.map(c => c.objeto_id);
-      console.log("🎯 Objeto IDs:", objetoIds);
-
-      // Buscar detalhes dos objetos e contratos
-      const { data: objetosData, error: objetosError } = await supabase
-        .from("objetos_contratos")
-        .select("id, numero, descricao, valor_unitario, contrato_id")
-        .in("id", objetoIds);
-
-      console.log("📋 Objetos data:", objetosData, "Error:", objetosError);
-
-      if (objetosError) throw objetosError;
-
-      if (!objetosData || objetosData.length === 0) {
-        console.log("⚠️ Nenhum objeto_contrato encontrado");
-        setContratosModal([]);
-        return;
-      }
-
-      // Extrair IDs de contratos únicos
-      const contratoIds = [...new Set(objetosData.map(o => o.contrato_id))];
-      console.log("🔗 Contrato IDs:", contratoIds);
-
-      // Buscar detalhes dos contratos
-      const { data: contratosData, error: contratosError } = await supabase
-        .from("contratos")
-        .select("id, numero, descricao, valor")
-        .in("id", contratoIds);
-
-      console.log("✅ Contratos data:", contratosData, "Error:", contratosError);
-
-      if (contratosError) throw contratosError;
-
-      setContratosModal(contratosData || []);
-    } catch (error) {
-      console.error("❌ Erro ao carregar contratos:", error);
-      setContratosModal([]);
-    }
-  };
 
   const loadChamados = async () => {
     try {
@@ -165,10 +104,10 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratos = async (chamadoId: string) => {
     try {
-      // Buscar consumo_objetos com detalhes dos objetos
+      // 1. Buscar consumo_objetos do chamado
       const { data: consumos } = await supabase
         .from("consumo_objetos")
-        .select("objeto_id, quantidade_usada, objetos_contratos!inner(id, nome, valor_unitario, quantidade_disponivel, contrato_id)")
+        .select("objeto_id, quantidade_usada")
         .eq("chamado_id", chamadoId)
         .eq("tipo", "chamado");
 
@@ -177,39 +116,50 @@ export default function ChamadosEmRequisicaoPage() {
         return;
       }
 
-      // Agrupar por contrato
-      const contratoMap = new Map();
+      const objetoIds = consumos.map(c => c.objeto_id);
 
-      for (const consumo of consumos) {
-        const objeto = consumo.objetos_contratos;
-        if (objeto) {
-          const contratoId = objeto.contrato_id;
+      // 2. Buscar detalhes dos objetos
+      const { data: objetos } = await supabase
+        .from("objetos_contratos")
+        .select("id, nome, valor_unitario, quantidade_disponivel, contrato_id")
+        .in("id", objetoIds);
 
-          if (!contratoMap.has(contratoId)) {
-            contratoMap.set(contratoId, {
-              contrato_id: contratoId,
-              objetos: []
-            });
-          }
-
-          contratoMap.get(contratoId).objetos.push({
-            id: objeto.id,
-            nome: objeto.nome,
-            valor_unitario: objeto.valor_unitario,
-            quantidade_disponivel: objeto.quantidade_disponivel,
-            quantidade_consumida: consumo.quantidade_usada
-          });
-        }
+      if (!objetos || objetos.length === 0) {
+        setContratosDoFornecedor([]);
+        return;
       }
 
-      // Buscar detalhes dos contratos
+      // 3. Agrupar objetos por contrato e manter consumo
+      const contratoMap = new Map();
+      const consumoMap = new Map();
+      consumos.forEach(c => consumoMap.set(c.objeto_id, c.quantidade_usada));
+
+      for (const objeto of objetos) {
+        const contratoId = objeto.contrato_id;
+        if (!contratoMap.has(contratoId)) {
+          contratoMap.set(contratoId, {
+            contrato_id: contratoId,
+            objetos: []
+          });
+        }
+
+        contratoMap.get(contratoId).objetos.push({
+          id: objeto.id,
+          nome: objeto.nome,
+          valor_unitario: objeto.valor_unitario,
+          quantidade_disponivel: objeto.quantidade_disponivel,
+          quantidade_consumida: consumoMap.get(objeto.id) || 0
+        });
+      }
+
+      // 4. Buscar detalhes dos contratos
       const contratoIds = Array.from(contratoMap.keys());
       const { data: contratos } = await supabase
         .from("contratos")
         .select("id, numero, descricao, valor")
         .in("id", contratoIds);
 
-      // Montar estrutura final com objetos
+      // 5. Montar resultado final
       const resultado = (contratos || []).map(contrato => ({
         ...contrato,
         objetos: contratoMap.get(contrato.id)?.objetos || []
