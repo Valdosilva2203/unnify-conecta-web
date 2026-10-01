@@ -579,7 +579,7 @@ export default function DetalheChamadoPage() {
                     </div>
 
                     {/* Barra de Progresso de Data Final */}
-                    {contratoSelecionado.data_inicio && contratoSelecionado.data_fim && (() => {
+                    {contratoSelecionado.data_inicio && contratoSelecionado.data_fim ? (() => {
                       const progresso = calcularProgressoContrato(contratoSelecionado);
                       if (!progresso) return null;
 
@@ -601,7 +601,11 @@ export default function DetalheChamadoPage() {
                           </div>
                         </div>
                       );
-                    })()}
+                    })() : (
+                      <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-green-300">
+                        ⚠️ Datas do contrato não informadas
+                      </p>
+                    )}
                   </div>
 
                   {/* Objetos do Contrato */}
