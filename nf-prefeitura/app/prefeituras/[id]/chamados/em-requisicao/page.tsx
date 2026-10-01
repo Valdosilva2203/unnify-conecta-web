@@ -206,8 +206,10 @@ export default function ChamadosEmRequisicaoPage() {
     if (!modalChamado) return;
 
     try {
-      // Criar requisição com dados do chamado
-      const { error } = await supabase
+      console.log("📝 Criando requisição com objetos:", contratosDoFornecedor);
+
+      // 1. Criar requisição
+      const { data: requisicaoData, error: reqError } = await supabase
         .from("requisicoes")
         .insert([{
           chamado_id: modalChamado.id,
@@ -216,18 +218,47 @@ export default function ChamadosEmRequisicaoPage() {
           secretaria_id: session?.secretaria_id,
           observacoes: observacoes,
           status: "pendente"
-        }]);
+        }])
+        .select();
 
-      if (error) throw error;
+      if (reqError) throw reqError;
+
+      const requisicaoId = requisicaoData?.[0]?.id;
+      if (!requisicaoId) throw new Error("Falha ao criar requisição");
+
+      console.log("✅ Requisição criada:", requisicaoId);
+
+      // 2. Criar itens da requisição para cada objeto
+      const itens = contratosDoFornecedor.flatMap(contrato =>
+        (contrato.objetos || []).map(objeto => ({
+          requisicao_id: requisicaoId,
+          objeto_contrato_id: objeto.id,
+          quantidade: objeto.quantidade_consumida,
+          valor_unitario: objeto.valor_unitario,
+          valor_total: (objeto.valor_unitario || 0) * (objeto.quantidade_consumida || 0)
+        }))
+      );
+
+      console.log("📦 Itens a criar:", itens);
+
+      if (itens.length > 0) {
+        const { error: itensError } = await supabase
+          .from("requisicoes_itens")
+          .insert(itens);
+
+        if (itensError) throw itensError;
+        console.log("✅ Itens criados");
+      }
 
       alert("Requisição criada com sucesso!");
       setModalChamado(null);
       setFornecedorBusca("");
       setObservacoes("");
+      setContratosDoFornecedor([]);
       await loadChamados();
     } catch (error) {
       console.error("❌ Erro ao criar requisição:", error);
-      alert("Erro ao criar requisição");
+      alert("Erro ao criar requisição: " + (error as any).message);
     }
   };
 
