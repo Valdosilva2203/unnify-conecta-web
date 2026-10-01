@@ -44,7 +44,7 @@ export default function ChamadosEmRequisicaoPage() {
   const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const menuRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
-  const [modalChamadoId, setModalChamadoId] = useState<string | null>(null);
+  const [modalChamado, setModalChamado] = useState<Chamado | null>(null);
   const [fornecedorBusca, setFornecedorBusca] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
@@ -94,10 +94,10 @@ export default function ChamadosEmRequisicaoPage() {
     }
   };
 
-  const gerarRequisicao = (chamadoId: string) => {
+  const gerarRequisicao = (chamado: Chamado) => {
     setMenuAbertoId(null);
-    setModalChamadoId(chamadoId);
-    setFornecedorBusca("");
+    setModalChamado(chamado);
+    setFornecedorBusca(chamado.fornecedor_nome || "");
     setObservacoes("");
   };
 
@@ -107,14 +107,31 @@ export default function ChamadosEmRequisicaoPage() {
       return;
     }
 
+    if (!modalChamado) return;
+
     try {
-      // Lógica para criar requisição será implementada
-      alert(`Requisição criada para ${fornecedorBusca}`);
-      setModalChamadoId(null);
+      // Criar requisição com dados do chamado
+      const { error } = await supabase
+        .from("requisicoes")
+        .insert([{
+          chamado_id: modalChamado.id,
+          fornecedor_id: modalChamado.fornecedor_id,
+          prefeitura_id: prefeituraId,
+          secretaria_id: session?.secretaria_id,
+          observacoes: observacoes,
+          status: "pendente"
+        }]);
+
+      if (error) throw error;
+
+      alert("Requisição criada com sucesso!");
+      setModalChamado(null);
       setFornecedorBusca("");
       setObservacoes("");
+      await loadChamados();
     } catch (error) {
       console.error("❌ Erro ao criar requisição:", error);
+      alert("Erro ao criar requisição");
     }
   };
 
@@ -229,7 +246,7 @@ export default function ChamadosEmRequisicaoPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              gerarRequisicao(chamado.id);
+                              gerarRequisicao(chamado);
                             }}
                             className="w-full px-4 py-3 text-left hover:bg-blue-50 transition text-sm font-medium text-gray-700 flex items-center gap-2"
                           >
@@ -246,13 +263,16 @@ export default function ChamadosEmRequisicaoPage() {
         )}
 
         {/* Modal Nova Requisição */}
-        {modalChamadoId && (
+        {modalChamado && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Nova Requisição</h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Nova Requisição</h2>
+                  <p className="text-sm text-gray-600 mt-1">Chamado: {modalChamado.titulo}</p>
+                </div>
                 <button
-                  onClick={() => setModalChamadoId(null)}
+                  onClick={() => setModalChamado(null)}
                   className="text-gray-500 hover:text-gray-700 text-2xl"
                 >
                   ✕
@@ -260,17 +280,16 @@ export default function ChamadosEmRequisicaoPage() {
               </div>
 
               <div className="space-y-6">
-                {/* Buscar Fornecedor */}
+                {/* Fornecedor (pré-preenchido) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Buscar Fornecedor
+                    Fornecedor
                   </label>
                   <input
                     type="text"
-                    placeholder="Digite nome ou CNPJ do fornecedor"
                     value={fornecedorBusca}
-                    onChange={(e) => setFornecedorBusca(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                   />
                 </div>
 
@@ -297,7 +316,7 @@ export default function ChamadosEmRequisicaoPage() {
                     Criar Requisição
                   </button>
                   <button
-                    onClick={() => setModalChamadoId(null)}
+                    onClick={() => setModalChamado(null)}
                     className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-3 px-4 rounded-lg transition"
                   >
                     Cancelar
