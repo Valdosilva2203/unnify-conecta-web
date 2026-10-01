@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { usuario_id, prefeitura_id, tipo, titulo, mensagem, referencia_id } = body;
+    const { usuario_id, prefeitura_id, tipo, mensagem, referencia_id } = body;
 
     if (!usuario_id || !prefeitura_id || !tipo) {
       return NextResponse.json(
@@ -64,11 +64,9 @@ export async function POST(request: NextRequest) {
           usuario_id,
           prefeitura_id,
           tipo,
-          titulo: titulo || "Nova Notificação",
           mensagem: mensagem || "",
           referencia_id: referencia_id || null,
           lida: false,
-          created_at: new Date().toISOString(),
         },
       ])
       .select();

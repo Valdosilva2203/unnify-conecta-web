@@ -253,8 +253,7 @@ export default function DetalheChamadoPage() {
             usuario_id: secretario.id,
             prefeitura_id: chamado.prefeitura_id,
             tipo: "chamado_aguardando_confirmacao",
-            titulo: `Confirmação de Chamado: ${chamado.titulo}`,
-            mensagem: `O fornecedor finalizou o chamado "${chamado.titulo}". Confirme ou negue.`,
+            mensagem: `Chamado "${chamado.titulo}" aguardando confirmação. O fornecedor finalizou o trabalho.`,
             referencia_id: chamadoId
           };
           console.log("📨 Criando notificação:", notifPayload);
