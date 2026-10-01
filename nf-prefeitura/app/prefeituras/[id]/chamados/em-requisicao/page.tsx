@@ -255,7 +255,11 @@ export default function ChamadosEmRequisicaoPage() {
       setFornecedorBusca("");
       setObservacoes("");
       setContratosDoFornecedor([]);
-      await loadChamados();
+
+      // Redirecionar para a página de detalhes da requisição
+      setTimeout(() => {
+        router.push(`/requisicoes/${requisicaoId}`);
+      }, 500);
     } catch (error) {
       console.error("❌ Erro ao criar requisição:", error);
       alert("Erro ao criar requisição: " + (error as any).message);
