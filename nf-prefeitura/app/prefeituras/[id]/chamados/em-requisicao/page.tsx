@@ -74,6 +74,8 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratosDoModal = async (chamadoId: string) => {
     try {
+      console.log("📋 Carregando contratos para chamado:", chamadoId);
+
       // Buscar consumo_objetos com detalhes dos objetos
       const { data: consumoData, error: consumoError } = await supabase
         .from("consumo_objetos")
@@ -92,7 +94,12 @@ export default function ChamadosEmRequisicaoPage() {
         .eq("chamado_id", chamadoId)
         .eq("tipo", "chamado");
 
-      if (consumoError) throw consumoError;
+      console.log("consumoData:", consumoData, "consumoError:", consumoError);
+
+      if (consumoError) {
+        console.error("❌ Erro em consumoError:", consumoError);
+        throw consumoError;
+      }
 
       if (!consumoData || consumoData.length === 0) {
         setContratosComObjetos([]);
@@ -127,12 +134,19 @@ export default function ChamadosEmRequisicaoPage() {
 
       // Buscar detalhes dos contratos
       const contratoIds = Array.from(contratoMap.keys());
+      console.log("contratoIds:", contratoIds);
+
       const { data: contratosData, error: contratosError } = await supabase
         .from("contratos")
         .select("id, numero, descricao, valor")
         .in("id", contratoIds);
 
-      if (contratosError) throw contratosError;
+      console.log("contratosData:", contratosData, "contratosError:", contratosError);
+
+      if (contratosError) {
+        console.error("❌ Erro em contratosError:", contratosError);
+        throw contratosError;
+      }
 
       // Montar estrutura final
       const resultado = (contratosData || []).map(contrato => ({
@@ -140,9 +154,11 @@ export default function ChamadosEmRequisicaoPage() {
         objetos: contratoMap.get(contrato.id)?.objetos || []
       }));
 
+      console.log("✅ Resultado final:", resultado);
       setContratosComObjetos(resultado);
     } catch (error) {
       console.error("❌ Erro ao carregar contratos:", error);
+      console.error("Stack:", (error as any)?.stack);
       setContratosComObjetos([]);
     }
   };
