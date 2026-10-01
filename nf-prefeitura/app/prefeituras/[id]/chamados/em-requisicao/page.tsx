@@ -104,27 +104,38 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratos = async (chamadoId: string) => {
     try {
+      console.log("🔥 Carregando contratos para chamado:", chamadoId);
+
       // 1. Buscar consumo_objetos do chamado
-      const { data: consumos } = await supabase
+      const { data: consumos, error: consumoError } = await supabase
         .from("consumo_objetos")
         .select("objeto_id, quantidade_usada")
         .eq("chamado_id", chamadoId)
         .eq("tipo", "chamado");
 
+      console.log("📦 Consumos encontrados:", consumos?.length || 0, consumoError);
+
+      if (consumoError) throw consumoError;
       if (!consumos || consumos.length === 0) {
+        console.log("⚠️ Nenhum consumo encontrado");
         setContratosDoFornecedor([]);
         return;
       }
 
       const objetoIds = consumos.map(c => c.objeto_id);
+      console.log("🎯 IDs de objetos:", objetoIds);
 
       // 2. Buscar detalhes dos objetos
-      const { data: objetos } = await supabase
+      const { data: objetos, error: objetosError } = await supabase
         .from("objetos_contratos")
-        .select("id, nome, valor_unitario, quantidade_disponivel, contrato_id")
+        .select("id, descricao, valor_unitario, quantidade, contrato_id")
         .in("id", objetoIds);
 
+      console.log("📋 Objetos encontrados:", objetos?.length || 0, objetosError);
+
+      if (objetosError) throw objetosError;
       if (!objetos || objetos.length === 0) {
+        console.log("⚠️ Nenhum objeto encontrado");
         setContratosDoFornecedor([]);
         return;
       }
@@ -145,19 +156,25 @@ export default function ChamadosEmRequisicaoPage() {
 
         contratoMap.get(contratoId).objetos.push({
           id: objeto.id,
-          nome: objeto.nome,
+          descricao: objeto.descricao,
           valor_unitario: objeto.valor_unitario,
-          quantidade_disponivel: objeto.quantidade_disponivel,
+          quantidade: objeto.quantidade,
           quantidade_consumida: consumoMap.get(objeto.id) || 0
         });
       }
 
       // 4. Buscar detalhes dos contratos
       const contratoIds = Array.from(contratoMap.keys());
-      const { data: contratos } = await supabase
+      console.log("🔗 IDs de contratos únicos:", contratoIds);
+
+      const { data: contratos, error: contratosError } = await supabase
         .from("contratos")
         .select("id, numero, descricao, valor")
         .in("id", contratoIds);
+
+      console.log("✅ Contratos encontrados:", contratos?.length || 0, contratosError);
+
+      if (contratosError) throw contratosError;
 
       // 5. Montar resultado final
       const resultado = (contratos || []).map(contrato => ({
@@ -165,9 +182,10 @@ export default function ChamadosEmRequisicaoPage() {
         objetos: contratoMap.get(contrato.id)?.objetos || []
       }));
 
+      console.log("🎉 Resultado final:", resultado);
       setContratosDoFornecedor(resultado);
     } catch (error) {
-      console.error("Erro ao carregar contratos:", error);
+      console.error("❌ Erro ao carregar contratos:", error);
       setContratosDoFornecedor([]);
     }
   };
@@ -394,10 +412,10 @@ export default function ChamadosEmRequisicaoPage() {
                             <div className="px-4 py-3 bg-white space-y-2">
                               {contrato.objetos.map((objeto) => (
                                 <div key={objeto.id} className="text-sm border-l-2 border-cyan-300 pl-3 py-1">
-                                  <p className="font-medium text-gray-900">{objeto.nome}</p>
+                                  <p className="font-medium text-gray-900">{objeto.descricao}</p>
                                   <p className="text-xs text-gray-600">
                                     Valor Unit.: R$ {(objeto.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} |
-                                    Qtd: {objeto.quantidade_consumida}/{objeto.quantidade_disponivel}
+                                    Qtd: {objeto.quantidade_consumida}/{objeto.quantidade}
                                   </p>
                                 </div>
                               ))}
