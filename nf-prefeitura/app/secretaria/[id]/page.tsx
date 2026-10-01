@@ -278,14 +278,22 @@ export default function SecretariaPage() {
       const prefeituraSession = localStorage.getItem("prefeitura_session");
       const session = prefeituraSession ? JSON.parse(prefeituraSession) : null;
 
-      if (!session?.id) return;
+      if (!session?.id || !secretaria?.prefeitura_id) return;
 
       // Busca notificações aguardando confirmação para este usuário
-      const { data: notificacoes } = await fetch(
-        `/api/prefeitura/notificacoes?usuario_id=${session.id}&prefeitura_id=${secretaria?.prefeitura_id}`
-      ).then(r => r.json());
+      const response = await fetch(
+        `/api/prefeitura/notificacoes?usuario_id=${session.id}&prefeitura_id=${secretaria.prefeitura_id}`
+      );
 
-      if (notificacoes && notificacoes.length > 0) {
+      if (!response.ok) {
+        console.error("Erro ao buscar notificações:", response.status);
+        return;
+      }
+
+      const result = await response.json();
+      const notificacoes = result.notificacoes || [];
+
+      if (notificacoes.length > 0) {
         // Busca detalhes dos chamados referenciados
         const chamadoIds = notificacoes.map((n: any) => n.referencia_id).filter(Boolean);
 
