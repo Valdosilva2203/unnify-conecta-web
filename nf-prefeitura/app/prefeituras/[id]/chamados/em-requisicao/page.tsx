@@ -208,6 +208,7 @@ export default function ChamadosEmRequisicaoPage() {
     try {
       console.log("📝 Criando requisição com objetos:", contratosDoFornecedor);
       console.log("👤 Session:", session);
+      console.log("👤 Usuário ID (criada_por):", session?.id);
 
       // Buscar secretaria_id: primeiro do sessionStorage (salvo quando entra em /secretaria/{id}), depois da session
       let secretariaId = sessionStorage.getItem("secretaria_id_temp") || session?.secretaria_id;
