@@ -72,7 +72,7 @@ export default function RequisicoesPage() {
     try {
       let query = supabase
         .from("requisicoes")
-        .select("*")
+        .select("id, titulo, descricao, status, created_at, numero_requisicao, secretaria_id, criada_por, criador_nome, fornecedor_nome")
         .eq("secretaria_id", secretariaId);
 
       // Se usuário NÃO é secretário, mostrar apenas suas requisições
@@ -86,15 +86,6 @@ export default function RequisicoesPage() {
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
-
-      // Log para debugar criador_nome
-      if (data && data.length > 0) {
-        console.log("📋 Primeiras requisições:", data.slice(0, 3).map((r: any) => ({
-          id: r.id,
-          criador_nome: r.criador_nome
-        })));
-      }
-
       setRequisicoes(data || []);
     } catch (error) {
       console.error("Erro ao carregar requisições:", error);
