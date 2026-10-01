@@ -189,6 +189,7 @@ export default function DetalheChamadoPage() {
         .eq("status", "ativo");
 
       if (error) throw error;
+      console.log("Contratos carregados:", data);
       setContratos(data || []);
     } catch (error) {
       console.error("Erro ao carregar contratos:", error);
