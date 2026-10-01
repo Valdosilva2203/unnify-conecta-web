@@ -165,10 +165,10 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratos = async (chamadoId: string) => {
     try {
-      // Buscar consumo_objetos do chamado
+      // Buscar consumo_objetos com detalhes dos objetos
       const { data: consumos } = await supabase
         .from("consumo_objetos")
-        .select("objeto_id")
+        .select("objeto_id, quantidade_usada, objetos_contratos!inner(id, nome, valor_unitario, quantidade_disponivel, contrato_id)")
         .eq("chamado_id", chamadoId)
         .eq("tipo", "chamado");
 
@@ -177,30 +177,45 @@ export default function ChamadosEmRequisicaoPage() {
         return;
       }
 
-      // Extrair objeto_ids
-      const objetoIds = consumos.map(c => c.objeto_id);
+      // Agrupar por contrato
+      const contratoMap = new Map();
 
-      // Buscar contratos desses objetos
-      const { data: objetos } = await supabase
-        .from("objetos_contratos")
-        .select("contrato_id")
-        .in("id", objetoIds);
+      for (const consumo of consumos) {
+        const objeto = consumo.objetos_contratos;
+        if (objeto) {
+          const contratoId = objeto.contrato_id;
 
-      if (!objetos || objetos.length === 0) {
-        setContratosDoFornecedor([]);
-        return;
+          if (!contratoMap.has(contratoId)) {
+            contratoMap.set(contratoId, {
+              contrato_id: contratoId,
+              objetos: []
+            });
+          }
+
+          contratoMap.get(contratoId).objetos.push({
+            id: objeto.id,
+            nome: objeto.nome,
+            valor_unitario: objeto.valor_unitario,
+            quantidade_disponivel: objeto.quantidade_disponivel,
+            quantidade_consumida: consumo.quantidade_usada
+          });
+        }
       }
 
-      // Extrair contrato_ids únicos
-      const contratoIds = [...new Set(objetos.map(o => o.contrato_id))];
-
       // Buscar detalhes dos contratos
+      const contratoIds = Array.from(contratoMap.keys());
       const { data: contratos } = await supabase
         .from("contratos")
         .select("id, numero, descricao, valor")
         .in("id", contratoIds);
 
-      setContratosDoFornecedor(contratos || []);
+      // Montar estrutura final com objetos
+      const resultado = (contratos || []).map(contrato => ({
+        ...contrato,
+        objetos: contratoMap.get(contrato.id)?.objetos || []
+      }));
+
+      setContratosDoFornecedor(resultado);
     } catch (error) {
       console.error("Erro ao carregar contratos:", error);
       setContratosDoFornecedor([]);
@@ -412,14 +427,32 @@ export default function ChamadosEmRequisicaoPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Contratos do Fornecedor
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                       {contratosDoFornecedor.map((contrato) => (
-                        <div key={contrato.id} className="bg-cyan-50 border border-cyan-300 rounded-lg p-3">
-                          <p className="font-semibold text-gray-900">✓ {contrato.numero}</p>
-                          <p className="text-sm text-gray-600">{contrato.descricao}</p>
-                          <p className="text-sm text-gray-700 mt-1">
-                            <strong>Valor:</strong> R$ {(contrato.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </p>
+                        <div key={contrato.id} className="bg-cyan-50 border border-cyan-300 rounded-lg overflow-hidden">
+                          {/* Cabeçalho Contrato */}
+                          <div className="bg-cyan-500 text-white px-4 py-2">
+                            <p className="font-semibold">✓ {contrato.numero}</p>
+                            <p className="text-sm">{contrato.descricao}</p>
+                            <p className="text-sm mt-1">
+                              <strong>Valor:</strong> R$ {(contrato.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+
+                          {/* Objetos do Contrato */}
+                          {contrato.objetos && contrato.objetos.length > 0 && (
+                            <div className="px-4 py-3 bg-white space-y-2">
+                              {contrato.objetos.map((objeto) => (
+                                <div key={objeto.id} className="text-sm border-l-2 border-cyan-300 pl-3 py-1">
+                                  <p className="font-medium text-gray-900">{objeto.nome}</p>
+                                  <p className="text-xs text-gray-600">
+                                    Valor Unit.: R$ {(objeto.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} |
+                                    Qtd: {objeto.quantidade_consumida}/{objeto.quantidade_disponivel}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
