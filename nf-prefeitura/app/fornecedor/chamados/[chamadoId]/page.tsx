@@ -101,16 +101,19 @@ export default function DetalheChamadoPage() {
 
         const { data: obj, error: erroObj } = await supabase
           .from("objetos_contratos")
-          .select("nome, contrato_id")
+          .select("*")
           .eq("id", consumo.objeto_id)
           .single();
 
         if (erroObj) {
           console.warn("⚠️ Erro ao buscar objeto:", erroObj);
+          console.log("📋 Objeto data:", obj);
           continue;
         }
 
         if (obj) {
+          console.log("✅ Objeto encontrado:", obj);
+
           const { data: contrato, error: erroContrato } = await supabase
             .from("contratos")
             .select("numero")
@@ -124,7 +127,7 @@ export default function DetalheChamadoPage() {
           detalhes.push({
             consumo_id: consumo.id,
             objeto_id: consumo.objeto_id,
-            nome: obj.nome,
+            nome: obj.nome || obj.descricao || "Objeto sem nome",
             quantidade: consumo.quantidade_usada,
             contrato_numero: contrato?.numero
           });
