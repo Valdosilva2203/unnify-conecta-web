@@ -51,6 +51,17 @@ export default function ChamadosEmRequisicaoPage() {
     }
   }, [session?.id]);
 
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setMenuAbertoId(null);
+    };
+
+    if (menuAbertoId) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [menuAbertoId]);
+
   const loadChamados = async () => {
     try {
       setLoading(true);
