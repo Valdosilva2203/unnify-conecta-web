@@ -1193,66 +1193,6 @@ function DetalhePrefeituraContent() {
           </div>
         )}
 
-        {/* Seção de Avisos (Dashboard) */}
-        {activeTab === "dashboard" && (
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">📢 Avisos</h2>
-          <div className="space-y-3">
-            {/* Aviso de Solicitações Pendentes */}
-            {solicitacoesPendentes.length > 0 && (
-              <button
-                onClick={() => setActiveTab("solicitacoes")}
-                className="w-full text-left flex items-start gap-3 p-3 bg-orange-50 rounded-lg border-l-4 border-orange-400 hover:bg-orange-100 transition"
-              >
-                <span className="text-xl">📋</span>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    Solicitações de vinculação pendentes
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {solicitacoesPendentes.length} {solicitacoesPendentes.length === 1 ? "solicitação" : "solicitações"} aguardando sua aprovação
-                  </p>
-                </div>
-              </button>
-            )}
-
-            <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
-              <span className="text-xl">⚠️</span>
-              <div>
-                <p className="font-medium text-gray-900">
-                  Renovação de licenças vencendo
-                </p>
-                <p className="text-sm text-gray-600">
-                  3 licenças vencerão nos próximos 7 dias
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-              <span className="text-xl">ℹ️</span>
-              <div>
-                <p className="font-medium text-gray-900">
-                  Documentos pendentes
-                </p>
-                <p className="text-sm text-gray-600">
-                  5 notas fiscais aguardando aprovação do financeiro
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
-              <span className="text-xl">✅</span>
-              <div>
-                <p className="font-medium text-gray-900">
-                  Processos em dia
-                </p>
-                <p className="text-sm text-gray-600">
-                  Todos os processos de aprovação estão em dia
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        )}
-
         {/* Modais */}
         <AdicionarFuncionarioModal
           isOpen={modalPrefeito}
