@@ -342,7 +342,7 @@ export default function DetalheChamadoPage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-6">📦 Objetos</h3>
 
               {objetos.length > 0 && (
-                <div className="space-y-3 mb-6">
+                <div className="space-y-3 mb-8">
                   {objetos.map((objeto, index) => (
                     <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-start gap-4">
                       <div className="flex-1">
@@ -361,59 +361,43 @@ export default function DetalheChamadoPage() {
                 </div>
               )}
 
-              {abrirFormularioObjeto && (
-                <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <p className="text-sm font-medium text-gray-700">
-                      {contratoSelecionado ? "Selecione um Objeto" : "Selecione um Contrato"}
-                    </p>
-                    <button
-                      onClick={() => {
-                        setAbrirFormularioObjeto(false);
-                        setContratoSelecionado(null);
-                        setObjetoSelecionado(null);
-                        setBuscaObjeto("");
-                      }}
-                      className="text-gray-600 hover:text-gray-900 text-xl"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {!contratoSelecionado ? (
-                    /* Lista de Contratos */
-                    <>
-                      {carregandoContratos ? (
-                        <div className="text-center py-4 text-gray-600">
-                          <div className="animate-spin inline-block text-2xl mb-2">⏳</div>
-                          <p>Carregando contratos...</p>
-                        </div>
-                      ) : contratos.length > 0 ? (
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {contratos.map((contrato) => (
-                            <button
-                              key={contrato.id}
-                              onClick={() => selecionarContrato(contrato)}
-                              className="w-full text-left p-3 bg-white border border-gray-300 rounded-lg hover:bg-blue-100 hover:border-blue-500 transition"
-                            >
-                              <p className="font-bold text-gray-900">{contrato.numero}</p>
-                              <p className="text-sm text-gray-600 mt-1">{contrato.descricao}</p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                R$ {(contrato.valor || 0).toLocaleString("pt-BR", {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                              </p>
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-4 text-gray-600">
-                          <p>Nenhum contrato ativo vinculado a essa prefeitura</p>
-                        </div>
-                      )}
-                    </>
+              {!contratoSelecionado && abrirFormularioObjeto ? (
+                /* Lista de Contratos - Grade sem scroll */
+                <>
+                  <p className="text-sm font-medium text-gray-700 mb-4">Selecione um Contrato:</p>
+                  {carregandoContratos ? (
+                    <div className="text-center py-8 text-gray-600">
+                      <div className="animate-spin inline-block text-3xl mb-2">⏳</div>
+                      <p>Carregando contratos...</p>
+                    </div>
+                  ) : contratos.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                      {contratos.map((contrato) => (
+                        <button
+                          key={contrato.id}
+                          onClick={() => selecionarContrato(contrato)}
+                          className="text-left p-4 bg-white border-2 border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition"
+                        >
+                          <p className="font-bold text-gray-900 text-lg">{contrato.numero}</p>
+                          <p className="text-sm text-gray-600 mt-2">{contrato.descricao}</p>
+                          <p className="text-sm text-gray-500 mt-3 font-medium">
+                            R$ {(contrato.valor || 0).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
                   ) : (
+                    <div className="text-center py-8 text-gray-600">
+                      <p>Nenhum contrato ativo vinculado a essa prefeitura</p>
+                    </div>
+                  )}
+                </>
+              ) : contratoSelecionado ? (
+                /* Objetos do Contrato Selecionado */
+                <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-6">
                     /* Lista de Objetos do Contrato */
                     <div className="space-y-4">
                       {/* Info do Contrato Selecionado */}
