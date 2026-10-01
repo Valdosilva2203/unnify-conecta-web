@@ -208,7 +208,20 @@ export default function ChamadosEmRequisicaoPage() {
     try {
       console.log("📝 Criando requisição com objetos:", contratosDoFornecedor);
       console.log("👤 Session:", session);
-      console.log("🏢 Secretaria ID:", session?.secretaria_id);
+
+      // Buscar secretaria_id do usuário se não tiver
+      let secretariaId = session?.secretaria_id;
+      if (!secretariaId && session?.id) {
+        const { data: usuario } = await supabase
+          .from("prefeitura_users")
+          .select("secretaria_id")
+          .eq("id", session.id)
+          .single();
+        secretariaId = usuario?.secretaria_id;
+        console.log("🔍 Secretaria ID obtida da query:", secretariaId);
+      }
+
+      console.log("🏢 Secretaria ID:", secretariaId);
       console.log("🏛️ Prefeitura ID:", prefeituraId);
 
       // 1. Pegar contrato_id do primeiro objeto
@@ -230,7 +243,7 @@ export default function ChamadosEmRequisicaoPage() {
           contrato_id: primeiroContrato?.id,
           contrato_numero: primeiroContrato?.numero,
           prefeitura_id: prefeituraId,
-          secretaria_id: session?.secretaria_id,
+          secretaria_id: secretariaId,
           status: "pendente"
         }])
         .select();
