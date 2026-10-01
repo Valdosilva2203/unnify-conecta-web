@@ -48,6 +48,8 @@ export default function DetalheChamadoPage() {
   const [loading, setLoading] = useState(true);
   const [novaJustificativa, setNovaJustificativa] = useState("");
   const [adicionando, setAdicionando] = useState(false);
+  const [mostrarFormJustificativa, setMostrarFormJustificativa] = useState(false);
+  const [finalizandoChamado, setFinalizandoChamado] = useState(false);
   const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(true);
   const [novoObjeto, setNovoObjeto] = useState("");
   const [objetos, setObjetos] = useState<{ id: string; objeto_id: string; consumo_id?: string; numero: string; descricao: string }[]>([]);
@@ -129,6 +131,25 @@ export default function DetalheChamadoPage() {
       await carregarJustificativas();
     } catch (error) {
       console.error("Erro ao deletar justificativa:", error);
+    }
+  };
+
+  const finalizarChamado = async () => {
+    try {
+      setFinalizandoChamado(true);
+      const { error } = await supabase
+        .from("chamados")
+        .update({ status: "finalizada" })
+        .eq("id", chamadoId);
+
+      if (error) throw error;
+      alert("✅ Chamado finalizado com sucesso!");
+      await carregarChamado();
+    } catch (error) {
+      console.error("Erro ao finalizar chamado:", error);
+      alert("Erro ao finalizar chamado");
+    } finally {
+      setFinalizandoChamado(false);
     }
   };
 
@@ -717,10 +738,21 @@ export default function DetalheChamadoPage() {
             </div>
 
             {/* Justificativas */}
-            <div className="border-t pt-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                📝 Justificativas ({justificativas.length}/3)
-              </h3>
+            <div className="border-t pt-8 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  📝 Justificativas ({justificativas.length}/3)
+                </h3>
+                {justificativas.length < 3 && !mostrarFormJustificativa && (
+                  <button
+                    onClick={() => setMostrarFormJustificativa(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium"
+                  >
+                    <span className="text-lg">+</span>
+                    <span>Adicionar</span>
+                  </button>
+                )}
+              </div>
 
               {justificativas.length > 0 ? (
                 <div className="space-y-4 mb-8">
@@ -748,15 +780,15 @@ export default function DetalheChamadoPage() {
                     </div>
                   ))}
                 </div>
-              ) : (
+              ) : !mostrarFormJustificativa ? (
                 <div className="text-center py-8 text-gray-500 mb-8">
                   Nenhuma justificativa adicionada
                 </div>
-              )}
+              ) : null}
 
-              {/* Adicionar Justificativa */}
-              {justificativas.length < 3 && (
-                <div className="border-t pt-6">
+              {/* Adicionar Justificativa - Só mostra quando botão é clicado */}
+              {mostrarFormJustificativa && justificativas.length < 3 && (
+                <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
                   <p className="text-sm font-medium text-gray-700 mb-4">
                     Adicionar Justificativa ({justificativas.length}/3)
                   </p>
@@ -769,10 +801,10 @@ export default function DetalheChamadoPage() {
                   />
                   <div className="flex gap-3 justify-end">
                     <button
-                      onClick={() => router.back()}
+                      onClick={() => setMostrarFormJustificativa(false)}
                       className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
                     >
-                      Voltar
+                      Cancelar
                     </button>
                     <button
                       onClick={adicionarJustificativa}
@@ -786,18 +818,29 @@ export default function DetalheChamadoPage() {
               )}
 
               {justificativas.length >= 3 && (
-                <div className="border-t pt-6 text-center">
-                  <p className="text-sm font-medium text-gray-700 mb-4">
+                <div className="text-center py-6 text-gray-700 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-sm font-medium">
                     ✅ Você atingiu o limite de 3 justificativas
                   </p>
-                  <button
-                    onClick={() => router.back()}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
-                  >
-                    Voltar
-                  </button>
                 </div>
               )}
+            </div>
+
+            {/* Botão Finalizar Chamado */}
+            <div className="border-t pt-8 flex gap-3 justify-end">
+              <button
+                onClick={() => router.back()}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={finalizarChamado}
+                disabled={finalizandoChamado}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50"
+              >
+                {finalizandoChamado ? "Finalizando..." : "✅ Finalizar Chamado"}
+              </button>
             </div>
           </div>
         </div>
