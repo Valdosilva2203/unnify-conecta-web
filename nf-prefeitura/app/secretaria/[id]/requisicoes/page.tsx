@@ -75,14 +75,6 @@ export default function RequisicoesPage() {
         .select("id, titulo, descricao, status, created_at, numero_requisicao, secretaria_id, criada_por, criador_nome, fornecedor_nome")
         .eq("secretaria_id", secretariaId);
 
-      // Se usuário NÃO é secretário, mostrar apenas suas requisições
-      const prefeituraSession = localStorage.getItem("prefeitura_session");
-      const session = prefeituraSession ? JSON.parse(prefeituraSession) : null;
-
-      if (session && session.cargo !== "Secretário" && session.cargo !== "secretario") {
-        query = query.eq("criada_por", session.id);
-      }
-
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
