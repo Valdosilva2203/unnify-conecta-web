@@ -695,6 +695,18 @@ export default function SecretariaPage() {
           (criadores || []).map((c: any) => [c.id, c.nome])
         );
 
+        // Buscar também em prefeitura_users para usuários que criaram via chamados
+        const { data: usuariosPrefeitura } = await supabase
+          .from("prefeitura_users")
+          .select("id, nome")
+          .in("id", criadoresIds);
+
+        (usuariosPrefeitura || []).forEach((u: any) => {
+          if (!criadoresMap.has(u.id)) {
+            criadoresMap.set(u.id, u.nome);
+          }
+        });
+
         // Buscar itens das requisições
         const requisicaoIds = data.map((r: any) => r.id);
         const { data: itens } = await supabase
