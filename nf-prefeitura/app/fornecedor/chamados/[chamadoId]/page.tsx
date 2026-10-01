@@ -397,9 +397,7 @@ export default function DetalheChamadoPage() {
                 </>
               ) : contratoSelecionado ? (
                 /* Objetos do Contrato Selecionado */
-                <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-6">
-                    /* Lista de Objetos do Contrato */
-                    <div className="space-y-4">
+                <div className="space-y-4">
                       {/* Info do Contrato Selecionado */}
                       <div className="bg-white p-3 rounded-lg border border-gray-300">
                         <p className="text-xs text-gray-600 uppercase mb-1">Contrato Selecionado</p>
@@ -496,10 +494,8 @@ export default function DetalheChamadoPage() {
                       >
                         ← Voltar para Contratos
                       </button>
-                    </div>
-                  )}
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Justificativas */}
