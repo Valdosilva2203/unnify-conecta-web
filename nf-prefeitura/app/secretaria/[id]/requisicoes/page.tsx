@@ -89,7 +89,8 @@ export default function RequisicoesPage() {
 
       // Buscar nomes dos criadores
       if (data && data.length > 0) {
-        const criadoresIds = [...new Set(data.map((r: any) => r.criada_por))];
+        const criadoresIds = [...new Set(data.map((r: any) => r.criada_por).filter((id: any) => id))];
+        console.log("🔍 IDs de criadores:", criadoresIds);
 
         // Buscar em funcionarios
         const { data: funcionarios } = await supabase
@@ -97,17 +98,23 @@ export default function RequisicoesPage() {
           .select("id, nome")
           .in("id", criadoresIds);
 
+        console.log("👥 Funcionários encontrados:", funcionarios?.length);
+
         const criadoresMap = new Map(
           (funcionarios || []).map((f: any) => [f.id, f.nome])
         );
 
         // Buscar em prefeitura_users se não encontrou em funcionarios
         const naoEncontrados = criadoresIds.filter(id => !criadoresMap.has(id));
+        console.log("🔎 Não encontrados em funcionarios:", naoEncontrados.length);
+
         if (naoEncontrados.length > 0) {
           const { data: usuarios } = await supabase
             .from("prefeitura_users")
             .select("id, nome")
             .in("id", naoEncontrados);
+
+          console.log("👤 Usuários encontrados:", usuarios?.length);
 
           (usuarios || []).forEach((u: any) => {
             criadoresMap.set(u.id, u.nome);
