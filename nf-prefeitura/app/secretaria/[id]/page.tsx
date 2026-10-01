@@ -85,6 +85,12 @@ export default function SecretariaPage() {
   const [fornecedorDetalhes, setFornecedorDetalhes] = useState<any>(null);
   const [secretarioResponsavel, setSecretarioResponsavel] = useState<any>(null);
   const [termoBusca, setTermoBusca] = useState("");
+  const [chamadosAguardandoConfirmacao, setChamadosAguardandoConfirmacao] = useState<any[]>([]);
+  const [mostrarModalConfirmacao, setMostrarModalConfirmacao] = useState(false);
+  const [carregandoConfirmacoes, setCarregandoConfirmacoes] = useState(false);
+  const [confirmandoChamado, setConfirmandoChamado] = useState<string | null>(null);
+  const [negandoChamado, setNegandoChamado] = useState<string | null>(null);
+  const [justificativaNegacao, setJustificativaNegacao] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Salvar secretaria_id no sessionStorage para usar em outros fluxos (por aba)
@@ -136,6 +142,7 @@ export default function SecretariaPage() {
     if (id) {
       localStorage.setItem("secretaria_atual_id", id);
       carregarRequisicoesCriadas();
+      loadChamadosAguardandoConfirmacao();
     }
     checkAuth();
   }, [id, router]);
@@ -262,6 +269,99 @@ export default function SecretariaPage() {
       }
     } catch (error) {
       console.error("Erro ao carregar secretário responsável:", error);
+    }
+  };
+
+  const loadChamadosAguardandoConfirmacao = async () => {
+    try {
+      setCarregandoConfirmacoes(true);
+      const prefeituraSession = localStorage.getItem("prefeitura_session");
+      const session = prefeituraSession ? JSON.parse(prefeituraSession) : null;
+
+      if (!session?.id) return;
+
+      // Busca notificações aguardando confirmação para este usuário
+      const { data: notificacoes } = await fetch(
+        `/api/prefeitura/notificacoes?usuario_id=${session.id}&prefeitura_id=${secretaria?.prefeitura_id}`
+      ).then(r => r.json());
+
+      if (notificacoes && notificacoes.length > 0) {
+        // Busca detalhes dos chamados referenciados
+        const chamadoIds = notificacoes.map((n: any) => n.referencia_id).filter(Boolean);
+
+        if (chamadoIds.length > 0) {
+          const { data: chamados } = await supabase
+            .from("chamados")
+            .select("id, titulo, descricao, prioridade, status, fornecedor_nome, created_at")
+            .in("id", chamadoIds)
+            .eq("status", "em_andamento");
+
+          setChamadosAguardandoConfirmacao(chamados || []);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar chamados aguardando confirmação:", error);
+    } finally {
+      setCarregandoConfirmacoes(false);
+    }
+  };
+
+  const confirmarChamado = async (chamadoId: string) => {
+    try {
+      setConfirmandoChamado(chamadoId);
+
+      const response = await fetch("/api/prefeitura/chamados/confirmar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chamado_id: chamadoId })
+      });
+
+      if (!response.ok) throw new Error("Erro ao confirmar");
+
+      alert("✅ Chamado confirmado!");
+      setChamadosAguardandoConfirmacao(
+        chamadosAguardandoConfirmacao.filter(c => c.id !== chamadoId)
+      );
+    } catch (error) {
+      console.error("Erro ao confirmar chamado:", error);
+      alert("Erro ao confirmar chamado");
+    } finally {
+      setConfirmandoChamado(null);
+    }
+  };
+
+  const negarChamado = async (chamadoId: string) => {
+    const justificativa = justificativaNegacao[chamadoId];
+
+    if (!justificativa.trim()) {
+      alert("Justificativa é obrigatória!");
+      return;
+    }
+
+    try {
+      setNegandoChamado(chamadoId);
+
+      const response = await fetch("/api/prefeitura/chamados/negar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chamado_id: chamadoId,
+          justificativa
+        })
+      });
+
+      if (!response.ok) throw new Error("Erro ao negar");
+
+      alert("❌ Chamado recusado!");
+      setChamadosAguardandoConfirmacao(
+        chamadosAguardandoConfirmacao.filter(c => c.id !== chamadoId)
+      );
+      setJustificativaNegacao({ ...justificativaNegacao, [chamadoId]: "" });
+    } catch (error) {
+      console.error("Erro ao negar chamado:", error);
+      alert("Erro ao negar chamado");
+    } finally {
+      setNegandoChamado(null);
     }
   };
 
@@ -1085,6 +1185,29 @@ export default function SecretariaPage() {
         {/* Dashboard Tab */}
         {activeTab === "dashboard" && (
           <div className="space-y-6">
+            {/* Banner de Chamados Aguardando Confirmação */}
+            {chamadosAguardandoConfirmacao.length > 0 && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded animate-pulse">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">⚠️</span>
+                    <div>
+                      <p className="font-bold text-yellow-800">
+                        Você tem {chamadosAguardandoConfirmacao.length} chamado{chamadosAguardandoConfirmacao.length > 1 ? 's' : ''} aguardando confirmação
+                      </p>
+                      <p className="text-sm text-yellow-700">O fornecedor finalizou e aguarda sua confirmação ou negação</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setMostrarModalConfirmacao(true)}
+                    className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition"
+                  >
+                    Ver Chamados
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Informações da Secretaria - Movido para o topo */}
             <div className="bg-white rounded-lg shadow p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">📋 Informações da Secretaria</h2>
@@ -1837,6 +1960,105 @@ export default function SecretariaPage() {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Chamados */}
+      {mostrarModalConfirmacao && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">
+                ⚠️ Chamados Aguardando Confirmação ({chamadosAguardandoConfirmacao.length})
+              </h2>
+              <button
+                onClick={() => setMostrarModalConfirmacao(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {carregandoConfirmacoes ? (
+                <p className="text-gray-600 text-center">Carregando chamados...</p>
+              ) : chamadosAguardandoConfirmacao.length === 0 ? (
+                <p className="text-gray-600 text-center">Nenhum chamado aguardando confirmação</p>
+              ) : (
+                chamadosAguardandoConfirmacao.map((chamado) => (
+                  <div key={chamado.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                    <div>
+                      <p className="font-bold text-gray-900">{chamado.titulo}</p>
+                      <p className="text-sm text-gray-600 mt-1">{chamado.descricao}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Prioridade:</span>
+                        <span className={`ml-2 font-medium ${
+                          chamado.prioridade === "Urgente" ? "text-red-600" :
+                          chamado.prioridade === "Normal" ? "text-yellow-600" :
+                          "text-green-600"
+                        }`}>
+                          {chamado.prioridade}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Fornecedor:</span>
+                        <span className="ml-2 font-medium text-gray-900">{chamado.fornecedor_nome}</span>
+                      </div>
+                    </div>
+
+                    {/* Formulário de Negação */}
+                    {negandoChamado === chamado.id && (
+                      <div className="bg-red-50 border border-red-200 rounded p-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Justificativa para recusa:
+                        </label>
+                        <textarea
+                          value={justificativaNegacao[chamado.id] || ""}
+                          onChange={(e) => setJustificativaNegacao({
+                            ...justificativaNegacao,
+                            [chamado.id]: e.target.value
+                          })}
+                          placeholder="Explique o motivo da recusa..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                          rows={3}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => confirmarChamado(chamado.id)}
+                        disabled={confirmandoChamado === chamado.id || negandoChamado === chamado.id}
+                        className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition disabled:opacity-50"
+                      >
+                        {confirmandoChamado === chamado.id ? "Confirmando..." : "✅ Confirmar"}
+                      </button>
+                      {negandoChamado === chamado.id ? (
+                        <button
+                          onClick={() => negarChamado(chamado.id)}
+                          disabled={negandoChamado === chamado.id}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50"
+                        >
+                          Enviar Recusa
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setNegandoChamado(chamado.id)}
+                          disabled={confirmandoChamado === chamado.id}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50"
+                        >
+                          ❌ Negar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
