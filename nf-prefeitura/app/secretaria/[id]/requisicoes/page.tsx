@@ -73,12 +73,8 @@ export default function RequisicoesPage() {
       const { data, error } = await supabase
         .from("requisicoes")
         .select("*")
+        .eq("secretaria_id", secretariaId)
         .order("created_at", { ascending: false });
-
-      console.log("✅ Total de requisições:", data?.length);
-      if (data) {
-        console.table(data.slice(0, 5));
-      }
 
       if (error) throw error;
       setRequisicoes(data || []);
