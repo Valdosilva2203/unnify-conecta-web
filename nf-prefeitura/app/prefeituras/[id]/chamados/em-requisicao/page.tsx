@@ -74,40 +74,48 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratosDoModal = async (chamadoId: string) => {
     try {
-      const { data, error } = await supabase
+      // Buscar objetos consumidos no chamado
+      const { data: consumoData, error: consumoError } = await supabase
         .from("consumo_objetos")
-        .select(`
-          id,
-          objeto_id,
-          quantidade_usada,
-          objetos_contratos (
-            id,
-            numero,
-            descricao,
-            valor_unitario,
-            contratos (
-              id,
-              numero,
-              descricao,
-              valor
-            )
-          )
-        `)
+        .select("objeto_id")
         .eq("chamado_id", chamadoId)
         .eq("tipo", "chamado");
 
-      if (error) throw error;
+      if (consumoError) throw consumoError;
 
-      // Agrupar por contrato
-      const contratoMap = new Map();
-      (data || []).forEach((item: any) => {
-        const contrato = item.objetos_contratos?.contratos;
-        if (contrato && !contratoMap.has(contrato.id)) {
-          contratoMap.set(contrato.id, contrato);
-        }
-      });
+      if (!consumoData || consumoData.length === 0) {
+        setContratosModal([]);
+        return;
+      }
 
-      setContratosModal(Array.from(contratoMap.values()));
+      // Extrair IDs de objetos
+      const objetoIds = consumoData.map(c => c.objeto_id);
+
+      // Buscar detalhes dos objetos e contratos
+      const { data: objetosData, error: objetosError } = await supabase
+        .from("objetos_contratos")
+        .select("id, numero, descricao, valor_unitario, contrato_id")
+        .in("id", objetoIds);
+
+      if (objetosError) throw objetosError;
+
+      if (!objetosData || objetosData.length === 0) {
+        setContratosModal([]);
+        return;
+      }
+
+      // Extrair IDs de contratos únicos
+      const contratoIds = [...new Set(objetosData.map(o => o.contrato_id))];
+
+      // Buscar detalhes dos contratos
+      const { data: contratosData, error: contratosError } = await supabase
+        .from("contratos")
+        .select("id, numero, descricao, valor")
+        .in("id", contratoIds);
+
+      if (contratosError) throw contratosError;
+
+      setContratosModal(contratosData || []);
     } catch (error) {
       console.error("❌ Erro ao carregar contratos:", error);
       setContratosModal([]);
