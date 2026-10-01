@@ -670,7 +670,7 @@ export default function SecretariaPage() {
 
       let query = supabase
         .from("requisicoes")
-        .select("*")
+        .select("id, titulo, descricao, status, created_at, numero_requisicao, secretaria_id, criada_por, criador_nome, fornecedor_nome")
         .eq("secretaria_id", id)
         .order("created_at", { ascending: false });
 
@@ -683,31 +683,8 @@ export default function SecretariaPage() {
 
       if (error) throw error;
 
-      // Buscar nomes dos criadores
+      // Buscar itens das requisições
       if (data && data.length > 0) {
-        const criadoresIds = [...new Set(data.map((r: any) => r.criada_por))];
-        const { data: criadores } = await supabase
-          .from("funcionarios")
-          .select("id, nome")
-          .in("id", criadoresIds);
-
-        const criadoresMap = new Map(
-          (criadores || []).map((c: any) => [c.id, c.nome])
-        );
-
-        // Buscar também em prefeitura_users para usuários que criaram via chamados
-        const { data: usuariosPrefeitura } = await supabase
-          .from("prefeitura_users")
-          .select("id, nome")
-          .in("id", criadoresIds);
-
-        (usuariosPrefeitura || []).forEach((u: any) => {
-          if (!criadoresMap.has(u.id)) {
-            criadoresMap.set(u.id, u.nome);
-          }
-        });
-
-        // Buscar itens das requisições
         const requisicaoIds = data.map((r: any) => r.id);
         const { data: itens } = await supabase
           .from("requisicoes_itens")
@@ -722,10 +699,9 @@ export default function SecretariaPage() {
           itensMap.get(item.requisicao_id).push(item);
         });
 
-        // Adicionar nome do criador e itens a cada requisição
+        // Adicionar itens a cada requisição (criador_nome já vem do banco)
         const dataComDados = data.map((r: any) => ({
           ...r,
-          criador_nome: criadoresMap.get(r.criada_por) || "Desconhecido",
           itens: itensMap.get(r.id) || [],
         }));
 
