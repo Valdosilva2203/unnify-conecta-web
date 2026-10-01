@@ -532,22 +532,45 @@ export default function DetalheChamadoPage() {
                     </div>
                   ) : contratos.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                      {contratos.map((contrato) => (
-                        <button
-                          key={contrato.id}
-                          onClick={() => selecionarContrato(contrato)}
-                          className="text-left p-4 bg-white border-2 border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition"
-                        >
-                          <p className="font-bold text-gray-900 text-lg">{contrato.numero}</p>
-                          <p className="text-sm text-gray-600 mt-2">{contrato.descricao}</p>
-                          <p className="text-sm text-gray-500 mt-3 font-medium">
-                            R$ {(contrato.valor || 0).toLocaleString("pt-BR", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </p>
-                        </button>
-                      ))}
+                      {contratos.map((contrato) => {
+                        const progresso = calcularProgressoContrato(contrato);
+                        return (
+                          <button
+                            key={contrato.id}
+                            onClick={() => selecionarContrato(contrato)}
+                            className="text-left p-4 bg-white border-2 border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition"
+                          >
+                            <p className="font-bold text-gray-900 text-lg">{contrato.numero}</p>
+                            <p className="text-sm text-gray-600 mt-2">{contrato.descricao}</p>
+                            <p className="text-sm text-gray-500 mt-3 font-medium">
+                              R$ {(contrato.valor || 0).toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </p>
+
+                            {/* Barra de Progresso de Data Final */}
+                            {progresso && (
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="text-xs font-medium text-gray-600">
+                                    {new Date(contrato.data_fim!).toLocaleDateString("pt-BR")}
+                                  </p>
+                                  <p className={`text-xs font-bold ${progresso.texCor}`}>
+                                    {progresso.diasRestantes <= 0 ? "Expirado" : `${progresso.diasRestantes} dias`}
+                                  </p>
+                                </div>
+                                <div className="w-full h-2 bg-gray-300 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all ${progresso.cor}`}
+                                    style={{ width: `${progresso.porcentagem}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-600">
