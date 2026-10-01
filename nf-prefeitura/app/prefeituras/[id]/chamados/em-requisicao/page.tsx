@@ -74,6 +74,8 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratosDoModal = async (chamadoId: string) => {
     try {
+      console.log("🔍 Buscando consumo_objetos para chamadoId:", chamadoId);
+
       // Buscar objetos consumidos no chamado
       const { data: consumoData, error: consumoError } = await supabase
         .from("consumo_objetos")
@@ -81,15 +83,19 @@ export default function ChamadosEmRequisicaoPage() {
         .eq("chamado_id", chamadoId)
         .eq("tipo", "chamado");
 
+      console.log("📦 Consumo data:", consumoData, "Error:", consumoError);
+
       if (consumoError) throw consumoError;
 
       if (!consumoData || consumoData.length === 0) {
+        console.log("⚠️ Nenhum objeto consumido encontrado");
         setContratosModal([]);
         return;
       }
 
       // Extrair IDs de objetos
       const objetoIds = consumoData.map(c => c.objeto_id);
+      console.log("🎯 Objeto IDs:", objetoIds);
 
       // Buscar detalhes dos objetos e contratos
       const { data: objetosData, error: objetosError } = await supabase
@@ -97,21 +103,27 @@ export default function ChamadosEmRequisicaoPage() {
         .select("id, numero, descricao, valor_unitario, contrato_id")
         .in("id", objetoIds);
 
+      console.log("📋 Objetos data:", objetosData, "Error:", objetosError);
+
       if (objetosError) throw objetosError;
 
       if (!objetosData || objetosData.length === 0) {
+        console.log("⚠️ Nenhum objeto_contrato encontrado");
         setContratosModal([]);
         return;
       }
 
       // Extrair IDs de contratos únicos
       const contratoIds = [...new Set(objetosData.map(o => o.contrato_id))];
+      console.log("🔗 Contrato IDs:", contratoIds);
 
       // Buscar detalhes dos contratos
       const { data: contratosData, error: contratosError } = await supabase
         .from("contratos")
         .select("id, numero, descricao, valor")
         .in("id", contratoIds);
+
+      console.log("✅ Contratos data:", contratosData, "Error:", contratosError);
 
       if (contratosError) throw contratosError;
 
