@@ -208,6 +208,9 @@ export default function ChamadosEmRequisicaoPage() {
     try {
       console.log("📝 Criando requisição com objetos:", contratosDoFornecedor);
 
+      // 1. Pegar contrato_id do primeiro objeto
+      const primeiroContrato = contratosDoFornecedor[0];
+
       // 1. Criar requisição
       const { data: requisicaoData, error: reqError } = await supabase
         .from("requisicoes")
@@ -215,6 +218,9 @@ export default function ChamadosEmRequisicaoPage() {
           titulo: modalChamado.titulo || "Requisição do Chamado",
           descricao: modalChamado.descricao || observacoes,
           fornecedor_id: modalChamado.fornecedor_id,
+          fornecedor_nome: fornecedorBusca,
+          contrato_id: primeiroContrato?.id,
+          contrato_numero: primeiroContrato?.numero,
           prefeitura_id: prefeituraId,
           secretaria_id: session?.secretaria_id,
           status: "pendente"
