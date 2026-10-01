@@ -27,6 +27,8 @@ interface Contrato {
   descricao: string;
   valor: number;
   status: "ativo" | "concluido" | "cancelado";
+  data_inicio?: string;
+  data_fim?: string;
 }
 
 interface ObjetoContrato {
@@ -344,6 +346,40 @@ export default function DetalheChamadoPage() {
     return nomeObjeto.includes(buscaObjeto.toLowerCase());
   });
 
+  const calcularProgressoContrato = (contrato: Contrato) => {
+    if (!contrato.data_inicio || !contrato.data_fim) {
+      return null;
+    }
+
+    const agora = new Date().getTime();
+    const inicio = new Date(contrato.data_inicio).getTime();
+    const fim = new Date(contrato.data_fim).getTime();
+    const duracao = fim - inicio;
+    const decorrido = agora - inicio;
+    const restante = fim - agora;
+
+    const porcentagem = Math.max(0, Math.min(100, (decorrido / duracao) * 100));
+    const diasRestantes = Math.ceil(restante / (1000 * 60 * 60 * 24));
+
+    let cor = "bg-green-500";
+    let texCor = "text-green-700";
+    if (diasRestantes <= 0) {
+      cor = "bg-red-700";
+      texCor = "text-red-700";
+    } else if (diasRestantes <= 30) {
+      cor = "bg-red-500";
+      texCor = "text-red-500";
+    } else if (diasRestantes <= 90) {
+      cor = "bg-orange-500";
+      texCor = "text-orange-500";
+    } else if (diasRestantes <= 180) {
+      cor = "bg-yellow-500";
+      texCor = "text-yellow-500";
+    }
+
+    return { porcentagem, diasRestantes, cor, texCor };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -523,8 +559,8 @@ export default function DetalheChamadoPage() {
                 <>
                   {/* Informações do Contrato Selecionado */}
                   <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200 mb-6">
-                    <div className="flex justify-between items-start">
-                      <div>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
                         <p className="text-sm text-green-700 font-bold uppercase">✓ Contrato nº {contratoSelecionado.numero}</p>
                         <p className="text-gray-700 mt-1">{contratoSelecionado.descricao}</p>
                       </div>
@@ -535,11 +571,36 @@ export default function DetalheChamadoPage() {
                           setBuscaObjeto("");
                           setQuantidadeObjeto("");
                         }}
-                        className="text-gray-600 hover:text-gray-900 text-xl"
+                        className="text-gray-600 hover:text-gray-900 text-xl flex-shrink-0"
                       >
                         ✕
                       </button>
                     </div>
+
+                    {/* Barra de Progresso de Data Final */}
+                    {contratoSelecionado.data_inicio && contratoSelecionado.data_fim && (() => {
+                      const progresso = calcularProgressoContrato(contratoSelecionado);
+                      if (!progresso) return null;
+
+                      return (
+                        <div className="mt-3 pt-3 border-t border-green-300">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs font-medium text-gray-600">
+                              Vencimento: {new Date(contratoSelecionado.data_fim).toLocaleDateString("pt-BR")}
+                            </p>
+                            <p className={`text-xs font-bold ${progresso.texCor}`}>
+                              {progresso.diasRestantes <= 0 ? "Expirado" : `${progresso.diasRestantes} dias`}
+                            </p>
+                          </div>
+                          <div className="w-full h-2 bg-gray-300 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${progresso.cor}`}
+                              style={{ width: `${progresso.porcentagem}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Objetos do Contrato */}
