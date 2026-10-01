@@ -48,7 +48,7 @@ export default function DetalheChamadoPage() {
   const [adicionando, setAdicionando] = useState(false);
   const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(true);
   const [novoObjeto, setNovoObjeto] = useState("");
-  const [objetos, setObjetos] = useState<{ id: string; objeto_id: string; numero: string; descricao: string }[]>([]);
+  const [objetos, setObjetos] = useState<{ id: string; objeto_id: string; consumo_id?: string; numero: string; descricao: string }[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [carregandoContratos, setCarregandoContratos] = useState(false);
   const [contratoSelecionado, setContratoSelecionado] = useState<Contrato | null>(null);
@@ -142,16 +142,18 @@ export default function DetalheChamadoPage() {
     try {
       const objetoARemover = objetos[index];
 
-      // Deleta o consumo do banco de dados
-      const { error } = await supabase
-        .from("consumo_objetos")
-        .delete()
-        .eq("objeto_id", objetoARemover.objeto_id);
+      // Deleta apenas esse consumo específico usando o ID
+      if (objetoARemover.consumo_id) {
+        const { error } = await supabase
+          .from("consumo_objetos")
+          .delete()
+          .eq("id", objetoARemover.consumo_id);
 
-      if (error) {
-        console.error("Erro ao deletar consumo:", error);
-        alert("Erro ao remover objeto do chamado");
-        return;
+        if (error) {
+          console.error("Erro ao deletar consumo:", error);
+          alert("Erro ao remover objeto do chamado");
+          return;
+        }
       }
 
       // Remove da lista local
@@ -275,10 +277,11 @@ export default function DetalheChamadoPage() {
           console.log("✅ Consumo registrado com sucesso:", data);
         }
 
-        // Atualiza a lista local
+        // Atualiza a lista local com o ID do consumo para deletar depois
         setObjetos([...objetos, {
           id: objetoSelecionado.id,
           objeto_id: objetoSelecionado.id,
+          consumo_id: data?.[0]?.id,
           numero: contratoSelecionado.numero,
           descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
         }]);
@@ -296,6 +299,7 @@ export default function DetalheChamadoPage() {
         setObjetos([...objetos, {
           id: objetoSelecionado.id,
           objeto_id: objetoSelecionado.id,
+          consumo_id: undefined,
           numero: contratoSelecionado.numero,
           descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
         }]);
