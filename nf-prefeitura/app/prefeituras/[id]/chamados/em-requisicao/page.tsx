@@ -245,6 +245,7 @@ export default function ChamadosEmRequisicaoPage() {
           prefeitura_id: prefeituraId,
           secretaria_id: secretariaId,
           criada_por: session?.id,
+          criador_nome: session?.nome,
           status: "pendente"
         }])
         .select();
