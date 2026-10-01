@@ -165,10 +165,10 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratos = async (chamadoId: string) => {
     try {
-      // Step 1: Buscar consumo_objetos simples
+      // Buscar consumo_objetos com detalhes dos objetos
       const { data: consumos } = await supabase
         .from("consumo_objetos")
-        .select("objeto_id, quantidade_usada")
+        .select("objeto_id, quantidade_usada, objetos_contratos!inner(id, nome, valor_unitario, quantidade_disponivel, contrato_id)")
         .eq("chamado_id", chamadoId)
         .eq("tipo", "chamado");
 
@@ -177,24 +177,11 @@ export default function ChamadosEmRequisicaoPage() {
         return;
       }
 
-      const objetoIds = consumos.map(c => c.objeto_id);
-
-      // Step 2: Buscar detalhes dos objetos
-      const { data: objetos } = await supabase
-        .from("objetos_contratos")
-        .select("id, nome, valor_unitario, quantidade_disponivel, contrato_id")
-        .in("id", objetoIds);
-
-      if (!objetos || objetos.length === 0) {
-        setContratosDoFornecedor([]);
-        return;
-      }
-
-      // Step 3: Agrupar por contrato
+      // Agrupar por contrato
       const contratoMap = new Map();
 
       for (const consumo of consumos) {
-        const objeto = objetos.find(o => o.id === consumo.objeto_id);
+        const objeto = consumo.objetos_contratos;
         if (objeto) {
           const contratoId = objeto.contrato_id;
 
@@ -215,14 +202,14 @@ export default function ChamadosEmRequisicaoPage() {
         }
       }
 
-      // Step 4: Buscar detalhes dos contratos
+      // Buscar detalhes dos contratos
       const contratoIds = Array.from(contratoMap.keys());
       const { data: contratos } = await supabase
         .from("contratos")
         .select("id, numero, descricao, valor")
         .in("id", contratoIds);
 
-      // Step 5: Montar estrutura final
+      // Montar estrutura final com objetos
       const resultado = (contratos || []).map(contrato => ({
         ...contrato,
         objetos: contratoMap.get(contrato.id)?.objetos || []
