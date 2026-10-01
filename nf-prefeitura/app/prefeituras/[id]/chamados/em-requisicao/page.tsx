@@ -41,6 +41,7 @@ export default function ChamadosEmRequisicaoPage() {
 
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
+  const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (session?.id) {
@@ -74,6 +75,16 @@ export default function ChamadosEmRequisicaoPage() {
       console.error("❌ Erro ao carregar chamados:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const gerarRequisicao = async (chamadoId: string) => {
+    try {
+      setMenuAbertoId(null);
+      // Lógica para gerar requisição será implementada
+      alert("Requisição será gerada para este chamado");
+    } catch (error) {
+      console.error("❌ Erro ao gerar requisição:", error);
     }
   };
 
@@ -151,8 +162,32 @@ export default function ChamadosEmRequisicaoPage() {
                         : "—"}
                     </td>
                     <td className="px-6 py-4 text-gray-700">{chamado.fornecedor_nome || "—"}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="text-cyan-600 font-bold text-lg">👁️</span>
+                    <td className="px-6 py-4 text-center relative">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuAbertoId(menuAbertoId === chamado.id ? null : chamado.id);
+                          }}
+                          className="p-2 hover:bg-gray-200 rounded-full transition"
+                        >
+                          ⋮
+                        </button>
+                      </div>
+
+                      {menuAbertoId === chamado.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              gerarRequisicao(chamado.id);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-blue-50 transition text-sm font-medium text-gray-700 flex items-center gap-2"
+                          >
+                            📋 Gerar Requisição
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
