@@ -67,8 +67,8 @@ export default function ChamadosEmRequisicaoPage() {
   }, [menuAbertoId]);
 
   useEffect(() => {
-    if (modalChamado && modalChamado.fornecedor_id) {
-      carregarContratos(modalChamado.fornecedor_id);
+    if (modalChamado) {
+      carregarContratos(modalChamado.id);
     }
   }, [modalChamado]);
 
@@ -163,13 +163,42 @@ export default function ChamadosEmRequisicaoPage() {
     }
   };
 
-  const carregarContratos = async (fornecedorId: string) => {
+  const carregarContratos = async (chamadoId: string) => {
     try {
-      // Buscar todos os contratos do fornecedor
+      // Buscar consumo_objetos do chamado
+      const { data: consumos } = await supabase
+        .from("consumo_objetos")
+        .select("objeto_id")
+        .eq("chamado_id", chamadoId)
+        .eq("tipo", "chamado");
+
+      if (!consumos || consumos.length === 0) {
+        setContratosDoFornecedor([]);
+        return;
+      }
+
+      // Extrair objeto_ids
+      const objetoIds = consumos.map(c => c.objeto_id);
+
+      // Buscar contratos desses objetos
+      const { data: objetos } = await supabase
+        .from("objetos_contratos")
+        .select("contrato_id")
+        .in("id", objetoIds);
+
+      if (!objetos || objetos.length === 0) {
+        setContratosDoFornecedor([]);
+        return;
+      }
+
+      // Extrair contrato_ids únicos
+      const contratoIds = [...new Set(objetos.map(o => o.contrato_id))];
+
+      // Buscar detalhes dos contratos
       const { data: contratos } = await supabase
         .from("contratos")
-        .select("id, numero, descricao, valor, fornecedor_id")
-        .eq("fornecedor_id", fornecedorId);
+        .select("id, numero, descricao, valor")
+        .in("id", contratoIds);
 
       setContratosDoFornecedor(contratos || []);
     } catch (error) {
