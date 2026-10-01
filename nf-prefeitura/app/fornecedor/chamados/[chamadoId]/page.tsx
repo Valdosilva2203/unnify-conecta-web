@@ -236,6 +236,8 @@ export default function DetalheChamadoPage() {
 
       // 2. Busca secretario_id do chamado para enviar notificação
       if (chamado?.secretaria_id) {
+        console.log("🔍 Buscando secretário da secretaria:", chamado.secretaria_id);
+
         const { data: secretario } = await supabase
           .from("funcionarios")
           .select("id")
@@ -243,20 +245,29 @@ export default function DetalheChamadoPage() {
           .eq("cargo", "Secretário")
           .single();
 
+        console.log("👤 Secretário encontrado:", secretario?.id);
+
         if (secretario?.id) {
           // 3. Cria notificação de confirmação para o secretário
-          await fetch("/api/prefeitura/notificacoes", {
+          const notifPayload = {
+            usuario_id: secretario.id,
+            prefeitura_id: chamado.prefeitura_id,
+            tipo: "chamado_aguardando_confirmacao",
+            titulo: `Confirmação de Chamado: ${chamado.titulo}`,
+            mensagem: `O fornecedor finalizou o chamado "${chamado.titulo}". Confirme ou negue.`,
+            referencia_id: chamadoId
+          };
+          console.log("📨 Criando notificação:", notifPayload);
+
+          const response = await fetch("/api/prefeitura/notificacoes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              usuario_id: secretario.id,
-              prefeitura_id: chamado.prefeitura_id,
-              tipo: "chamado_aguardando_confirmacao",
-              titulo: `Confirmação de Chamado: ${chamado.titulo}`,
-              mensagem: `O fornecedor finalizou o chamado "${chamado.titulo}". Confirme ou negue.`,
-              referencia_id: chamadoId
-            })
+            body: JSON.stringify(notifPayload)
           });
+
+          console.log("📊 Resposta da notificação:", response.status);
+          const result = await response.json();
+          console.log("✅ Notificação criada:", result);
         }
       }
 
