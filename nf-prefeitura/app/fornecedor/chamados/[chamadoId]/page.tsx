@@ -78,7 +78,8 @@ export default function DetalheChamadoPage() {
         .is("chamado_id", null);
 
       if (error) {
-        console.error("Erro na query consumo_objetos:", error);
+        console.warn("⚠️ Aviso ao carregar objetos:", JSON.stringify(error));
+        console.log("Nota: Se a migration não foi rodada, é normal este erro. Continuando sem carregar objetos persistidos.");
         return;
       }
 
