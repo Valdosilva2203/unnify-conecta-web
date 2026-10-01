@@ -130,6 +130,7 @@ export default function DetalheChamadoPage() {
             objeto_id: consumo.objeto_id,
             nome: obj.nome || obj.descricao || "Objeto sem nome",
             quantidade: consumo.quantidade_usada,
+            valor_unitario: obj.valor_unitario || 0,
             contrato_numero: contrato?.numero
           });
         }
@@ -618,6 +619,12 @@ export default function DetalheChamadoPage() {
                           <p className="text-sm text-gray-600 mt-1">
                             Quantidade: <strong>{objeto.quantidade}</strong>
                           </p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Valor Unitário: <strong>R$ {(objeto.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                          </p>
+                          <p className="text-sm text-gray-800 font-bold mt-1">
+                            Subtotal: R$ {((objeto.valor_unitario || 0) * objeto.quantidade).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
                         </div>
                         <button
                           onClick={() => removerObjeto(objeto.consumo_id)}
@@ -628,6 +635,13 @@ export default function DetalheChamadoPage() {
                         </button>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Total */}
+                  <div className="mt-4 pt-4 border-t-2 border-green-300">
+                    <p className="text-lg font-bold text-gray-900">
+                      Valor Total: R$ {objetos.reduce((total, obj) => total + ((obj.valor_unitario || 0) * obj.quantidade), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
                   </div>
                 </div>
               )}
