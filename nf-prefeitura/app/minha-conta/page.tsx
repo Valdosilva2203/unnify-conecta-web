@@ -335,8 +335,6 @@ function MinhaContaContent() {
       <div className="flex h-screen">
         {/* Sidebar */}
         <div className="w-64 bg-gradient-to-br from-orange-500 to-orange-600 text-white p-8 overflow-y-auto">
-          <h1 className="text-3xl font-bold mb-12">SUCCESS</h1>
-
           {/* Perfil Resumido */}
           <div className="bg-white/10 rounded-lg p-4 mb-8">
             <div className="flex items-center gap-3 mb-4">
