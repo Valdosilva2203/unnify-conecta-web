@@ -65,7 +65,44 @@ export default function DetalheChamadoPage() {
   useEffect(() => {
     carregarChamado();
     carregarContratos();
+    carregarObjetosJaAdicionados();
   }, [chamadoId]);
+
+  const carregarObjetosJaAdicionados = async () => {
+    try {
+      // Busca consumos já adicionados a este chamado (sem vincular ainda)
+      const { data, error } = await supabase
+        .from("consumo_objetos")
+        .select(`
+          id,
+          quantidade_usada,
+          objetos_contratos!objeto_id(
+            id,
+            nome,
+            descricao,
+            contratos!contrato_id(numero)
+          )
+        `)
+        .eq("tipo", "chamado")
+        .is("chamado_id", null);
+
+      if (error) throw error;
+
+      // Reconstrói o estado local com os objetos já adicionados
+      if (data && data.length > 0) {
+        const objetosReconstruidos = data.map((item: any) => ({
+          id: item.objetos_contratos?.id,
+          objeto_id: item.objetos_contratos?.id,
+          consumo_id: item.id,
+          numero: item.objetos_contratos?.contratos?.numero,
+          descricao: `${item.objetos_contratos?.nome || item.objetos_contratos?.descricao} (Qtd: ${item.quantidade_usada})`
+        }));
+        setObjetos(objetosReconstruidos);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar objetos já adicionados:", error);
+    }
+  };
 
   const carregarChamado = async () => {
     try {
