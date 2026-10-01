@@ -256,7 +256,7 @@ export default function DetalheChamadoPage() {
     }
   };
 
-  const removerObjeto = async (consumoId: string, contratoId: string) => {
+  const removerObjeto = async (consumoId: string) => {
     try {
       // DELETE do consumo
       const { error } = await supabase
@@ -275,8 +275,10 @@ export default function DetalheChamadoPage() {
       // Recarrega objetos do chamado
       await carregarObjetos();
 
-      // Recarrega objetos disponíveis do contrato
-      await carregarObjetosContrato(contratoId);
+      // Recarrega objetos do contrato selecionado
+      if (contratoSelecionado) {
+        await carregarObjetosContrato(contratoSelecionado.id);
+      }
     } catch (error) {
       console.error("Erro ao remover objeto:", error);
       alert("Erro ao remover objeto");
@@ -606,7 +608,7 @@ export default function DetalheChamadoPage() {
                           </p>
                         </div>
                         <button
-                          onClick={() => removerObjeto(objeto.consumo_id, objeto.contrato_numero)}
+                          onClick={() => removerObjeto(objeto.consumo_id)}
                           className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 rounded-full transition flex-shrink-0"
                           title="Remover objeto e recuperar saldo"
                         >
