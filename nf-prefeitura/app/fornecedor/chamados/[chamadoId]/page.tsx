@@ -56,6 +56,7 @@ export default function DetalheChamadoPage() {
   const [carregandoObjetos, setCarregandoObjetos] = useState(false);
   const [buscaObjeto, setBuscaObjeto] = useState("");
   const [objetoSelecionado, setObjetoSelecionado] = useState<ObjetoContrato | null>(null);
+  const [quantidadeObjeto, setQuantidadeObjeto] = useState("");
 
   useEffect(() => {
     carregarChamado();
@@ -190,16 +191,17 @@ export default function DetalheChamadoPage() {
   };
 
   const adicionarObjetoAoChamado = () => {
-    if (contratoSelecionado && objetoSelecionado) {
+    if (contratoSelecionado && objetoSelecionado && quantidadeObjeto) {
       setObjetos([...objetos, {
         id: objetoSelecionado.id,
         numero: contratoSelecionado.numero,
-        descricao: objetoSelecionado.nome
+        descricao: `${objetoSelecionado.nome} (Qtd: ${quantidadeObjeto})`
       }]);
       setContratoSelecionado(null);
       setObjetoSelecionado(null);
       setObjetosContrato([]);
       setBuscaObjeto("");
+      setQuantidadeObjeto("");
       setAbrirFormularioObjeto(false);
     }
   };
@@ -417,7 +419,7 @@ export default function DetalheChamadoPage() {
                     </>
                   ) : (
                     /* Lista de Objetos do Contrato */
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {/* Info do Contrato Selecionado */}
                       <div className="bg-white p-3 rounded-lg border border-gray-300">
                         <p className="text-xs text-gray-600 uppercase mb-1">Contrato Selecionado</p>
@@ -425,59 +427,75 @@ export default function DetalheChamadoPage() {
                         <p className="text-sm text-gray-600">{contratoSelecionado.descricao}</p>
                       </div>
 
-                      {/* Campo de Busca */}
-                      <input
-                        type="text"
-                        value={buscaObjeto}
-                        onChange={(e) => setBuscaObjeto(e.target.value)}
-                        placeholder="Buscar por nome do objeto..."
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
-                      />
-
-                      {/* Lista de Objetos */}
+                      {/* Lista de Objetos com Interface de Requisição */}
                       {carregandoObjetos ? (
-                        <div className="text-center py-4 text-gray-600">
-                          <div className="animate-spin inline-block text-xl mb-2">⏳</div>
+                        <div className="text-center py-6 text-gray-600">
+                          <div className="animate-spin inline-block text-3xl mb-2">⏳</div>
                           <p className="text-sm">Carregando objetos...</p>
                         </div>
-                      ) : objetosFiltrados.length > 0 ? (
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                          {objetosFiltrados.map((objeto) => (
-                            <button
+                      ) : objetosContrato.length > 0 ? (
+                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                          {objetosContrato.map((objeto) => (
+                            <div
                               key={objeto.id}
-                              onClick={() => setObjetoSelecionado(objeto)}
-                              className={`w-full text-left p-3 rounded-lg border-2 transition ${
+                              className={`bg-yellow-50 p-4 rounded-lg border-2 transition ${
                                 objetoSelecionado?.id === objeto.id
-                                  ? "bg-green-100 border-green-500"
-                                  : "bg-white border-gray-300 hover:bg-gray-100"
+                                  ? "border-orange-500 bg-orange-50"
+                                  : "border-yellow-200"
                               }`}
                             >
-                              <p className="font-medium text-gray-900">{objeto.nome}</p>
-                              {objeto.descricao && (
-                                <p className="text-xs text-gray-600 mt-1">{objeto.descricao}</p>
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="flex-1">
+                                  <p className="font-bold text-gray-900">{objeto.nome}</p>
+                                  <p className="text-xs text-gray-600 mt-1">{objeto.descricao || ""}</p>
+                                </div>
+                                {objetoSelecionado?.id === objeto.id && (
+                                  <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">
+                                    ✓ Selecionado
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex gap-4 mb-3 text-xs">
+                                <div>
+                                  <p className="text-gray-600">Valor Unit.:</p>
+                                  <p className="font-bold text-gray-900">
+                                    R$ {(objeto.descricao ? 0 : 0).toLocaleString("pt-BR", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="mb-3">
+                                <input
+                                  type="number"
+                                  value={objetoSelecionado?.id === objeto.id ? quantidadeObjeto : ""}
+                                  onChange={(e) => {
+                                    setObjetoSelecionado(objeto);
+                                    setQuantidadeObjeto(e.target.value);
+                                  }}
+                                  placeholder="Qtd"
+                                  className="w-16 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-orange-500"
+                                  min="1"
+                                />
+                              </div>
+
+                              {objetoSelecionado?.id === objeto.id && quantidadeObjeto && (
+                                <button
+                                  onClick={adicionarObjetoAoChamado}
+                                  className="w-full px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded font-bold transition text-sm"
+                                >
+                                  Adicionar
+                                </button>
                               )}
-                            </button>
+                            </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-4 text-gray-600">
-                          <p className="text-sm">
-                            {buscaObjeto ? "Nenhum objeto encontrado" : "Nenhum objeto neste contrato"}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Botões de Ação */}
-                      {objetoSelecionado && (
-                        <div className="bg-green-50 p-3 rounded-lg border border-green-300">
-                          <p className="text-xs text-green-700 font-medium mb-2">Objeto Selecionado</p>
-                          <p className="font-bold text-gray-900 mb-3">{objetoSelecionado.nome}</p>
-                          <button
-                            onClick={adicionarObjetoAoChamado}
-                            className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
-                          >
-                            ✓ Adicionar este Objeto
-                          </button>
+                        <div className="text-center py-6 text-gray-600">
+                          <p className="text-sm">Nenhum objeto neste contrato</p>
                         </div>
                       )}
 
@@ -487,6 +505,7 @@ export default function DetalheChamadoPage() {
                           setContratoSelecionado(null);
                           setObjetoSelecionado(null);
                           setBuscaObjeto("");
+                          setQuantidadeObjeto("");
                         }}
                         className="w-full px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium text-sm"
                       >
