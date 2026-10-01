@@ -389,41 +389,52 @@ export default function ChamadosEmRequisicaoPage() {
                   />
                 </div>
 
-                {/* Contratos do Fornecedor */}
+                {/* Objetos do Chamado */}
                 {contratosDoFornecedor.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Contratos do Fornecedor
-                    </label>
-                    <div className="space-y-4">
-                      {contratosDoFornecedor.map((contrato) => (
-                        <div key={contrato.id} className="bg-cyan-50 border border-cyan-300 rounded-lg overflow-hidden">
-                          {/* Cabeçalho Contrato */}
-                          <div className="bg-cyan-500 text-white px-4 py-2">
-                            <p className="font-semibold">✓ {contrato.numero}</p>
-                            <p className="text-sm">{contrato.descricao}</p>
-                            <p className="text-sm mt-1">
-                              <strong>Valor:</strong> R$ {(contrato.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </p>
-                          </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      📦 Objetos do Chamado
+                    </h3>
 
-                          {/* Objetos do Contrato */}
-                          {contrato.objetos && contrato.objetos.length > 0 && (
-                            <div className="px-4 py-3 bg-white space-y-2">
-                              {contrato.objetos.map((objeto) => (
-                                <div key={objeto.id} className="text-sm border-l-2 border-cyan-300 pl-3 py-1">
-                                  <p className="font-medium text-gray-900">{objeto.descricao}</p>
-                                  <p className="text-xs text-gray-600">
-                                    Valor Unit.: R$ {(objeto.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} |
-                                    Qtd: {objeto.quantidade_consumida}/{objeto.quantidade}
-                                  </p>
+                    <div className="space-y-3">
+                      {contratosDoFornecedor.map((contrato) =>
+                        contrato.objetos?.map((objeto) => {
+                          const subtotal = (objeto.valor_unitario || 0) * (objeto.quantidade_consumida || 0);
+                          return (
+                            <div key={objeto.id} className="bg-white border border-green-200 rounded-lg p-4">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <p className="font-semibold text-gray-900">Contrato: {contrato.numero}</p>
+                                  <p className="text-gray-700 font-medium mt-1">{objeto.descricao}</p>
                                 </div>
-                              ))}
+                                <div className="text-right">
+                                  <p className="text-sm text-gray-600">Quantidade: <span className="font-semibold text-gray-900">{objeto.quantidade_consumida}</span></p>
+                                </div>
+                              </div>
+
+                              <div className="flex justify-between items-center text-sm">
+                                <p className="text-gray-600">Valor Unitário: <span className="font-semibold text-gray-900">R$ {(objeto.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></p>
+                                <p className="text-gray-600">Subtotal: <span className="font-semibold text-gray-900">R$ {subtotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></p>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      ))}
+                          );
+                        })
+                      )}
                     </div>
+
+                    {/* Valor Total */}
+                    {contratosDoFornecedor.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-green-200">
+                        <p className="text-lg font-bold text-gray-900">
+                          Valor Total: R${' '}
+                          {contratosDoFornecedor.reduce((total, contrato) => {
+                            return total + (contrato.objetos?.reduce((sum: number, obj: any) => {
+                              return sum + ((obj.valor_unitario || 0) * (obj.quantidade_consumida || 0));
+                            }, 0) || 0);
+                          }, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
