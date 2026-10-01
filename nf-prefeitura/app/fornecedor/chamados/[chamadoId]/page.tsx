@@ -89,20 +89,30 @@ export default function DetalheChamadoPage() {
         const objetosReconstruidos: any[] = [];
 
         for (const consumo of data) {
-          const { data: objetoData } = await supabase
-            .from("objetos_contratos")
-            .select("id, nome, descricao, contratos!contrato_id(numero)")
-            .eq("id", consumo.objeto_id)
-            .single();
+          try {
+            const { data: objetoData } = await supabase
+              .from("objetos_contratos")
+              .select("id, nome, descricao, contrato_id")
+              .eq("id", consumo.objeto_id)
+              .single();
 
-          if (objetoData) {
-            objetosReconstruidos.push({
-              id: objetoData.id,
-              objeto_id: objetoData.id,
-              consumo_id: consumo.id,
-              numero: (objetoData.contratos as any)?.numero,
-              descricao: `${objetoData.nome || objetoData.descricao} (Qtd: ${consumo.quantidade_usada})`
-            });
+            if (objetoData) {
+              const { data: contratoData } = await supabase
+                .from("contratos")
+                .select("numero")
+                .eq("id", objetoData.contrato_id)
+                .single();
+
+              objetosReconstruidos.push({
+                id: objetoData.id,
+                objeto_id: objetoData.id,
+                consumo_id: consumo.id,
+                numero: contratoData?.numero,
+                descricao: `${objetoData.nome || objetoData.descricao} (Qtd: ${consumo.quantidade_usada})`
+              });
+            }
+          } catch (err) {
+            console.warn(`⚠️ Erro ao carregar objeto ${consumo.objeto_id}:`, err);
           }
         }
 
