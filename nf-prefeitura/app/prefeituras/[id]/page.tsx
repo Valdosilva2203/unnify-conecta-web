@@ -983,6 +983,7 @@ function DetalhePrefeituraContent() {
               )}
             </div>
           )}
+        </main>
 
         {/* Modal: Todos os Funcionários */}
         {mostrarTodosFuncionarios && (
