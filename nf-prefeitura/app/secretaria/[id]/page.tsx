@@ -1170,8 +1170,10 @@ export default function SecretariaPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-
+              <div
+                onClick={() => secretaria && router.push(`/prefeituras/${secretaria.prefeitura_id}/chamados`)}
+                className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
+              >
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-gray-600 text-sm font-medium">Chamados</p>
