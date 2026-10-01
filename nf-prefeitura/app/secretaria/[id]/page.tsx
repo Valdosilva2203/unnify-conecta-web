@@ -361,15 +361,12 @@ export default function SecretariaPage() {
 
       const { data: requisicoes } = await queryReq;
 
-      // Buscar total de chamados: todos se admin/prefeito, apenas da secretaria se secretário
+      // Buscar total de chamados: apenas os criados pelo usuário
       let queryChamados = supabase
         .from("chamados")
         .select("id")
-        .eq("prefeitura_id", prefeituraId);
-
-      if (!ehAdmin && !ehPrefeito) {
-        queryChamados = queryChamados.eq("secretaria_id", id);
-      }
+        .eq("prefeitura_id", prefeituraId)
+        .eq("criada_por", session?.id);
 
       const { data: chamados } = await queryChamados;
 
