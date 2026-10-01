@@ -44,6 +44,9 @@ export default function ChamadosEmRequisicaoPage() {
   const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const menuRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [modalChamadoId, setModalChamadoId] = useState<string | null>(null);
+  const [fornecedorBusca, setFornecedorBusca] = useState("");
+  const [observacoes, setObservacoes] = useState("");
 
   useEffect(() => {
     if (session?.id) {
@@ -91,13 +94,27 @@ export default function ChamadosEmRequisicaoPage() {
     }
   };
 
-  const gerarRequisicao = async (chamadoId: string) => {
+  const gerarRequisicao = (chamadoId: string) => {
+    setMenuAbertoId(null);
+    setModalChamadoId(chamadoId);
+    setFornecedorBusca("");
+    setObservacoes("");
+  };
+
+  const criarRequisicao = async () => {
+    if (!fornecedorBusca.trim()) {
+      alert("Por favor, selecione um fornecedor");
+      return;
+    }
+
     try {
-      setMenuAbertoId(null);
-      // Lógica para gerar requisição será implementada
-      alert("Requisição será gerada para este chamado");
+      // Lógica para criar requisição será implementada
+      alert(`Requisição criada para ${fornecedorBusca}`);
+      setModalChamadoId(null);
+      setFornecedorBusca("");
+      setObservacoes("");
     } catch (error) {
-      console.error("❌ Erro ao gerar requisição:", error);
+      console.error("❌ Erro ao criar requisição:", error);
     }
   };
 
@@ -225,6 +242,69 @@ export default function ChamadosEmRequisicaoPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Modal Nova Requisição */}
+        {modalChamadoId && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Nova Requisição</h2>
+                <button
+                  onClick={() => setModalChamadoId(null)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Buscar Fornecedor */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Buscar Fornecedor
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Digite nome ou CNPJ do fornecedor"
+                    value={fornecedorBusca}
+                    onChange={(e) => setFornecedorBusca(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+
+                {/* Observações */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Observações
+                  </label>
+                  <textarea
+                    placeholder="Digite observações adicionais (opcional)"
+                    value={observacoes}
+                    onChange={(e) => setObservacoes(e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                  />
+                </div>
+
+                {/* Botões */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={criarRequisicao}
+                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 px-4 rounded-lg transition"
+                  >
+                    Criar Requisição
+                  </button>
+                  <button
+                    onClick={() => setModalChamadoId(null)}
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-3 px-4 rounded-lg transition"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
