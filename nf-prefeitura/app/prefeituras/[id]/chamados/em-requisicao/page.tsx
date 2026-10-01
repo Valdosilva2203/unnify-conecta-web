@@ -47,7 +47,7 @@ export default function ChamadosEmRequisicaoPage() {
   const [modalChamado, setModalChamado] = useState<Chamado | null>(null);
   const [fornecedorBusca, setFornecedorBusca] = useState("");
   const [observacoes, setObservacoes] = useState("");
-  const [contratosComObjetos, setContratosComObjetos] = useState<any[]>([]);
+  const [contratosModal, setContratosModal] = useState<any[]>([]);
 
   useEffect(() => {
     if (session?.id) {
@@ -74,92 +74,63 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratosDoModal = async (chamadoId: string) => {
     try {
-      console.log("📋 Carregando contratos para chamado:", chamadoId);
+      console.log("🔍 Buscando consumo_objetos para chamadoId:", chamadoId);
 
-      // Buscar consumo_objetos com detalhes dos objetos
+      // Buscar objetos consumidos no chamado
       const { data: consumoData, error: consumoError } = await supabase
         .from("consumo_objetos")
-        .select(`
-          objeto_id,
-          quantidade_usada,
-          objetos_contratos (
-            id,
-            nome,
-            descricao,
-            valor_unitario,
-            quantidade_disponivel,
-            contrato_id
-          )
-        `)
+        .select("objeto_id")
         .eq("chamado_id", chamadoId)
         .eq("tipo", "chamado");
 
-      console.log("consumoData:", consumoData, "consumoError:", consumoError);
+      console.log("📦 Consumo data:", consumoData, "Error:", consumoError);
 
-      if (consumoError) {
-        console.error("❌ Erro em consumoError:", consumoError);
-        throw consumoError;
-      }
+      if (consumoError) throw consumoError;
 
       if (!consumoData || consumoData.length === 0) {
-        setContratosComObjetos([]);
+        console.log("⚠️ Nenhum objeto consumido encontrado");
+        setContratosModal([]);
         return;
       }
 
-      // Agrupar por contrato
-      const contratoMap = new Map();
+      // Extrair IDs de objetos
+      const objetoIds = consumoData.map(c => c.objeto_id);
+      console.log("🎯 Objeto IDs:", objetoIds);
 
-      for (const consumo of consumoData) {
-        const objeto = consumo.objetos_contratos;
-        if (objeto) {
-          const contratoId = objeto.contrato_id;
+      // Buscar detalhes dos objetos e contratos
+      const { data: objetosData, error: objetosError } = await supabase
+        .from("objetos_contratos")
+        .select("id, numero, descricao, valor_unitario, contrato_id")
+        .in("id", objetoIds);
 
-          if (!contratoMap.has(contratoId)) {
-            contratoMap.set(contratoId, {
-              contrato_id: contratoId,
-              objetos: []
-            });
-          }
+      console.log("📋 Objetos data:", objetosData, "Error:", objetosError);
 
-          contratoMap.get(contratoId).objetos.push({
-            id: objeto.id,
-            nome: objeto.nome,
-            descricao: objeto.descricao,
-            valor_unitario: objeto.valor_unitario,
-            quantidade_disponivel: objeto.quantidade_disponivel,
-            quantidade_consumida: consumo.quantidade_usada
-          });
-        }
+      if (objetosError) throw objetosError;
+
+      if (!objetosData || objetosData.length === 0) {
+        console.log("⚠️ Nenhum objeto_contrato encontrado");
+        setContratosModal([]);
+        return;
       }
 
-      // Buscar detalhes dos contratos
-      const contratoIds = Array.from(contratoMap.keys());
-      console.log("contratoIds:", contratoIds);
+      // Extrair IDs de contratos únicos
+      const contratoIds = [...new Set(objetosData.map(o => o.contrato_id))];
+      console.log("🔗 Contrato IDs:", contratoIds);
 
+      // Buscar detalhes dos contratos
       const { data: contratosData, error: contratosError } = await supabase
         .from("contratos")
         .select("id, numero, descricao, valor")
         .in("id", contratoIds);
 
-      console.log("contratosData:", contratosData, "contratosError:", contratosError);
+      console.log("✅ Contratos data:", contratosData, "Error:", contratosError);
 
-      if (contratosError) {
-        console.error("❌ Erro em contratosError:", contratosError);
-        throw contratosError;
-      }
+      if (contratosError) throw contratosError;
 
-      // Montar estrutura final
-      const resultado = (contratosData || []).map(contrato => ({
-        ...contrato,
-        objetos: contratoMap.get(contrato.id)?.objetos || []
-      }));
-
-      console.log("✅ Resultado final:", resultado);
-      setContratosComObjetos(resultado);
+      setContratosModal(contratosData || []);
     } catch (error) {
       console.error("❌ Erro ao carregar contratos:", error);
-      console.error("Stack:", (error as any)?.stack);
-      setContratosComObjetos([]);
+      setContratosModal([]);
     }
   };
 
@@ -391,44 +362,20 @@ export default function ChamadosEmRequisicaoPage() {
                   />
                 </div>
 
-                {/* Contratos e Objetos */}
-                {contratosComObjetos.length > 0 && (
+                {/* Contratos Adicionados */}
+                {contratosModal.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Contratos e Objetos Adicionados
+                      Contratos Adicionados
                     </label>
-                    <div className="space-y-4">
-                      {contratosComObjetos.map((contrato) => (
-                        <div key={contrato.id} className="border border-gray-300 rounded-lg overflow-hidden">
-                          {/* Cabeçalho Contrato */}
-                          <div className="bg-cyan-500 text-white px-4 py-2">
-                            <p className="font-semibold">✓ Contrato n° {contrato.numero}</p>
-                            <p className="text-sm">{contrato.descricao}</p>
-                          </div>
-
-                          {/* Objetos */}
-                          <div className="space-y-2 p-4 bg-gray-50">
-                            {contrato.objetos.map((objeto) => {
-                              const percentualConsumido = (objeto.quantidade_consumida / objeto.quantidade_disponivel) * 100;
-                              return (
-                                <div key={objeto.id} className="bg-white border border-gray-200 rounded p-3">
-                                  <p className="font-medium text-gray-900">{objeto.nome}</p>
-                                  <p className="text-xs text-gray-600 mb-2">Valor Unit.: R$ {(objeto.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} | Qtd Disponível: {objeto.quantidade_disponivel}/{objeto.quantidade_disponivel}</p>
-
-                                  {/* Barra de Progresso */}
-                                  <div className="mb-2">
-                                    <div className="w-full bg-gray-300 rounded-full h-2">
-                                      <div
-                                        className="bg-green-500 h-2 rounded-full transition-all"
-                                        style={{ width: `${Math.min(percentualConsumido, 100)}%` }}
-                                      ></div>
-                                    </div>
-                                    <p className="text-xs text-gray-600 mt-1">{Math.round(percentualConsumido)}%</p>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                    <div className="space-y-2">
+                      {contratosModal.map((contrato) => (
+                        <div key={contrato.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <p className="font-semibold text-gray-900">{contrato.numero}</p>
+                          <p className="text-sm text-gray-600">{contrato.descricao}</p>
+                          <p className="text-sm text-gray-700 mt-1">
+                            <strong>Valor:</strong> R$ {(contrato.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </p>
                         </div>
                       ))}
                     </div>
