@@ -87,6 +87,11 @@ export default function SecretariaPage() {
   const [termoBusca, setTermoBusca] = useState("");
 
   useEffect(() => {
+    // Salvar secretaria_id no localStorage para usar em outros fluxos
+    if (id) {
+      localStorage.setItem("secretaria_id_temp", id);
+    }
+
     // Recarregar prefeitura para obter logo_url atualizada
     if (requisicaoSelecionadaDetalhes && secretaria?.prefeitura_id) {
       loadPrefeitura(secretaria.prefeitura_id);

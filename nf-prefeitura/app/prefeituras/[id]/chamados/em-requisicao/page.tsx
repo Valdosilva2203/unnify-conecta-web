@@ -209,8 +209,8 @@ export default function ChamadosEmRequisicaoPage() {
       console.log("📝 Criando requisição com objetos:", contratosDoFornecedor);
       console.log("👤 Session:", session);
 
-      // Buscar secretaria_id do usuário se não tiver
-      let secretariaId = session?.secretaria_id;
+      // Buscar secretaria_id: primeiro do localStorage (salvo quando entra em /secretaria/{id}), depois da session
+      let secretariaId = localStorage.getItem("secretaria_id_temp") || session?.secretaria_id;
       if (!secretariaId && session?.id) {
         const { data: usuario } = await supabase
           .from("prefeitura_users")
@@ -218,7 +218,6 @@ export default function ChamadosEmRequisicaoPage() {
           .eq("id", session.id)
           .single();
         secretariaId = usuario?.secretaria_id;
-        console.log("🔍 Secretaria ID obtida da query:", secretariaId);
       }
 
       console.log("🏢 Secretaria ID:", secretariaId);
