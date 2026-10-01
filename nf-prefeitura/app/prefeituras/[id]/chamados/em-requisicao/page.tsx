@@ -207,6 +207,9 @@ export default function ChamadosEmRequisicaoPage() {
 
     try {
       console.log("📝 Criando requisição com objetos:", contratosDoFornecedor);
+      console.log("👤 Session:", session);
+      console.log("🏢 Secretaria ID:", session?.secretaria_id);
+      console.log("🏛️ Prefeitura ID:", prefeituraId);
 
       // 1. Pegar contrato_id do primeiro objeto
       const primeiroContrato = contratosDoFornecedor[0];
