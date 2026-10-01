@@ -114,6 +114,8 @@ export default function DetalheChamadoPage() {
 
         if (obj) {
           console.log("✅ Objeto encontrado:", obj);
+          console.log("💰 Campos do objeto:", Object.keys(obj));
+          console.log("💵 valor_unitario:", obj.valor_unitario);
 
           const { data: contrato, error: erroContrato } = await supabase
             .from("contratos")
@@ -125,14 +127,16 @@ export default function DetalheChamadoPage() {
             console.warn("⚠️ Erro ao buscar contrato:", erroContrato);
           }
 
-          detalhes.push({
+          const detalhe = {
             consumo_id: consumo.id,
             objeto_id: consumo.objeto_id,
             nome: obj.nome || obj.descricao || "Objeto sem nome",
             quantidade: consumo.quantidade_usada,
             valor_unitario: obj.valor_unitario || 0,
             contrato_numero: contrato?.numero
-          });
+          };
+          console.log("📝 Detalhe adicionado:", detalhe);
+          detalhes.push(detalhe);
         }
       }
       setObjetos(detalhes);
