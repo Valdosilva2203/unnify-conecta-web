@@ -168,12 +168,19 @@ export default function DetalheChamadoPage() {
   const carregarObjetosContrato = async (contratoId: string) => {
     try {
       setCarregandoObjetos(true);
-      const { data, error } = await supabase
+
+      // Tenta carregar de objetos_contratos
+      let { data, error } = await supabase
         .from("objetos_contratos")
         .select("id, nome, descricao")
         .eq("contrato_id", contratoId);
 
-      if (error) throw error;
+      if (error) {
+        console.warn("Tabela objetos_contratos não existe ou erro de RLS, usando dados vazios:", error);
+        setObjetosContrato([]);
+        return;
+      }
+
       setObjetosContrato(data || []);
     } catch (error) {
       console.error("Erro ao carregar objetos do contrato:", error);
@@ -494,8 +501,13 @@ export default function DetalheChamadoPage() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-6 text-gray-600">
-                          <p className="text-sm">Nenhum objeto neste contrato</p>
+                        <div className="text-center py-8 text-gray-600">
+                          <p className="text-sm font-medium text-red-600">
+                            ⚠️ Nenhum objeto cadastrado para este contrato
+                          </p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Entre em contato com a administração para adicionar objetos
+                          </p>
                         </div>
                       )}
 
