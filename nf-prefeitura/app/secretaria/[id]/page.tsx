@@ -93,6 +93,35 @@ export default function SecretariaPage() {
   const [justificativaNegacao, setJustificativaNegacao] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // Carrega chamados aguardando confirmação quando secretaria é carregada
+    if (secretaria?.prefeitura_id) {
+      loadChamadosAguardandoConfirmacao();
+
+      // Listener em tempo real para notificações
+      const prefeituraSession = localStorage.getItem("prefeitura_session");
+      const session = prefeituraSession ? JSON.parse(prefeituraSession) : null;
+
+      if (session?.id) {
+        const subscription = supabase
+          .channel("notificacoes-changes")
+          .on("postgres_changes", {
+            event: "*",
+            schema: "public",
+            table: "notificacoes",
+            filter: `usuario_id=eq.${session.id}`
+          }, () => {
+            loadChamadosAguardandoConfirmacao();
+          })
+          .subscribe();
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      }
+    }
+  }, [secretaria?.prefeitura_id]);
+
+  useEffect(() => {
     // Salvar secretaria_id no sessionStorage para usar em outros fluxos (por aba)
     if (id) {
       sessionStorage.setItem("secretaria_id_temp", id);
