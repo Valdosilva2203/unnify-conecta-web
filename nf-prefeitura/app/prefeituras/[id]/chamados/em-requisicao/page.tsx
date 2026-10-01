@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import TopNavBar from "@/components/TopNavBar";
 import { supabase } from "@/lib/supabase";
@@ -42,6 +42,8 @@ export default function ChamadosEmRequisicaoPage() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const menuRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   useEffect(() => {
     if (session?.id) {
@@ -120,7 +122,7 @@ export default function ChamadosEmRequisicaoPage() {
             <p className="text-xl font-semibold">Nenhum chamado em requisição</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white">
                 <tr>
@@ -165,9 +167,23 @@ export default function ChamadosEmRequisicaoPage() {
                     <td className="px-6 py-4 text-center relative">
                       <div className="flex items-center justify-center gap-2">
                         <button
+                          ref={(el) => {
+                            if (el) menuRefs.current[chamado.id] = el;
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setMenuAbertoId(menuAbertoId === chamado.id ? null : chamado.id);
+                            if (menuAbertoId === chamado.id) {
+                              setMenuAbertoId(null);
+                            } else {
+                              const rect = menuRefs.current[chamado.id]?.getBoundingClientRect();
+                              if (rect) {
+                                setMenuPos({
+                                  top: rect.bottom + 8,
+                                  left: rect.left - 180
+                                });
+                              }
+                              setMenuAbertoId(chamado.id);
+                            }
                           }}
                           className="p-2 hover:bg-gray-200 rounded-full transition"
                         >
@@ -176,7 +192,12 @@ export default function ChamadosEmRequisicaoPage() {
                       </div>
 
                       {menuAbertoId === chamado.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                        <div
+                          className="fixed w-48 bg-white border border-gray-300 rounded-lg shadow-2xl z-50"
+                          style={{
+                            top: `${menuPos.top}px`,
+                            left: `${menuPos.left}px`
+                          }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
