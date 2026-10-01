@@ -366,7 +366,7 @@ export default function SecretariaPage() {
         .from("chamados")
         .select("id")
         .eq("prefeitura_id", prefeituraId)
-        .eq("criado_por", session?.id);
+        .eq("criada_por", session?.id);
 
       const { data: chamados } = await queryChamados;
 
