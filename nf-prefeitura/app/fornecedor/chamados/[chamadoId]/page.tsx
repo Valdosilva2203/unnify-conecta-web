@@ -169,18 +169,20 @@ export default function DetalheChamadoPage() {
     try {
       setCarregandoObjetos(true);
 
-      // Tenta carregar de objetos_contratos
-      let { data, error } = await supabase
+      // Carrega de objetos_contratos com todos os campos (como faz na página de requisições)
+      const { data, error } = await supabase
         .from("objetos_contratos")
-        .select("id, nome, descricao")
-        .eq("contrato_id", contratoId);
+        .select("*")
+        .eq("contrato_id", contratoId)
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.warn("Tabela objetos_contratos não existe ou erro de RLS, usando dados vazios:", error);
+        console.error("Erro ao carregar objetos do contrato:", error);
         setObjetosContrato([]);
         return;
       }
 
+      console.log("Objetos carregados para contrato", contratoId, ":", data);
       setObjetosContrato(data || []);
     } catch (error) {
       console.error("Erro ao carregar objetos do contrato:", error);
