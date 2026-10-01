@@ -242,7 +242,7 @@ export default function DetalheChamadoPage() {
           .from("funcionarios")
           .select("id")
           .eq("secretaria_id", chamado.secretaria_id)
-          .eq("cargo", "Secretário")
+          .ilike("cargo", "%secretario%")
           .single();
 
         console.log("👤 Secretário encontrado:", secretario?.id);
