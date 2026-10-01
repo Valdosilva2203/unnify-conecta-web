@@ -47,8 +47,7 @@ export default function ChamadosEmRequisicaoPage() {
   const [modalChamado, setModalChamado] = useState<Chamado | null>(null);
   const [fornecedorBusca, setFornecedorBusca] = useState("");
   const [observacoes, setObservacoes] = useState("");
-  const [contratoModal, setContratoModal] = useState<any>(null);
-  const [objetosModal, setObjetosModal] = useState<any[]>([]);
+  const [contratosDoFornecedor, setContratosDoFornecedor] = useState<any[]>([]);
 
   useEffect(() => {
     if (session?.id) {
@@ -68,8 +67,8 @@ export default function ChamadosEmRequisicaoPage() {
   }, [menuAbertoId]);
 
   useEffect(() => {
-    if (modalChamado) {
-      carregarContratoDoModal(modalChamado.id);
+    if (modalChamado && modalChamado.fornecedor_id) {
+      carregarContratos(modalChamado.fornecedor_id);
     }
   }, [modalChamado]);
 
@@ -164,72 +163,18 @@ export default function ChamadosEmRequisicaoPage() {
     }
   };
 
-  const carregarContratoDoModal = async (chamadoId: string) => {
+  const carregarContratos = async (fornecedorId: string) => {
     try {
-      // Buscar todos os consumo_objetos do chamado
-      const { data: consumos } = await supabase
-        .from("consumo_objetos")
-        .select("objeto_id, quantidade_usada")
-        .eq("chamado_id", chamadoId)
-        .eq("tipo", "chamado");
-
-      if (!consumos || consumos.length === 0) {
-        setContratoModal(null);
-        setObjetosModal([]);
-        return;
-      }
-
-      const objetoId = consumos[0].objeto_id;
-
-      // Buscar contrato via objeto
-      const { data: objetos } = await supabase
-        .from("objetos_contratos")
-        .select("contrato_id, id, nome, descricao, valor_unitario, quantidade_disponivel")
-        .eq("id", objetoId)
-        .limit(1);
-
-      if (!objetos || objetos.length === 0) {
-        setContratoModal(null);
-        setObjetosModal([]);
-        return;
-      }
-
-      const contratoId = objetos[0].contrato_id;
-
-      // Buscar detalhes do contrato
-      const { data: contrato } = await supabase
+      // Buscar todos os contratos do fornecedor
+      const { data: contratos } = await supabase
         .from("contratos")
-        .select("id, numero, descricao, valor")
-        .eq("id", contratoId)
-        .single();
+        .select("id, numero, descricao, valor, fornecedor_id")
+        .eq("fornecedor_id", fornecedorId);
 
-      setContratoModal(contrato);
-
-      // Buscar todos os objetos deste contrato que foram adicionados ao chamado
-      const { data: objetosConsumo } = await supabase
-        .from("consumo_objetos")
-        .select("objeto_id, quantidade_usada, objetos_contratos!inner(id, nome, descricao, valor_unitario, quantidade_disponivel)")
-        .eq("chamado_id", chamadoId)
-        .eq("tipo", "chamado");
-
-      if (objetosConsumo) {
-        const objetosFormatados = objetosConsumo
-          .map((item: any) => ({
-            id: item.objeto_id,
-            nome: item.objetos_contratos?.nome || "Objeto",
-            descricao: item.objetos_contratos?.descricao,
-            valor_unitario: item.objetos_contratos?.valor_unitario,
-            quantidade_disponivel: item.objetos_contratos?.quantidade_disponivel,
-            quantidade_consumida: item.quantidade_usada
-          }))
-          .filter(obj => obj.nome !== "Objeto");
-
-        setObjetosModal(objetosFormatados);
-      }
+      setContratosDoFornecedor(contratos || []);
     } catch (error) {
-      console.error("Erro ao carregar contrato:", error);
-      setContratoModal(null);
-      setObjetosModal([]);
+      console.error("Erro ao carregar contratos:", error);
+      setContratosDoFornecedor([]);
     }
   };
 
@@ -432,35 +377,23 @@ export default function ChamadosEmRequisicaoPage() {
                   />
                 </div>
 
-                {/* Contrato */}
-                {contratoModal && (
+                {/* Contratos do Fornecedor */}
+                {contratosDoFornecedor.length > 0 && (
                   <div>
-                    <div className="bg-cyan-50 border border-cyan-300 rounded-lg p-4 mb-4">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Contrato</p>
-                      <p className="font-semibold text-gray-900">✓ {contratoModal.numero}</p>
-                      <p className="text-sm text-gray-600">{contratoModal.descricao}</p>
-                      <p className="text-sm text-gray-700 mt-2">
-                        <strong>Valor:</strong> R$ {(contratoModal.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-
-                    {/* Objetos do Contrato */}
-                    {objetosModal.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 mb-3">Objetos do Contrato:</p>
-                        <div className="space-y-2">
-                          {objetosModal.map((objeto) => (
-                            <div key={objeto.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                              <p className="font-medium text-gray-900">{objeto.nome}</p>
-                              <p className="text-xs text-gray-600">
-                                Valor Unit.: R$ {(objeto.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} |
-                                Qtd: {objeto.quantidade_consumida}/{objeto.quantidade_disponivel}
-                              </p>
-                            </div>
-                          ))}
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Contratos do Fornecedor
+                    </label>
+                    <div className="space-y-2">
+                      {contratosDoFornecedor.map((contrato) => (
+                        <div key={contrato.id} className="bg-cyan-50 border border-cyan-300 rounded-lg p-3">
+                          <p className="font-semibold text-gray-900">✓ {contrato.numero}</p>
+                          <p className="text-sm text-gray-600">{contrato.descricao}</p>
+                          <p className="text-sm text-gray-700 mt-1">
+                            <strong>Valor:</strong> R$ {(contrato.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </p>
                         </div>
-                      </div>
-                    )}
+                      ))}
+                    </div>
                   </div>
                 )}
 
