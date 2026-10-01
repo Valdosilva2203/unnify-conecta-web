@@ -86,51 +86,7 @@ export default function RequisicoesPage() {
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
-
-      // Buscar nomes dos criadores
-      if (data && data.length > 0) {
-        const criadoresIds = [...new Set(data.map((r: any) => r.criada_por).filter((id: any) => id))];
-        console.log("🔍 IDs de criadores:", criadoresIds);
-
-        // Buscar em funcionarios
-        const { data: funcionarios } = await supabase
-          .from("funcionarios")
-          .select("id, nome")
-          .in("id", criadoresIds);
-
-        console.log("👥 Funcionários encontrados:", funcionarios?.length);
-
-        const criadoresMap = new Map(
-          (funcionarios || []).map((f: any) => [f.id, f.nome])
-        );
-
-        // Buscar em prefeitura_users se não encontrou em funcionarios
-        const naoEncontrados = criadoresIds.filter(id => !criadoresMap.has(id));
-        console.log("🔎 Não encontrados em funcionarios:", naoEncontrados.length);
-
-        if (naoEncontrados.length > 0) {
-          const { data: usuarios } = await supabase
-            .from("prefeitura_users")
-            .select("id, nome")
-            .in("id", naoEncontrados);
-
-          console.log("👤 Usuários encontrados:", usuarios?.length);
-
-          (usuarios || []).forEach((u: any) => {
-            criadoresMap.set(u.id, u.nome);
-          });
-        }
-
-        // Adicionar criador_nome a cada requisição
-        const dataComCriadores = (data || []).map((r: any) => ({
-          ...r,
-          criador_nome: criadoresMap.get(r.criada_por) || "Desconhecido"
-        }));
-
-        setRequisicoes(dataComCriadores);
-      } else {
-        setRequisicoes(data || []);
-      }
+      setRequisicoes(data || []);
     } catch (error) {
       console.error("Erro ao carregar requisições:", error);
     } finally {
