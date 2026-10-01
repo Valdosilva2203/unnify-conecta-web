@@ -339,7 +339,7 @@ export default function DetalheChamadoPage() {
 
             {/* Objetos */}
             <div className="border-t pt-8 mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">📦 Objetos</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">Contratos</h3>
 
               {objetos.length > 0 && (
                 <div className="space-y-3 mb-8">
