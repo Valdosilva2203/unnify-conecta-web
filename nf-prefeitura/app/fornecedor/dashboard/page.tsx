@@ -570,7 +570,7 @@ export default function FornecedorDashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {chamados.map((chamado) => (
-                        <tr key={chamado.id} className="hover:bg-blue-50 transition cursor-pointer" onClick={() => setModalDetalhes(chamado.id)}>
+                        <tr key={chamado.id} className="hover:bg-blue-50 transition cursor-pointer" onClick={() => router.push(`/fornecedor/chamados/${chamado.id}`)}>
                           <td className="px-6 py-4">
                             <span className="font-bold text-gray-900">{chamado.titulo}</span>
                           </td>
