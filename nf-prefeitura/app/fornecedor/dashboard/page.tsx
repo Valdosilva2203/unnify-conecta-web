@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import FornecedorSidebar from "@/app/components/FornecedorSidebar";
+import FornecedorTopNavBar from "@/app/components/FornecedorTopNavBar";
 
 interface SessionData {
   id: string;
@@ -340,18 +341,13 @@ export default function FornecedorDashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
-        <div className="bg-white shadow px-8 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Bem-vindo, {session?.nome}!</h1>
-            <p className="text-gray-600 mt-1">{prefeitura?.nome} - {prefeitura?.estado}</p>
-          </div>
-          <button
-            onClick={() => setMenuAberto(!menuAberto)}
-            className="text-2xl hover:bg-gray-100 p-2 rounded-lg transition"
-          >
-            ☰
-          </button>
-        </div>
+        <FornecedorTopNavBar
+          userName={session?.nome || "Fornecedor"}
+          prefeituraName={prefeitura?.nome}
+          prefeituraEstado={prefeitura?.estado}
+          onMenuToggle={() => setMenuAberto(!menuAberto)}
+          onLogout={handleLogout}
+        />
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-8">
