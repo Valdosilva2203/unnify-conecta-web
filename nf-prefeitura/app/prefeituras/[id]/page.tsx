@@ -903,7 +903,7 @@ function DetalhePrefeituraContent() {
           )}
 
 
-          {/* Card 9: Avisos */}
+          {/* Card 9: Cargos */}
           <div
             onClick={() => setMostrarDetalheCargos(!mostrarDetalheCargos)}
             className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition"
@@ -911,7 +911,7 @@ function DetalhePrefeituraContent() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-gray-600 text-sm font-medium">
-                  Avisos
+                  Cargos
                 </p>
                 <p className="text-2xl font-bold text-purple-600 mt-2">
                   {quantidadeCargos}
@@ -952,7 +952,7 @@ function DetalhePrefeituraContent() {
             </div>
           </div>
 
-          {/* Card 9: Avisos */}
+          {/* Card 9: Cargos */}
           <div
             onClick={() => setMostrarDetalheCargos(!mostrarDetalheCargos)}
             className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition"
@@ -960,7 +960,7 @@ function DetalhePrefeituraContent() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-gray-600 text-sm font-medium">
-                  Avisos
+                  Cargos
                 </p>
                 <p className="text-2xl font-bold text-purple-600 mt-2">
                   {quantidadeCargos}
