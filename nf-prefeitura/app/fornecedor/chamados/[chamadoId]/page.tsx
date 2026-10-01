@@ -62,6 +62,7 @@ export default function DetalheChamadoPage() {
   const [contratoSelecionado, setContratoSelecionado] = useState<Contrato | null>(null);
   const [objetosContrato, setObjetosContrato] = useState<ObjetoContrato[]>([]);
   const [carregandoObjetos, setCarregandoObjetos] = useState(false);
+  const [buscaObjeto, setBuscaObjeto] = useState("");
   const [objetoSelecionado, setObjetoSelecionado] = useState<ObjetoContrato | null>(null);
   const [quantidadeObjeto, setQuantidadeObjeto] = useState("");
 
