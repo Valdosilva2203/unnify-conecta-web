@@ -226,28 +226,41 @@ export default function DetalheChamadoPage() {
         return;
       }
 
-      // Atualiza status do chamado para "em_requisicao"
+      // 1. Atualiza status do chamado para "em_andamento" (aguardando confirmação do secretário)
       const { error: erroStatus } = await supabase
         .from("chamados")
-        .update({ status: "em_requisicao" })
+        .update({ status: "em_andamento" })
         .eq("id", chamadoId);
 
       if (erroStatus) throw erroStatus;
 
-      // Envia notificação para o criador do chamado
-      if (chamado?.id) {
-        await fetch("/api/notificacoes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chamado_id: chamadoId,
-            tipo: "requisicao_enviada",
-            mensagem: `Chamado "${chamado.titulo}" foi enviado para requisição`
-          })
-        });
+      // 2. Busca secretario_id do chamado para enviar notificação
+      if (chamado?.secretaria_id) {
+        const { data: secretario } = await supabase
+          .from("funcionarios")
+          .select("id")
+          .eq("secretaria_id", chamado.secretaria_id)
+          .eq("cargo", "Secretário")
+          .single();
+
+        if (secretario?.id) {
+          // 3. Cria notificação de confirmação para o secretário
+          await fetch("/api/prefeitura/notificacoes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              usuario_id: secretario.id,
+              prefeitura_id: chamado.prefeitura_id,
+              tipo: "chamado_aguardando_confirmacao",
+              titulo: `Confirmação de Chamado: ${chamado.titulo}`,
+              mensagem: `O fornecedor finalizou o chamado "${chamado.titulo}". Confirme ou negue.`,
+              referencia_id: chamadoId
+            })
+          });
+        }
       }
 
-      alert("✅ Chamado enviado para requisição!");
+      alert("✅ Chamado enviado! Aguardando confirmação do secretário.");
       await carregarChamado();
     } catch (error) {
       console.error("Erro ao finalizar chamado:", error);
