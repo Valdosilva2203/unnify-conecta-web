@@ -431,12 +431,18 @@ function MinhaContaContent() {
               )}
 
               {/* Status */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-                  <span>🔗</span> Status
+              <div className={`rounded-xl p-6 border ${secretarias.length > 0
+                ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
+                : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200'}`}>
+                <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${secretarias.length > 0 ? 'text-green-900' : 'text-blue-900'}`}>
+                  <span>{secretarias.length > 0 ? '✅' : '🔗'}</span> Status
                 </h3>
-                <p className="text-sm font-semibold text-blue-900 mb-2">Aguardando Vinculação</p>
-                <p className="text-xs text-blue-700">Sua solicitação está pendente de aprovação</p>
+                <p className={`text-sm font-semibold mb-2 ${secretarias.length > 0 ? 'text-green-900' : 'text-blue-900'}`}>
+                  {secretarias.length > 0 ? 'Vinculado' : 'Aguardando Vinculação'}
+                </p>
+                <p className={`text-xs ${secretarias.length > 0 ? 'text-green-700' : 'text-blue-700'}`}>
+                  {secretarias.length > 0 ? 'Sua solicitação está aprovada' : 'Sua solicitação está pendente de aprovação'}
+                </p>
               </div>
 
               {/* Perfil Pessoal */}
