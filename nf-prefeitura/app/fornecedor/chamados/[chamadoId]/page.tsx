@@ -48,7 +48,7 @@ export default function DetalheChamadoPage() {
   const [adicionando, setAdicionando] = useState(false);
   const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(true);
   const [novoObjeto, setNovoObjeto] = useState("");
-  const [objetos, setObjetos] = useState<{ id: string; numero: string; descricao: string }[]>([]);
+  const [objetos, setObjetos] = useState<{ id: string; objeto_id: string; numero: string; descricao: string }[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [carregandoContratos, setCarregandoContratos] = useState(false);
   const [contratoSelecionado, setContratoSelecionado] = useState<Contrato | null>(null);
@@ -138,8 +138,35 @@ export default function DetalheChamadoPage() {
     }
   };
 
-  const removerObjeto = (index: number) => {
-    setObjetos(objetos.filter((_, i) => i !== index));
+  const removerObjeto = async (index: number) => {
+    try {
+      const objetoARemover = objetos[index];
+
+      // Deleta o consumo do banco de dados
+      const { error } = await supabase
+        .from("consumo_objetos")
+        .delete()
+        .eq("objeto_id", objetoARemover.objeto_id);
+
+      if (error) {
+        console.error("Erro ao deletar consumo:", error);
+        alert("Erro ao remover objeto do chamado");
+        return;
+      }
+
+      // Remove da lista local
+      setObjetos(objetos.filter((_, i) => i !== index));
+
+      // Recarrega os objetos do contrato para atualizar quantidades disponíveis
+      if (contratoSelecionado) {
+        await carregarObjetosContrato(contratoSelecionado.id);
+      }
+
+      console.log("✅ Objeto removido com sucesso!");
+    } catch (error) {
+      console.error("Erro ao remover objeto:", error);
+      alert("Erro ao remover objeto");
+    }
   };
 
   const carregarContratos = async () => {
@@ -251,6 +278,7 @@ export default function DetalheChamadoPage() {
         // Atualiza a lista local
         setObjetos([...objetos, {
           id: objetoSelecionado.id,
+          objeto_id: objetoSelecionado.id,
           numero: contratoSelecionado.numero,
           descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
         }]);
@@ -267,6 +295,7 @@ export default function DetalheChamadoPage() {
         // Ainda assim adiciona localmente mesmo se falhar no banco
         setObjetos([...objetos, {
           id: objetoSelecionado.id,
+          objeto_id: objetoSelecionado.id,
           numero: contratoSelecionado.numero,
           descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
         }]);
