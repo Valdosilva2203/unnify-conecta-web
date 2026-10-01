@@ -188,8 +188,11 @@ export default function DetalheChamadoPage() {
 
       setNovaJustificativa("");
       await carregarJustificativas();
+      setMostrarFormJustificativa(false);
+      alert("✅ Justificativa adicionada!");
     } catch (error) {
       console.error("Erro ao adicionar justificativa:", error);
+      alert("Erro ao adicionar justificativa");
     } finally {
       setAdicionando(false);
     }
