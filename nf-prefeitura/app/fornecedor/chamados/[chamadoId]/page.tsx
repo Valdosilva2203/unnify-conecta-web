@@ -53,6 +53,7 @@ export default function DetalheChamadoPage() {
   const [abrirFormularioObjeto, setAbrirFormularioObjeto] = useState(true);
   const [novoObjeto, setNovoObjeto] = useState("");
   const [objetos, setObjetos] = useState<{ id: string; objeto_id: string; consumo_id?: string; numero: string; descricao: string }[]>([]);
+  const [objetosAdicionados, setObjetosAdicionados] = useState<any[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [carregandoContratos, setCarregandoContratos] = useState(false);
   const [contratoSelecionado, setContratoSelecionado] = useState<Contrato | null>(null);
@@ -65,7 +66,7 @@ export default function DetalheChamadoPage() {
   useEffect(() => {
     carregarChamado();
     carregarContratos();
-    // carregarObjetosJaAdicionados disabled due to RLS/API issues
+    carregarObjetosAdicionados();
   }, [chamadoId]);
 
   const carregarObjetosJaAdicionados = async () => {
@@ -121,6 +122,53 @@ export default function DetalheChamadoPage() {
       }
     } catch (error) {
       console.error("Erro ao carregar objetos já adicionados:", error);
+    }
+  };
+
+  const carregarObjetosAdicionados = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("consumo_objetos")
+        .select("id, quantidade_usada, objeto_id")
+        .eq("tipo", "chamado")
+        .is("chamado_id", null);
+
+      if (error) {
+        console.warn("Aviso ao carregar objetos:", error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        setObjetosAdicionados([]);
+        return;
+      }
+
+      const detalhes: any[] = [];
+      for (const consumo of data) {
+        const { data: obj } = await supabase
+          .from("objetos_contratos")
+          .select("nome, contrato_id")
+          .eq("id", consumo.objeto_id)
+          .single();
+
+        if (obj) {
+          const { data: contrato } = await supabase
+            .from("contratos")
+            .select("numero")
+            .eq("id", obj.contrato_id)
+            .single();
+
+          detalhes.push({
+            id: consumo.id,
+            nome: obj.nome,
+            quantidade: consumo.quantidade_usada,
+            contrato_numero: contrato?.numero
+          });
+        }
+      }
+      setObjetosAdicionados(detalhes);
+    } catch (error) {
+      console.error("Erro ao carregar objetos adicionados:", error);
     }
   };
 
@@ -216,6 +264,7 @@ export default function DetalheChamadoPage() {
 
       alert("✅ Chamado finalizado com sucesso!");
       await carregarChamado();
+      await carregarObjetosAdicionados();
     } catch (error) {
       console.error("Erro ao finalizar chamado:", error);
       alert("Erro ao finalizar chamado");
@@ -591,12 +640,33 @@ export default function DetalheChamadoPage() {
               </div>
             </div>
 
-            {/* Objetos */}
+            {/* Objetos e Contratos */}
             <div className="border-t pt-8 mb-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Contratos</h3>
 
+              {/* Objetos Adicionados (do banco) */}
+              {objetosAdicionados.length > 0 && (
+                <div className="mb-8 p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                  <p className="font-bold text-gray-900 mb-3">📦 Objetos Adicionados:</p>
+                  <div className="space-y-2">
+                    {objetosAdicionados.map((obj) => (
+                      <div key={obj.id} className="bg-white p-3 rounded border border-green-300">
+                        <p className="text-sm font-bold text-gray-900">
+                          Contrato: {obj.contrato_numero}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {obj.nome} - Qtd: {obj.quantidade}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Objetos na lista local (para remover) */}
               {objetos.length > 0 && (
                 <div className="space-y-3 mb-8">
+                  <p className="text-sm font-medium text-gray-700 mb-2">✏️ Objetos em Edição:</p>
                   {objetos.map((objeto, index) => (
                     <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-start gap-4">
                       <div className="flex-1">
