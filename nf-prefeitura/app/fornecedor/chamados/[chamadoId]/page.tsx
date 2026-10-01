@@ -29,6 +29,12 @@ interface Contrato {
   status: "ativo" | "concluido" | "cancelado";
 }
 
+interface ObjetoContrato {
+  id: string;
+  nome: string;
+  descricao?: string;
+}
+
 export default function DetalheChamadoPage() {
   const params = useParams();
   const router = useRouter();
@@ -45,6 +51,11 @@ export default function DetalheChamadoPage() {
   const [objetos, setObjetos] = useState<{ id: string; numero: string; descricao: string }[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [carregandoContratos, setCarregandoContratos] = useState(false);
+  const [contratoSelecionado, setContratoSelecionado] = useState<Contrato | null>(null);
+  const [objetosContrato, setObjetosContrato] = useState<ObjetoContrato[]>([]);
+  const [carregandoObjetos, setCarregandoObjetos] = useState(false);
+  const [buscaObjeto, setBuscaObjeto] = useState("");
+  const [objetoSelecionado, setObjetoSelecionado] = useState<ObjetoContrato | null>(null);
 
   useEffect(() => {
     carregarChamado();
@@ -153,14 +164,49 @@ export default function DetalheChamadoPage() {
     }
   };
 
-  const adicionarContratoComoObjeto = (contrato: Contrato) => {
-    setObjetos([...objetos, {
-      id: contrato.id,
-      numero: contrato.numero,
-      descricao: contrato.descricao
-    }]);
-    setAbrirFormularioObjeto(false);
+  const carregarObjetosContrato = async (contratoId: string) => {
+    try {
+      setCarregandoObjetos(true);
+      const { data, error } = await supabase
+        .from("contrato_itens")
+        .select("id, nome, descricao")
+        .eq("contrato_id", contratoId);
+
+      if (error) throw error;
+      setObjetosContrato(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar objetos do contrato:", error);
+      setObjetosContrato([]);
+    } finally {
+      setCarregandoObjetos(false);
+    }
   };
+
+  const selecionarContrato = (contrato: Contrato) => {
+    setContratoSelecionado(contrato);
+    setBuscaObjeto("");
+    setObjetoSelecionado(null);
+    carregarObjetosContrato(contrato.id);
+  };
+
+  const adicionarObjetoAoChamado = () => {
+    if (contratoSelecionado && objetoSelecionado) {
+      setObjetos([...objetos, {
+        id: objetoSelecionado.id,
+        numero: contratoSelecionado.numero,
+        descricao: objetoSelecionado.nome
+      }]);
+      setContratoSelecionado(null);
+      setObjetoSelecionado(null);
+      setObjetosContrato([]);
+      setBuscaObjeto("");
+      setAbrirFormularioObjeto(false);
+    }
+  };
+
+  const objetosFiltrados = objetosContrato.filter(obj =>
+    obj.nome.toLowerCase().includes(buscaObjeto.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -320,42 +366,132 @@ export default function DetalheChamadoPage() {
               {abrirFormularioObjeto && (
                 <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 mb-6">
                   <div className="flex justify-between items-center mb-4">
-                    <p className="text-sm font-medium text-gray-700">Selecione um Contrato</p>
+                    <p className="text-sm font-medium text-gray-700">
+                      {contratoSelecionado ? "Selecione um Objeto" : "Selecione um Contrato"}
+                    </p>
                     <button
-                      onClick={() => setAbrirFormularioObjeto(false)}
+                      onClick={() => {
+                        setAbrirFormularioObjeto(false);
+                        setContratoSelecionado(null);
+                        setObjetoSelecionado(null);
+                        setBuscaObjeto("");
+                      }}
                       className="text-gray-600 hover:text-gray-900 text-xl"
                     >
                       ✕
                     </button>
                   </div>
 
-                  {carregandoContratos ? (
-                    <div className="text-center py-4 text-gray-600">
-                      <div className="animate-spin inline-block text-2xl mb-2">⏳</div>
-                      <p>Carregando contratos...</p>
-                    </div>
-                  ) : contratos.length > 0 ? (
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {contratos.map((contrato) => (
-                        <button
-                          key={contrato.id}
-                          onClick={() => adicionarContratoComoObjeto(contrato)}
-                          className="w-full text-left p-3 bg-white border border-gray-300 rounded-lg hover:bg-blue-100 hover:border-blue-500 transition"
-                        >
-                          <p className="font-bold text-gray-900">{contrato.numero}</p>
-                          <p className="text-sm text-gray-600 mt-1">{contrato.descricao}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            R$ {(contrato.valor || 0).toLocaleString("pt-BR", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
+                  {!contratoSelecionado ? (
+                    /* Lista de Contratos */
+                    <>
+                      {carregandoContratos ? (
+                        <div className="text-center py-4 text-gray-600">
+                          <div className="animate-spin inline-block text-2xl mb-2">⏳</div>
+                          <p>Carregando contratos...</p>
+                        </div>
+                      ) : contratos.length > 0 ? (
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {contratos.map((contrato) => (
+                            <button
+                              key={contrato.id}
+                              onClick={() => selecionarContrato(contrato)}
+                              className="w-full text-left p-3 bg-white border border-gray-300 rounded-lg hover:bg-blue-100 hover:border-blue-500 transition"
+                            >
+                              <p className="font-bold text-gray-900">{contrato.numero}</p>
+                              <p className="text-sm text-gray-600 mt-1">{contrato.descricao}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                R$ {(contrato.valor || 0).toLocaleString("pt-BR", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                              </p>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-gray-600">
+                          <p>Nenhum contrato ativo vinculado a essa prefeitura</p>
+                        </div>
+                      )}
+                    </>
                   ) : (
-                    <div className="text-center py-4 text-gray-600">
-                      <p>Nenhum contrato ativo vinculado a essa prefeitura</p>
+                    /* Lista de Objetos do Contrato */
+                    <div className="space-y-3">
+                      {/* Info do Contrato Selecionado */}
+                      <div className="bg-white p-3 rounded-lg border border-gray-300">
+                        <p className="text-xs text-gray-600 uppercase mb-1">Contrato Selecionado</p>
+                        <p className="font-bold text-gray-900">{contratoSelecionado.numero}</p>
+                        <p className="text-sm text-gray-600">{contratoSelecionado.descricao}</p>
+                      </div>
+
+                      {/* Campo de Busca */}
+                      <input
+                        type="text"
+                        value={buscaObjeto}
+                        onChange={(e) => setBuscaObjeto(e.target.value)}
+                        placeholder="Buscar por nome do objeto..."
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                      />
+
+                      {/* Lista de Objetos */}
+                      {carregandoObjetos ? (
+                        <div className="text-center py-4 text-gray-600">
+                          <div className="animate-spin inline-block text-xl mb-2">⏳</div>
+                          <p className="text-sm">Carregando objetos...</p>
+                        </div>
+                      ) : objetosFiltrados.length > 0 ? (
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {objetosFiltrados.map((objeto) => (
+                            <button
+                              key={objeto.id}
+                              onClick={() => setObjetoSelecionado(objeto)}
+                              className={`w-full text-left p-3 rounded-lg border-2 transition ${
+                                objetoSelecionado?.id === objeto.id
+                                  ? "bg-green-100 border-green-500"
+                                  : "bg-white border-gray-300 hover:bg-gray-100"
+                              }`}
+                            >
+                              <p className="font-medium text-gray-900">{objeto.nome}</p>
+                              {objeto.descricao && (
+                                <p className="text-xs text-gray-600 mt-1">{objeto.descricao}</p>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-gray-600">
+                          <p className="text-sm">
+                            {buscaObjeto ? "Nenhum objeto encontrado" : "Nenhum objeto neste contrato"}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Botões de Ação */}
+                      {objetoSelecionado && (
+                        <div className="bg-green-50 p-3 rounded-lg border border-green-300">
+                          <p className="text-xs text-green-700 font-medium mb-2">Objeto Selecionado</p>
+                          <p className="font-bold text-gray-900 mb-3">{objetoSelecionado.nome}</p>
+                          <button
+                            onClick={adicionarObjetoAoChamado}
+                            className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
+                          >
+                            ✓ Adicionar este Objeto
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Botão Voltar */}
+                      <button
+                        onClick={() => {
+                          setContratoSelecionado(null);
+                          setObjetoSelecionado(null);
+                          setBuscaObjeto("");
+                        }}
+                        className="w-full px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium text-sm"
+                      >
+                        ← Voltar para Contratos
+                      </button>
                     </div>
                   )}
                 </div>
