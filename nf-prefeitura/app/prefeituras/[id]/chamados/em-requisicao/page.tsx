@@ -127,7 +127,8 @@ export default function ChamadosEmRequisicaoPage() {
                     key={chamado.id}
                     className={`${
                       idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } border-b border-gray-200 hover:bg-blue-50 transition`}
+                    } border-b border-gray-200 hover:bg-blue-50 transition cursor-pointer`}
+                    onClick={() => router.push(`/chamados/${chamado.id}`)}
                   >
                     <td className="px-6 py-4 font-semibold text-gray-900">{chamado.titulo}</td>
                     <td className="px-6 py-4 text-gray-700 text-sm">{chamado.descricao || "—"}</td>
@@ -151,17 +152,7 @@ export default function ChamadosEmRequisicaoPage() {
                     </td>
                     <td className="px-6 py-4 text-gray-700">{chamado.fornecedor_nome || "—"}</td>
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => {
-                          if (session?.secretaria_id) {
-                            router.push(`/secretaria/${session.secretaria_id}?tab=requisicoes`);
-                          }
-                        }}
-                        className="p-2 hover:bg-cyan-100 rounded-full transition text-cyan-600 font-bold text-lg cursor-pointer"
-                        title="Ir para Requisições"
-                      >
-                        📄
-                      </button>
+                      <span className="text-cyan-600 font-bold text-lg">👁️</span>
                     </td>
                   </tr>
                 ))}
