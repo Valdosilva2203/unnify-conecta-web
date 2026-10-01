@@ -307,12 +307,19 @@ export default function SecretariaPage() {
       const prefeituraSession = localStorage.getItem("prefeitura_session");
       const session = prefeituraSession ? JSON.parse(prefeituraSession) : null;
 
-      if (!session?.id || !secretaria?.prefeitura_id) return;
+      console.log("🔍 loadChamadosAguardandoConfirmacao - session:", session?.id, "prefeitura:", secretaria?.prefeitura_id);
+
+      if (!session?.id || !secretaria?.prefeitura_id) {
+        console.log("⚠️ Retornando porque session ou prefeitura_id ausentes");
+        return;
+      }
 
       // Busca notificações aguardando confirmação para este usuário
-      const response = await fetch(
-        `/api/prefeitura/notificacoes?usuario_id=${session.id}&prefeitura_id=${secretaria.prefeitura_id}`
-      );
+      const url = `/api/prefeitura/notificacoes?usuario_id=${session.id}&prefeitura_id=${secretaria.prefeitura_id}`;
+      console.log("📡 Chamando API:", url);
+
+      const response = await fetch(url);
+      console.log("📊 Resposta da API:", response.status);
 
       if (!response.ok) {
         console.error("Erro ao buscar notificações:", response.status);
@@ -321,17 +328,22 @@ export default function SecretariaPage() {
 
       const result = await response.json();
       const notificacoes = result.notificacoes || [];
+      console.log("📋 Notificações encontradas:", notificacoes.length, notificacoes);
 
       if (notificacoes.length > 0) {
         // Busca detalhes dos chamados referenciados
         const chamadoIds = notificacoes.map((n: any) => n.referencia_id).filter(Boolean);
+        console.log("🆔 IDs de chamados:", chamadoIds);
 
         if (chamadoIds.length > 0) {
-          const { data: chamados } = await supabase
+          const { data: chamados, error: erroSupa } = await supabase
             .from("chamados")
             .select("id, titulo, descricao, prioridade, status, fornecedor_nome, created_at")
             .in("id", chamadoIds)
             .eq("status", "em_andamento");
+
+          console.log("🎫 Chamados em_andamento:", chamados?.length, chamados);
+          if (erroSupa) console.error("❌ Erro Supabase:", erroSupa);
 
           setChamadosAguardandoConfirmacao(chamados || []);
         }
