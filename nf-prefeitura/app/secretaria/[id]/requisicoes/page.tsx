@@ -72,13 +72,22 @@ export default function RequisicoesPage() {
     try {
       console.log("🔍 Buscando requisições para secretaria_id:", secretariaId);
 
+      // Primeiro, busca TODAS para debugar
+      const { data: todas } = await supabase
+        .from("requisicoes")
+        .select("id, titulo, secretaria_id, fornecedor_nome, numero_requisicao")
+        .limit(20);
+
+      console.log("📦 TODAS as requisições no banco:", todas);
+      console.log("🔎 Procurando secretaria_id:", secretariaId);
+
       const { data, error } = await supabase
         .from("requisicoes")
         .select("id, titulo, descricao, status, created_at, numero_requisicao, secretaria_id, fornecedor_nome")
         .eq("secretaria_id", secretariaId)
         .order("created_at", { ascending: false });
 
-      console.log("📋 Requisições encontradas:", data?.length || 0, error);
+      console.log("📋 Requisições encontradas para esta secretaria:", data?.length || 0, error);
 
       if (error) throw error;
       setRequisicoes(data || []);
