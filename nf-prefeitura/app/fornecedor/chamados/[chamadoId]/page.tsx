@@ -221,19 +221,42 @@ export default function DetalheChamadoPage() {
     carregarObjetosContrato(contrato.id);
   };
 
-  const adicionarObjetoAoChamado = () => {
+  const adicionarObjetoAoChamado = async () => {
     if (contratoSelecionado && objetoSelecionado && quantidadeObjeto) {
-      setObjetos([...objetos, {
-        id: objetoSelecionado.id,
-        numero: contratoSelecionado.numero,
-        descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
-      }]);
-      setContratoSelecionado(null);
-      setObjetoSelecionado(null);
-      setObjetosContrato([]);
-      setBuscaObjeto("");
-      setQuantidadeObjeto("");
-      setAbrirFormularioObjeto(false);
+      try {
+        // Registra o consumo no banco de dados
+        const { error } = await supabase
+          .from("consumo_objetos")
+          .insert([{
+            objeto_id: objetoSelecionado.id,
+            quantidade_usada: parseFloat(quantidadeObjeto),
+            requisicao_id: chamado?.id,
+            tipo: "chamado"
+          }]);
+
+        if (error) {
+          console.error("Erro ao registrar consumo:", error);
+          alert("Erro ao adicionar objeto");
+          return;
+        }
+
+        // Atualiza a lista local
+        setObjetos([...objetos, {
+          id: objetoSelecionado.id,
+          numero: contratoSelecionado.numero,
+          descricao: `${objetoSelecionado.nome || objetoSelecionado.descricao} (Qtd: ${quantidadeObjeto})`
+        }]);
+
+        // Recarrega objetos para atualizar quantidades disponíveis
+        await carregarObjetosContrato(contratoSelecionado.id);
+
+        setObjetoSelecionado(null);
+        setBuscaObjeto("");
+        setQuantidadeObjeto("");
+      } catch (error) {
+        console.error("Erro ao adicionar objeto:", error);
+        alert("Erro ao adicionar objeto");
+      }
     }
   };
 
