@@ -47,7 +47,7 @@ export default function ChamadosEmRequisicaoPage() {
   const [modalChamado, setModalChamado] = useState<Chamado | null>(null);
   const [fornecedorBusca, setFornecedorBusca] = useState("");
   const [observacoes, setObservacoes] = useState("");
-  const [contratosModal, setContratosModal] = useState<any[]>([]);
+  const [contratoModal, setContratoModal] = useState<any>(null);
 
   useEffect(() => {
     if (session?.id) {
@@ -68,7 +68,7 @@ export default function ChamadosEmRequisicaoPage() {
 
   useEffect(() => {
     if (modalChamado) {
-      carregarContratosDoModal(modalChamado.id);
+      carregarContratoDoModal(modalChamado.id);
     }
   }, [modalChamado]);
 
@@ -160,6 +160,51 @@ export default function ChamadosEmRequisicaoPage() {
       console.error("❌ Erro ao carregar chamados:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const carregarContratoDoModal = async (chamadoId: string) => {
+    try {
+      // Buscar consumo_objetos do chamado
+      const { data: consumo } = await supabase
+        .from("consumo_objetos")
+        .select("objeto_id")
+        .eq("chamado_id", chamadoId)
+        .eq("tipo", "chamado")
+        .limit(1);
+
+      if (!consumo || consumo.length === 0) {
+        setContratoModal(null);
+        return;
+      }
+
+      const objetoId = consumo[0].objeto_id;
+
+      // Buscar contrato via objeto
+      const { data: objetos } = await supabase
+        .from("objetos_contratos")
+        .select("contrato_id")
+        .eq("id", objetoId)
+        .limit(1);
+
+      if (!objetos || objetos.length === 0) {
+        setContratoModal(null);
+        return;
+      }
+
+      const contratoId = objetos[0].contrato_id;
+
+      // Buscar detalhes do contrato
+      const { data: contrato } = await supabase
+        .from("contratos")
+        .select("id, numero, descricao, valor")
+        .eq("id", contratoId)
+        .single();
+
+      setContratoModal(contrato);
+    } catch (error) {
+      console.error("Erro ao carregar contrato:", error);
+      setContratoModal(null);
     }
   };
 
@@ -361,6 +406,18 @@ export default function ChamadosEmRequisicaoPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
                   />
                 </div>
+
+                {/* Contrato */}
+                {contratoModal && (
+                  <div className="bg-cyan-50 border border-cyan-300 rounded-lg p-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Contrato</p>
+                    <p className="font-semibold text-gray-900">✓ {contratoModal.numero}</p>
+                    <p className="text-sm text-gray-600">{contratoModal.descricao}</p>
+                    <p className="text-sm text-gray-700 mt-2">
+                      <strong>Valor:</strong> R$ {(contratoModal.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                )}
 
                 {/* Contratos Adicionados */}
                 {contratosModal.length > 0 && (
