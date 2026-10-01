@@ -10,6 +10,9 @@ import TopNavBar from "@/components/TopNavBar";
 import AdicionarFuncionarioModal from "@/components/AdicionarFuncionarioModal";
 import EditarFuncionarioModal from "@/components/EditarFuncionarioModal";
 import CompartilharLinkModal from "@/components/CompartilharLinkModal";
+import PrefeituraSidebar from "@/components/PrefeituraSidebar";
+import PrefeituraHeader from "@/components/PrefeituraHeader";
+import MetricCard from "@/components/MetricCard";
 import crypto from "crypto";
 
 interface Prefeitura {
@@ -682,263 +685,304 @@ function DetalhePrefeituraContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TopNavBar
-        title={`${prefeitura?.nome || "Prefeitura"}`}
-        subtitle="Aqui está o que está acontecendo na sua prefeitura hoje"
-        tabs={tabs}
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <PrefeituraSidebar
+        prefeituraLogo={logoUrl}
+        prefeituraNome={prefeitura?.nome}
         activeTab={activeTab}
-        onTabChange={(tabId) => {
-          setActiveTab(tabId);
-          if (tabId === "solicitacoes") {
-            loadSolicitacoesPendentes();
-          }
-        }}
-        onExport={handleExport}
-        userName={prefeituraSession?.nome || "Usuário"}
-        userRole={prefeituraSession?.role || prefeituraSession?.cargo || "Usuário"}
-        logoUrl={logoUrl}
       />
 
-      <div className="app-container p-8">
-        {/* Conteúdo Principal */}
-        {/* Botão Compartilhar Link */}
-        {autenticado && isAuthenticated() && (
-          <div className="mt-12 mb-8 flex flex-col items-end gap-3">
-            {tokenCompartilhado ? (
-              <div className="bg-white border border-gray-300 rounded-lg p-3 max-w-sm">
-                <p className="text-xs text-gray-600 mb-2 font-medium">Link para compartilhar:</p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={tokenCompartilhado}
-                    readOnly
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded bg-gray-50 text-gray-700"
-                  />
+      {/* Main Content */}
+      <div className="flex-1 ml-64">
+        {/* Header */}
+        <PrefeituraHeader
+          userName={prefeituraSession?.nome || "Usuário"}
+          userRole={prefeituraSession?.role || prefeituraSession?.cargo || "Usuário"}
+          onLogout={handleLogout}
+        />
+
+        {/* Main Content Area */}
+        <main className="p-8 bg-gray-100">
+          {/* Hero Banner */}
+          <div className="h-48 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl shadow-lg mb-8 relative overflow-hidden flex items-center px-8">
+            <div className="absolute inset-0 opacity-10 bg-pattern"></div>
+            <div className="relative z-10">
+              <h1 className="text-4xl font-bold text-white mb-2">{prefeitura?.nome}</h1>
+              <p className="text-orange-100">Dashboard de gestão municipal</p>
+            </div>
+
+            {/* Botão Exportar */}
+            {autenticado && isAuthenticated() && (
+              <button
+                onClick={handleExport}
+                className="absolute top-6 right-6 flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-lg hover:bg-orange-50 transition font-medium shadow-md"
+              >
+                <span>📊</span>
+                Exportar
+              </button>
+            )}
+          </div>
+
+          {/* Link Compartilhado */}
+          {autenticado && isAuthenticated() && (
+            <div className="mb-8 flex flex-col items-end gap-3">
+              {tokenCompartilhado ? (
+                <div className="bg-white border border-gray-300 rounded-lg p-3 max-w-sm shadow-md">
+                  <p className="text-xs text-gray-600 mb-2 font-medium">Link para compartilhar:</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={tokenCompartilhado}
+                      readOnly
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded bg-gray-50 text-gray-700"
+                    />
+                    <button
+                      onClick={handleCopiarLink}
+                      className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+              <button
+                onClick={() => setMostrarCompartilharLink(true)}
+                disabled={!prefeitura}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg transition font-medium bg-green-600 text-white border border-green-600 hover:bg-green-700"
+              >
+                <span className="text-lg">🔗</span>
+                Liberar acesso
+              </button>
+            </div>
+          )}
+
+          {/* Cards Estatísticos - Primeira Linha (5 cards) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <MetricCard
+              title="Prefeitura"
+              value={prefeitura?.nome || "-"}
+              subtitle={`CNPJ: ${prefeitura?.cnpj || "-"}`}
+              icon="🏛️"
+              accentColor="blue"
+              onClick={() => router.push(`/prefeituras/${id}/configuracoes`)}
+            />
+            <MetricCard
+              title="Total Colaboradores"
+              value={todosFuncionarios.length}
+              subtitle={todosFuncionarios.length > 0 ? "Cadastrados" : "Nenhum cadastrado"}
+              icon="👥"
+              accentColor="orange"
+              onClick={() => router.push(`/prefeituras/${id}/funcionarios`)}
+            />
+            <MetricCard
+              title="Secretários"
+              value={todosFuncionarios.filter((f) => {
+                const cargoLower = f.cargo.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+                return cargoLower.includes("secretario");
+              }).length}
+              subtitle={
+                todosFuncionarios.filter((f) => {
+                  const cargoLower = f.cargo.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+                  return cargoLower.includes("secretario");
+                }).length > 0
+                  ? "Ativos"
+                  : "Nenhum"
+              }
+              icon="🎩"
+              accentColor="purple"
+              onClick={() => router.push(`/prefeituras/${id}/secretarios`)}
+            />
+            <MetricCard
+              title="Secretarias"
+              value={secretarias.length}
+              subtitle={secretarias.length > 0 ? "Cadastradas" : "Nenhuma"}
+              icon="📂"
+              accentColor="blue"
+              onClick={() => router.push(`/prefeituras/${id}/secretarias`)}
+            />
+            <MetricCard
+              title="Chamados"
+              value={chamadosPendentes}
+              subtitle="Pendentes"
+              icon="🔔"
+              accentColor="orange"
+              onClick={() => router.push(`/prefeituras/${id}/chamados`)}
+            />
+          </div>
+
+          {/* Cards Estatísticos - Segunda Linha (5 cards) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <MetricCard
+              title="Cargos"
+              value={quantidadeCargos}
+              subtitle="Tipos diferentes"
+              icon="👔"
+              accentColor="purple"
+              onClick={() => setMostrarDetalheCargos(!mostrarDetalheCargos)}
+            />
+            <MetricCard
+              title="Notas Fiscais"
+              value="156"
+              subtitle="↑ 12 este mês"
+              icon="📄"
+              accentColor="red"
+            />
+            <MetricCard
+              title="Total Gasto (4m)"
+              value="R$ 125.4k"
+              subtitle="↓ 5% vs ago"
+              icon="💰"
+              accentColor="green"
+            />
+            <MetricCard
+              title="Fornecedores"
+              value={quantidadeFornecedores}
+              subtitle="Cadastrados"
+              icon="🏢"
+              accentColor="blue"
+              onClick={() => router.push(`/prefeituras/${id}/fornecedores`)}
+            />
+            <MetricCard
+              title="Contratos"
+              value={quantidadeContratos}
+              subtitle="Cadastrados"
+              icon="📋"
+              accentColor="orange"
+              onClick={() => router.push(`/prefeituras/${id}/contratos`)}
+            />
+          </div>
+
+          {/* Seção de Avisos (Dashboard) */}
+          {activeTab === "dashboard" && (
+            <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">📣 Avisos</h2>
+              <div className="space-y-4">
+                {/* Aviso: Solicitações Pendentes (Laranja) */}
+                {solicitacoesPendentes.length > 0 && (
                   <button
-                    onClick={handleCopiarLink}
-                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition"
+                    onClick={() => setActiveTab("solicitacoes")}
+                    className="w-full text-left flex items-start gap-4 p-4 bg-orange-50 rounded-xl border-l-4 border-orange-400 hover:shadow-md transition"
                   >
-                    Copiar
+                    <span className="text-2xl flex-shrink-0">📋</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">
+                        Solicitações de vinculação pendentes
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {solicitacoesPendentes.length} {solicitacoesPendentes.length === 1 ? "solicitação" : "solicitações"} aguardando sua aprovação
+                      </p>
+                    </div>
                   </button>
+                )}
+
+                {/* Aviso: Licenças Vencendo (Amarelo) */}
+                <div className="w-full text-left flex items-start gap-4 p-4 bg-amber-50 rounded-xl border-l-4 border-amber-400">
+                  <span className="text-2xl flex-shrink-0">⚠️</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">
+                      Renovação de licenças vencendo
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      3 licenças vencerão nos próximos 7 dias
+                    </p>
+                  </div>
+                </div>
+
+                {/* Aviso: Documentos Pendentes (Azul) */}
+                <div className="w-full text-left flex items-start gap-4 p-4 bg-blue-50 rounded-xl border-l-4 border-blue-400">
+                  <span className="text-2xl flex-shrink-0">ℹ️</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">
+                      Documentos pendentes
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      5 notas fiscais aguardando aprovação do financeiro
+                    </p>
+                  </div>
                 </div>
               </div>
-            ) : null}
-            <button
-              onClick={() => setMostrarCompartilharLink(true)}
-              disabled={!prefeitura}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition font-medium bg-green-600 text-white border border-green-600 hover:bg-green-700"
-            >
-              <span className="text-lg">🔗</span>
-              Liberar acesso
-            </button>
-          </div>
-        )}
-
-        {/* Cards Estatísticos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Card 1: Prefeitura */}
-          <div
-            onClick={() => router.push(`/prefeituras/${id}/configuracoes`)}
-            className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Prefeitura</p>
-                <p className="text-lg font-bold text-gray-900 mt-2">
-                  {prefeitura.nome}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">CNPJ: {prefeitura.cnpj}</p>
-              </div>
-              <div className="bg-teal-100 p-3 rounded-lg text-2xl">🏛️</div>
             </div>
-          </div>
+          )}
 
-          {/* Card 2: Total de Colaboradores */}
-          <div
-            onClick={() => router.push(`/prefeituras/${id}/funcionarios`)}
-            className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  Total Colaboradores
-                </p>
-                <p className="text-3xl font-bold text-orange-600 mt-2">{todosFuncionarios.length}</p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {todosFuncionarios.length > 0 ? "Cadastrados" : "Nenhum cadastrado"}
-                </p>
-              </div>
-              <div className="bg-orange-100 p-3 rounded-lg text-2xl">👥</div>
+          {/* Seção de Solicitações */}
+          {activeTab === "solicitacoes" && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Solicitações de Vinculação</h2>
+
+              {solicitacoesPendentes.length > 0 ? (
+                <div className="space-y-4">
+                  {solicitacoesPendentes.map((solicitacao: any) => (
+                    <div
+                      key={solicitacao.id}
+                      className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-400"
+                    >
+                      <div className="flex items-start justify-between gap-6">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-bold text-gray-900">
+                              {solicitacao.funcionarios?.nome || "Funcionário"}
+                            </h3>
+                            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                              Pendente
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">Cargo</p>
+                              <p className="text-sm text-gray-900">{solicitacao.funcionarios?.cargo || "N/A"}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">Email</p>
+                              <p className="text-sm text-blue-600">{solicitacao.funcionarios?.email || "N/A"}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">Secretaria</p>
+                              <p className="text-sm text-gray-900">{solicitacao.secretarias?.nome || "N/A"}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">Solicitante</p>
+                              <p className="text-sm text-gray-900">{solicitacao.solicitantes?.nome || "N/A"}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() =>
+                              aprovarSolicitacao(
+                                solicitacao.id,
+                                solicitacao.funcionarios.id,
+                                solicitacao.secretarias.id
+                              )
+                            }
+                            disabled={processandoSolicitacao === solicitacao.id}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium disabled:opacity-50"
+                          >
+                            {processandoSolicitacao === solicitacao.id ? "..." : "✓ Aprovar"}
+                          </button>
+                          <button
+                            onClick={() => rejeitarSolicitacao(solicitacao.id)}
+                            disabled={processandoSolicitacao === solicitacao.id}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium disabled:opacity-50"
+                          >
+                            {processandoSolicitacao === solicitacao.id ? "..." : "✕ Rejeitar"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-200">
+                  <p className="text-2xl mb-2">✅</p>
+                  <p className="text-gray-600 font-medium">Nenhuma solicitação pendente</p>
+                  <p className="text-sm text-gray-500 mt-2">Todas as solicitações foram processadas</p>
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Card 3: Secretários */}
-          <div
-            onClick={() => router.push(`/prefeituras/${id}/secretarios`)}
-            className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Secretários</p>
-                <p className="text-3xl font-bold text-purple-600 mt-2">
-                  {todosFuncionarios.filter((f) => {
-                    const cargoLower = f.cargo.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-                    return cargoLower.includes("secretario");
-                  }).length}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {todosFuncionarios.filter((f) => {
-                    const cargoLower = f.cargo.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-                    return cargoLower.includes("secretario");
-                  }).length > 0
-                    ? "Ativos"
-                    : "Nenhum"}
-                </p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-lg text-2xl">🎩</div>
-            </div>
-          </div>
-
-          {/* Card 4: Secretarias */}
-          <div
-            onClick={() => router.push(`/prefeituras/${id}/secretarias`)}
-            className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  Secretarias
-                </p>
-                <p className="text-3xl font-bold text-blue-600 mt-2">{secretarias.length}</p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {secretarias.length > 0 ? "Cadastradas" : "Nenhuma"}
-                </p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-lg text-2xl">📂</div>
-            </div>
-          </div>
-
-          {/* Card 5: Chamados */}
-          <button
-            onClick={() => router.push(`/prefeituras/${id}/chamados`)}
-            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition border border-gray-200 hover:border-orange-300 cursor-pointer group text-left"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-gray-600">Chamados</p>
-              <span className="text-2xl group-hover:scale-110 transition">🔔</span>
-            </div>
-            <p className="text-3xl font-bold text-orange-600">{chamadosPendentes}</p>
-            <p className="text-xs text-gray-500 mt-2">Pendentes</p>
-          </button>
-
-
-          {/* Card 9: Cargos */}
-          <div
-            onClick={() => setMostrarDetalheCargos(!mostrarDetalheCargos)}
-            className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  Cargos
-                </p>
-                <p className="text-2xl font-bold text-purple-600 mt-2">
-                  {quantidadeCargos}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">Tipos diferentes</p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-lg text-2xl">👔</div>
-            </div>
-          </div>
-
-          {/* Card 7: Notas Fiscais */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  Notas Fiscais
-                </p>
-                <p className="text-3xl font-bold text-orange-600 mt-2">156</p>
-                <p className="text-xs text-green-600 mt-2">↑ 12 este mês</p>
-              </div>
-              <div className="bg-orange-100 p-3 rounded-lg text-2xl">📄</div>
-            </div>
-          </div>
-
-          {/* Card 8: Total Gasto */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  Total Gasto (4m)
-                </p>
-                <p className="text-2xl font-bold text-green-600 mt-2">
-                  R$ 125.4k
-                </p>
-                <p className="text-xs text-red-600 mt-2">↑ 5% vs ago</p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-lg text-2xl">💰</div>
-            </div>
-          </div>
-
-          {/* Card 9: Cargos */}
-          <div
-            onClick={() => setMostrarDetalheCargos(!mostrarDetalheCargos)}
-            className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  Cargos
-                </p>
-                <p className="text-2xl font-bold text-purple-600 mt-2">
-                  {quantidadeCargos}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">Tipos diferentes</p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-lg text-2xl">👔</div>
-            </div>
-          </div>
-
-          {/* Card 10: Fornecedores */}
-          <button
-            onClick={() => router.push(`/prefeituras/${id}/fornecedores`)}
-            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition cursor-pointer text-left w-full"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  Fornecedores
-                </p>
-                <p className="text-2xl font-bold text-blue-600 mt-2">
-                  {quantidadeFornecedores}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">Cadastrados</p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-lg text-2xl">🏢</div>
-            </div>
-          </button>
-
-          {/* Card 11: Contratos */}
-          <button
-            onClick={() => router.push(`/prefeituras/${id}/contratos`)}
-            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition cursor-pointer text-left w-full"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
-                  Contratos
-                </p>
-                <p className="text-2xl font-bold text-indigo-600 mt-2">
-                  {quantidadeContratos}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">Cadastrados</p>
-              </div>
-              <div className="bg-indigo-100 p-3 rounded-lg text-2xl">📋</div>
-            </div>
-          </button>
-        </div>
+          )}
 
         {/* Modal: Todos os Funcionários */}
         {mostrarTodosFuncionarios && (
