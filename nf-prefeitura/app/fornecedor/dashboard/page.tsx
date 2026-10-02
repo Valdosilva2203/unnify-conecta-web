@@ -71,6 +71,7 @@ export default function FornecedorDashboardPage() {
   const [justificativas, setJustificativas] = useState<{ [key: string]: any[] }>({});
   const [novaJustificativa, setNovaJustificativa] = useState("");
   const [modalDetalhes, setModalDetalhes] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -606,11 +607,21 @@ export default function FornecedorDashboardPage() {
                               {chamado.secretarias?.nome || chamado.secretaria_nome || "Secretaria"}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right relative z-10" ref={menuRef}>
+                          <td className="px-6 py-4 text-right">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setMenuAbertoId(menuAbertoId === chamado.id ? null : chamado.id);
+                                if (menuAbertoId === chamado.id) {
+                                  setMenuAbertoId(null);
+                                  setMenuPos(null);
+                                } else {
+                                  const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                                  setMenuPos({
+                                    top: rect.bottom + window.scrollY + 8,
+                                    left: rect.left + window.scrollX - 180
+                                  });
+                                  setMenuAbertoId(chamado.id);
+                                }
                               }}
                               disabled={chamado.status === "em_requisicao"}
                               className={`p-2 rounded-full transition font-bold text-lg ${
@@ -621,13 +632,12 @@ export default function FornecedorDashboardPage() {
                             >
                               ⋮
                             </button>
-                            {menuAbertoId === chamado.id && (
+                            {menuAbertoId === chamado.id && menuPos && (
                               <div
-                                ref={menuRef}
                                 className="fixed bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-[9999] w-56"
                                 style={{
-                                  top: menuRef.current ? menuRef.current.getBoundingClientRect().bottom + window.scrollY + 8 : 'auto',
-                                  left: menuRef.current ? menuRef.current.getBoundingClientRect().right + window.scrollX - 220 : 'auto'
+                                  top: `${menuPos.top}px`,
+                                  left: `${menuPos.left}px`
                                 }}
                               >
                                 {/* Header AÇÕES */}
