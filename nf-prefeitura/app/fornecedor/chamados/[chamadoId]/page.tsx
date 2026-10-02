@@ -13,6 +13,8 @@ interface Chamado {
   prioridade: "baixa" | "normal" | "urgente";
   created_at: string;
   criador_nome?: string;
+  criado_por?: string;
+  prefeitura_id?: string;
 }
 
 interface Justificativa {
@@ -151,7 +153,7 @@ export default function DetalheChamadoPage() {
       setLoading(true);
       const { data, error } = await supabase
         .from("chamados")
-        .select("*")
+        .select("*, criado_por, prefeitura_id")
         .eq("id", chamadoId)
         .single();
 
@@ -235,11 +237,11 @@ export default function DetalheChamadoPage() {
       if (erroStatus) throw erroStatus;
 
       // 2. Envia notificação para o criador do chamado
-      if (chamado?.usuario_id && chamado?.prefeitura_id) {
-        console.log("🔍 Enviando notificação para criador do chamado:", chamado.usuario_id);
+      if (chamado?.criado_por && chamado?.prefeitura_id) {
+        console.log("🔍 Enviando notificação para criador do chamado:", chamado.criado_por);
 
         const notifPayload = {
-          usuario_id: chamado.usuario_id,
+          usuario_id: chamado.criado_por,
           prefeitura_id: chamado.prefeitura_id,
           tipo: "chamado_aguardando_confirmacao",
           mensagem: `Chamado "${chamado.titulo}" aguardando confirmação. O fornecedor finalizou o trabalho.`,
