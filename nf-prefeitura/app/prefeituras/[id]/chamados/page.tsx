@@ -475,25 +475,6 @@ export default function ChamadosPage() {
       />
 
       <div className="p-8 w-full max-w-[2280px] mx-auto">
-        {/* Banner de Notificações Aguardando Confirmação - Visível apenas para o criador */}
-        {notificacoesAguardandoConfirmacao.length > 0 && session?.id && notificacoesAguardandoConfirmacao.some((n: any) => n.usuario_id === session.id) && (
-          <div className="mb-8 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-2xl p-6 border-2 border-yellow-600 shadow-lg animate-pulse">
-            <div className="flex items-center gap-4">
-              <span className="text-5xl">⏸️</span>
-              <div className="flex-1">
-                <p className="text-xl font-black">Você tem {notificacoesAguardandoConfirmacao.length} chamado{notificacoesAguardandoConfirmacao.length > 1 ? 's' : ''} aguardando sua confirmação de finalização</p>
-                <p className="text-sm mt-2 font-medium">O fornecedor já finalizou e está aguardando você confirmar se o serviço foi realmente concluído.</p>
-              </div>
-              <button
-                onClick={() => setModalAguardandoConfirmacao(true)}
-                className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg transition transform hover:scale-105"
-              >
-                Ver Chamados
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Stats Cards - Design Premium */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           {stats.map((stat, idx) => (
