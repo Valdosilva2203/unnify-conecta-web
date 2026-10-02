@@ -617,8 +617,8 @@ export default function FornecedorDashboardPage() {
                                 } else {
                                   const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
                                   setMenuPos({
-                                    top: rect.bottom + window.scrollY + 8,
-                                    left: rect.left + window.scrollX - 180
+                                    top: rect.bottom + 8,
+                                    left: rect.left - 180
                                   });
                                   setMenuAbertoId(chamado.id);
                                 }
