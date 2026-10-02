@@ -124,17 +124,7 @@ export default function ChamadosPage() {
     try {
       const { data, error } = await supabase
         .from("consumo_objetos")
-        .select(`
-          id,
-          quantidade_usada,
-          objetos_contratos!objeto_id(
-            id,
-            nome,
-            descricao,
-            valor_unitario,
-            contratos!contrato_id(id, numero, descricao)
-          )
-        `)
+        .select("*")
         .eq("chamado_id", chamadoId);
 
       if (error) throw error;
