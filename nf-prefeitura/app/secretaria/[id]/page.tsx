@@ -1238,14 +1238,14 @@ export default function SecretariaPage() {
         {activeTab === "dashboard" && (
           <div className="space-y-6">
             {/* Banner de Chamados Aguardando Confirmação - Visível apenas para o criador */}
-            {chamadosAguardandoConfirmacao.length > 0 && usuarioLogado?.id && chamadosAguardandoConfirmacao.some((c: any) => c.usuario_id === usuarioLogado.id) && (
+            {chamadosAguardandoConfirmacao.length > 0 && usuarioLogado?.id && chamadosAguardandoConfirmacao.some((c: any) => c.criado_por === usuarioLogado.id) && (
               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded animate-pulse">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">⚠️</span>
                     <div>
                       <p className="font-bold text-yellow-800">
-                        Você tem {chamadosAguardandoConfirmacao.filter((c: any) => c.usuario_id === usuarioLogado.id).length} chamado{chamadosAguardandoConfirmacao.filter((c: any) => c.usuario_id === usuarioLogado.id).length > 1 ? 's' : ''} aguardando confirmação
+                        Você tem {chamadosAguardandoConfirmacao.filter((c: any) => c.criado_por === usuarioLogado.id).length} chamado{chamadosAguardandoConfirmacao.filter((c: any) => c.criado_por === usuarioLogado.id).length > 1 ? 's' : ''} aguardando confirmação
                       </p>
                       <p className="text-sm text-yellow-700">O fornecedor finalizou e aguarda sua confirmação ou negação</p>
                     </div>

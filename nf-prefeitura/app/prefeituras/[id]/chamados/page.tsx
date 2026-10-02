@@ -119,6 +119,8 @@ export default function ChamadosPage() {
   }, [session?.id]);
 
   const carregarObjetosAdicionados = async (chamadoId: string) => {
+    if (!chamadoId) return;
+
     try {
       const { data, error } = await supabase
         .from("consumo_objetos")
