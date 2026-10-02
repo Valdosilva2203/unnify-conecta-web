@@ -358,14 +358,14 @@ export default function SecretariaPage() {
     }
   };
 
-  const confirmarChamado = async (chamadoId: string) => {
+  const confirmarChamado = async (chamadoId: string, notificacaoId?: string) => {
     try {
       setConfirmandoChamado(chamadoId);
 
       const response = await fetch("/api/prefeitura/chamados/confirmar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chamado_id: chamadoId })
+        body: JSON.stringify({ chamado_id: chamadoId, notificacao_id: notificacaoId || chamadoId })
       });
 
       if (!response.ok) throw new Error("Erro ao confirmar");
