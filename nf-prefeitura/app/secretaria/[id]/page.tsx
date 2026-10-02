@@ -382,7 +382,7 @@ export default function SecretariaPage() {
     }
   };
 
-  const negarChamado = async (chamadoId: string) => {
+  const negarChamado = async (chamadoId: string, notificacaoId?: string) => {
     const justificativa = justificativaNegacao[chamadoId];
 
     if (!justificativa.trim()) {
@@ -398,6 +398,7 @@ export default function SecretariaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chamado_id: chamadoId,
+          notificacao_id: notificacaoId || chamadoId,
           justificativa
         })
       });
