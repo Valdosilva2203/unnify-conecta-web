@@ -224,7 +224,7 @@ export default function ChamadosEmRequisicaoPage() {
       const agora = new Date();
       const numeroRequisicao = `REQ-${agora.getFullYear()}${String(agora.getMonth() + 1).padStart(2, "0")}${String(agora.getDate()).padStart(2, "0")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-      // 1. Criar requisição
+      // 1. Criar requisição com status "Aguardando nota fiscal"
       const { data: requisicaoData, error: reqError } = await supabase
         .from("requisicoes")
         .insert([{
@@ -239,7 +239,7 @@ export default function ChamadosEmRequisicaoPage() {
           secretaria_id: secretariaId,
           criada_por: session?.id,
           criador_nome: session?.nome,
-          status: "pendente"
+          status: "Aguardando nota fiscal"
         }])
         .select();
 
@@ -248,7 +248,15 @@ export default function ChamadosEmRequisicaoPage() {
       const requisicaoId = requisicaoData?.[0]?.id;
       if (!requisicaoId) throw new Error("Falha ao criar requisição");
 
-      console.log("✅ Requisição criada:", requisicaoId);
+      // 1.5. Atualizar chamado relacionado para "finalizado"
+      if (modalChamado?.id) {
+        const { error: updateChamadoError } = await supabase
+          .from("chamados")
+          .update({ status: "finalizada" })
+          .eq("id", modalChamado.id);
+
+        if (updateChamadoError) throw updateChamadoError;
+      }
 
       // 2. Criar itens da requisição para cada objeto
       const itens = contratosDoFornecedor.flatMap(contrato =>
