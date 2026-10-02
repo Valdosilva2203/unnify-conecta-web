@@ -338,14 +338,17 @@ export default function SecretariaPage() {
         if (chamadoIds.length > 0) {
           const { data: chamados, error: erroSupa } = await supabase
             .from("chamados")
-            .select("id, titulo, descricao, prioridade, status, fornecedor_nome, created_at")
-            .in("id", chamadoIds)
-            .eq("status", "em_andamento");
+            .select("id, titulo, descricao, prioridade, status, fornecedor_nome, usuario_id, created_at")
+            .in("id", chamadoIds);
 
-          console.log("🎫 Chamados em_andamento:", chamados?.length, chamados);
+          console.log("🎫 Chamados encontrados:", chamados?.length, chamados);
           if (erroSupa) console.error("❌ Erro Supabase:", erroSupa);
 
-          setChamadosAguardandoConfirmacao(chamados || []);
+          // Filtrar apenas os que estão em_andamento
+          const chamadosEmAndamento = (chamados || []).filter((c: any) => c.status === "em_andamento");
+          console.log("🎯 Filtrados em_andamento:", chamadosEmAndamento.length);
+
+          setChamadosAguardandoConfirmacao(chamadosEmAndamento);
         }
       }
     } catch (error) {
