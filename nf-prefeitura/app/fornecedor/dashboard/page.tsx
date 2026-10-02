@@ -608,32 +608,30 @@ export default function FornecedorDashboardPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            {chamado.status !== "finalizada" && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (menuAbertoId === chamado.id) {
-                                    setMenuAbertoId(null);
-                                    setMenuPos(null);
-                                  } else {
-                                    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
-                                    setMenuPos({
-                                      top: rect.bottom + 8,
-                                      left: rect.left - 180
-                                    });
-                                    setMenuAbertoId(chamado.id);
-                                  }
-                                }}
-                                disabled={chamado.status === "em_requisicao"}
-                                className={`p-2 rounded-full transition font-bold text-lg ${
-                                  chamado.status === "em_requisicao"
-                                    ? "text-gray-300 cursor-not-allowed opacity-50"
-                                    : "hover:bg-gray-200 text-gray-600"
-                                }`}
-                              >
-                                ⋮
-                              </button>
-                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (menuAbertoId === chamado.id) {
+                                  setMenuAbertoId(null);
+                                  setMenuPos(null);
+                                } else {
+                                  const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                                  setMenuPos({
+                                    top: rect.bottom + 8,
+                                    left: rect.left - 180
+                                  });
+                                  setMenuAbertoId(chamado.id);
+                                }
+                              }}
+                              disabled={chamado.status === "em_requisicao" || chamado.status === "finalizada"}
+                              className={`p-2 rounded-full transition font-bold text-lg ${
+                                chamado.status === "em_requisicao" || chamado.status === "finalizada"
+                                  ? "text-gray-300 cursor-not-allowed opacity-50"
+                                  : "hover:bg-gray-200 text-gray-600"
+                              }`}
+                            >
+                              ⋮
+                            </button>
                             {menuAbertoId === chamado.id && menuPos && (
                               <div
                                 className="fixed bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-[9999] w-56"
