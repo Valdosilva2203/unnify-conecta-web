@@ -338,7 +338,7 @@ export default function SecretariaPage() {
         if (chamadoIds.length > 0) {
           const { data: chamados, error: erroSupa } = await supabase
             .from("chamados")
-            .select("id, titulo, descricao, prioridade, status, fornecedor_nome, usuario_id, created_at")
+            .select("*")
             .in("id", chamadoIds);
 
           console.log("🎫 Chamados encontrados:", chamados?.length, chamados);
