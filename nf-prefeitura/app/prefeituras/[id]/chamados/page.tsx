@@ -475,8 +475,8 @@ export default function ChamadosPage() {
       />
 
       <div className="p-8 w-full max-w-[2280px] mx-auto">
-        {/* Banner de Notificações Aguardando Confirmação */}
-        {notificacoesAguardandoConfirmacao.length > 0 && (
+        {/* Banner de Notificações Aguardando Confirmação - Visível apenas para o criador */}
+        {notificacoesAguardandoConfirmacao.length > 0 && session?.id && notificacoesAguardandoConfirmacao.some((n: any) => n.usuario_id === session.id) && (
           <div className="mb-8 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-2xl p-6 border-2 border-yellow-600 shadow-lg animate-pulse">
             <div className="flex items-center gap-4">
               <span className="text-5xl">⏸️</span>
