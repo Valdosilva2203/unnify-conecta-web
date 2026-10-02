@@ -307,19 +307,14 @@ export default function SecretariaPage() {
       const prefeituraSession = localStorage.getItem("prefeitura_session");
       const session = prefeituraSession ? JSON.parse(prefeituraSession) : null;
 
-      console.log("🔍 loadChamadosAguardandoConfirmacao - session:", session?.id, "prefeitura:", secretaria?.prefeitura_id);
-
       if (!session?.id || !secretaria?.prefeitura_id) {
-        console.log("⚠️ Retornando porque session ou prefeitura_id ausentes");
         return;
       }
 
       // Busca notificações aguardando confirmação para este usuário
       const url = `/api/prefeitura/notificacoes?usuario_id=${session.id}&prefeitura_id=${secretaria.prefeitura_id}`;
-      console.log("📡 Chamando API:", url);
 
       const response = await fetch(url);
-      console.log("📊 Resposta da API:", response.status);
 
       if (!response.ok) {
         console.error("Erro ao buscar notificações:", response.status);
@@ -328,12 +323,11 @@ export default function SecretariaPage() {
 
       const result = await response.json();
       const notificacoes = result.notificacoes || [];
-      console.log("📋 Notificações encontradas:", notificacoes.length, notificacoes);
+      console.log("📋 Notificações encontradas:", notificacoes.length);
 
       if (notificacoes.length > 0) {
         // Busca detalhes dos chamados referenciados
         const chamadoIds = notificacoes.map((n: any) => n.referencia_id).filter(Boolean);
-        console.log("🆔 IDs de chamados:", chamadoIds);
 
         if (chamadoIds.length > 0) {
           const { data: chamados, error: erroSupa } = await supabase
@@ -341,12 +335,10 @@ export default function SecretariaPage() {
             .select("*")
             .in("id", chamadoIds);
 
-          console.log("🎫 Chamados encontrados:", chamados?.length, chamados);
-          if (erroSupa) console.error("❌ Erro Supabase:", erroSupa);
+          if (erroSupa) console.error("Erro ao buscar chamados:", erroSupa);
 
           // Filtrar apenas os que estão em_andamento
           const chamadosEmAndamento = (chamados || []).filter((c: any) => c.status === "em_andamento");
-          console.log("🎯 Filtrados em_andamento:", chamadosEmAndamento.length);
 
           setChamadosAguardandoConfirmacao(chamadosEmAndamento);
         }

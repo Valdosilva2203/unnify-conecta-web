@@ -77,8 +77,6 @@ export default function DetalheChamadoPage() {
 
   const carregarObjetos = async () => {
     try {
-      console.log("📥 Carregando objetos para chamado:", chamadoId);
-
       const { data, error } = await supabase
         .from("consumo_objetos")
         .select("id, quantidade_usada, objeto_id")
@@ -100,8 +98,6 @@ export default function DetalheChamadoPage() {
 
       const detalhes: any[] = [];
       for (const consumo of data) {
-        console.log("🔍 Buscando detalhes do objeto:", consumo.objeto_id);
-
         const { data: obj, error: erroObj } = await supabase
           .from("objetos_contratos")
           .select("*")
@@ -109,15 +105,11 @@ export default function DetalheChamadoPage() {
           .single();
 
         if (erroObj) {
-          console.warn("⚠️ Erro ao buscar objeto:", erroObj);
-          console.log("📋 Objeto data:", obj);
+          console.error("Erro ao buscar objeto:", erroObj);
           continue;
         }
 
         if (obj) {
-          console.log("✅ Objeto encontrado:", obj);
-          console.log("💰 Campos do objeto:", Object.keys(obj));
-          console.log("💵 valor_unitario:", obj.valor_unitario);
 
           const { data: contrato, error: erroContrato } = await supabase
             .from("contratos")
@@ -238,8 +230,6 @@ export default function DetalheChamadoPage() {
 
       // 2. Envia notificação para o criador do chamado
       if (chamado?.criado_por && chamado?.prefeitura_id) {
-        console.log("🔍 Enviando notificação para criador do chamado:", chamado.criado_por);
-
         const notifPayload = {
           usuario_id: chamado.criado_por,
           prefeitura_id: chamado.prefeitura_id,
