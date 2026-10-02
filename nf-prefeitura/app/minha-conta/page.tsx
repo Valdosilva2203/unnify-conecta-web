@@ -266,7 +266,6 @@ function MinhaContaContent() {
 
           if (prefUser) {
             tabelaUsuario = "prefeitura_users";
-            console.log("Usuário encontrado em prefeitura_users");
           } else {
             console.error("Usuário não encontrado em nenhuma tabela");
             throw new Error("Usuário não encontrado no sistema");

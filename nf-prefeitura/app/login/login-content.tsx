@@ -108,8 +108,6 @@ export default function LoginContent() {
           };
 
           console.log("🔐 FORNECEDOR LOGIN");
-          console.log("📛 Nome:", fornecedor.nome);
-          console.log("🏢 CNPJ:", fornecedor.cnpj_cpf);
           localStorage.removeItem("prefeitura_session");
           localStorage.setItem("fornecedor_session", JSON.stringify(sessionData));
 

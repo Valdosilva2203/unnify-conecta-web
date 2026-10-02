@@ -681,7 +681,6 @@ function DetalhePrefeituraContent() {
   ];
 
   const handleExport = () => {
-    console.log("Exportando dados da prefeitura...");
   };
 
   return (

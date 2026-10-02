@@ -70,9 +70,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("✅ Email enviado com sucesso:");
-    console.log(`- Para: ${fornecedorEmail}`);
-    console.log(`- Fornecedor: ${fornecedorNome}`);
-    console.log(`- Prefeitura: ${prefeituraNome}`);
 
     return NextResponse.json(
       {

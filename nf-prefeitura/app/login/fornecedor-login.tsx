@@ -85,8 +85,6 @@ export default function FornecedorLogin() {
       };
 
       console.log("🔐 FORNECEDOR LOGIN");
-      console.log("📛 Nome:", fornecedor.nome);
-      console.log("📧 Email:", fornecedor.email);
 
       // Buscar quantas prefeituras este fornecedor tem acesso
       const { data: prefeituraData } = await supabase

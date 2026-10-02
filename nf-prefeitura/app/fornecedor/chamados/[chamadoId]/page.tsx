@@ -91,7 +91,6 @@ export default function DetalheChamadoPage() {
       console.log("📊 Registros encontrados:", data?.length);
 
       if (!data || data.length === 0) {
-        console.log("ℹ️ Nenhum objeto vinculado ainda");
         setObjetos([]);
         return;
       }
@@ -282,7 +281,6 @@ export default function DetalheChamadoPage() {
         return;
       }
 
-      console.log("✅ Objeto removido! Saldo atualizado.");
 
       // Recarrega objetos do chamado
       await carregarObjetos();
@@ -360,7 +358,6 @@ export default function DetalheChamadoPage() {
         percentualUsado: obj.quantidade ? Math.round(((consumoMap[obj.id] || 0) / obj.quantidade) * 100) : 0
       }));
 
-      console.log("Objetos carregados para contrato", contratoId, ":", objetosComConsumo);
       setObjetosContrato(objetosComConsumo);
     } catch (error) {
       console.error("Erro ao carregar objetos do contrato:", error);
@@ -406,7 +403,6 @@ export default function DetalheChamadoPage() {
           return;
         }
 
-        console.log(`✅ Quantidade atualizada para ${novaQtd}!`);
       } else {
         // Novo objeto: INSERT
         const { error } = await supabase

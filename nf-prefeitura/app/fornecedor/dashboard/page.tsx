@@ -226,7 +226,6 @@ export default function FornecedorDashboardPage() {
       const chamado = chamados.find(c => c.id === modalFinalizacao);
       if (!chamado) throw new Error("Chamado não encontrado");
 
-      console.log("📧 Enviando notificação para usuario_id:", chamado.criado_por, "chamado:", chamado.id);
       const { error } = await supabase
         .from("notificacoes")
         .insert([{

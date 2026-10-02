@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { texto } = body;
 
-    console.log("📝 Adicionando justificativa:", { chamadoId, texto });
 
     if (!chamadoId || !texto) {
       return NextResponse.json(

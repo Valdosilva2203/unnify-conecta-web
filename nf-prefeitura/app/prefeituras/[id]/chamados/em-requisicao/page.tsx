@@ -104,7 +104,6 @@ export default function ChamadosEmRequisicaoPage() {
 
   const carregarContratos = async (chamadoId: string) => {
     try {
-      console.log("🔥 Carregando contratos para chamado:", chamadoId);
 
       // 1. Buscar consumo_objetos do chamado
       const { data: consumos, error: consumoError } = await supabase
@@ -123,7 +122,6 @@ export default function ChamadosEmRequisicaoPage() {
       }
 
       const objetoIds = consumos.map(c => c.objeto_id);
-      console.log("🎯 IDs de objetos:", objetoIds);
 
       // 2. Buscar detalhes dos objetos
       const { data: objetos, error: objetosError } = await supabase
@@ -131,11 +129,9 @@ export default function ChamadosEmRequisicaoPage() {
         .select("id, descricao, valor_unitario, quantidade, contrato_id")
         .in("id", objetoIds);
 
-      console.log("📋 Objetos encontrados:", objetos?.length || 0, objetosError);
 
       if (objetosError) throw objetosError;
       if (!objetos || objetos.length === 0) {
-        console.log("⚠️ Nenhum objeto encontrado");
         setContratosDoFornecedor([]);
         return;
       }
@@ -206,9 +202,7 @@ export default function ChamadosEmRequisicaoPage() {
     if (!modalChamado) return;
 
     try {
-      console.log("📝 Criando requisição com objetos:", contratosDoFornecedor);
       console.log("👤 Session:", session);
-      console.log("👤 Usuário ID (criada_por):", session?.id);
       console.log("📛 Criador Nome:", session?.nome);
 
       // Buscar secretaria_id: primeiro do sessionStorage (salvo quando entra em /secretaria/{id}), depois da session
@@ -222,8 +216,6 @@ export default function ChamadosEmRequisicaoPage() {
         secretariaId = usuario?.secretaria_id;
       }
 
-      console.log("🏢 Secretaria ID:", secretariaId);
-      console.log("🏛️ Prefeitura ID:", prefeituraId);
 
       // 1. Pegar contrato_id do primeiro objeto
       const primeiroContrato = contratosDoFornecedor[0];

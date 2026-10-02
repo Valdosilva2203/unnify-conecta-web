@@ -255,7 +255,6 @@ function FornecedoresContent() {
   ];
 
   const handleExport = () => {
-    console.log("Exportando fornecedores...");
   };
 
   const toggleSelecionado = (id: string) => {
