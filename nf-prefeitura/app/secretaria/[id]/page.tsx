@@ -1931,12 +1931,14 @@ export default function SecretariaPage() {
                         <span className="text-xs text-gray-500 whitespace-nowrap">
                           {new Date(req.created_at).toLocaleDateString("pt-BR")}
                         </span>
-                        <button
-                          onClick={() => deletarRequisicao(req.id)}
-                          className="text-red-600 hover:text-red-700 text-sm font-medium flex-shrink-0 ml-auto"
-                        >
-                          🗑️
-                        </button>
+                        {req.status !== "Aguardando nota fiscal" && (
+                          <button
+                            onClick={() => deletarRequisicao(req.id)}
+                            className="text-red-600 hover:text-red-700 text-sm font-medium flex-shrink-0 ml-auto"
+                          >
+                            🗑️
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
