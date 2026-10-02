@@ -622,7 +622,14 @@ export default function FornecedorDashboardPage() {
                               ⋮
                             </button>
                             {menuAbertoId === chamado.id && (
-                              <div className="absolute bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-50 w-56 top-full mt-2 -right-4">
+                              <div
+                                ref={menuRef}
+                                className="fixed bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-[9999] w-56"
+                                style={{
+                                  top: menuRef.current ? menuRef.current.getBoundingClientRect().bottom + window.scrollY + 8 : 'auto',
+                                  left: menuRef.current ? menuRef.current.getBoundingClientRect().right + window.scrollX - 220 : 'auto'
+                                }}
+                              >
                                 {/* Header AÇÕES */}
                                 <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 rounded-t-lg">
                                   <p className="text-sm font-bold text-gray-800">AÇÕES</p>
