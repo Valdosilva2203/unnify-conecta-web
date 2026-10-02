@@ -2092,7 +2092,7 @@ export default function SecretariaPage() {
                       {negandoChamado === chamado.id ? (
                         <button
                           onClick={() => negarChamado(chamado.id)}
-                          disabled={negandoChamado === chamado.id}
+                          disabled={confirmandoChamado === chamado.id}
                           className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50"
                         >
                           Enviar Recusa
