@@ -575,20 +575,21 @@ export default function FornecedorDashboardPage() {
                           <td className="px-6 py-4 text-gray-700 line-clamp-2">{chamado.descricao}</td>
                           <td className="px-6 py-4">
                             <span
-                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${
+                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border max-w-xs truncate ${
                                 chamado.prioridade === "urgente"
                                   ? "bg-red-50 text-red-700 border-red-200"
                                   : chamado.prioridade === "normal"
                                     ? "bg-amber-50 text-amber-700 border-amber-200"
                                     : "bg-emerald-50 text-emerald-700 border-emerald-200"
                               }`}
+                              title={chamado.prioridade === "urgente" ? "Urgente" : chamado.prioridade === "normal" ? "Normal" : "Baixa"}
                             >
                               🔴 {chamado.prioridade === "urgente" ? "Urgente" : chamado.prioridade === "normal" ? "Normal" : "Baixa"}
                             </span>
                           </td>
                           <td className="px-6 py-4">
                             <span
-                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold max-w-xs truncate ${
                                 chamado.status === "pendente"
                                   ? "bg-orange-100 text-orange-700"
                                   : chamado.status === "em_andamento"
@@ -597,15 +598,16 @@ export default function FornecedorDashboardPage() {
                                       ? "bg-green-100 text-green-700"
                                       : "bg-gray-100 text-gray-700"
                               }`}
+                              title={chamado.status === "em_andamento" ? "Em Andamento" : chamado.status === "finalizada" ? "Finalizada" : chamado.status === "pendente" ? "Pendente" : chamado.status}
                             >
                               • {chamado.status === "em_andamento" ? "Em Andamento" : chamado.status === "finalizada" ? "Finalizada" : chamado.status === "pendente" ? "Pendente" : chamado.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                          <td className="px-6 py-4 text-sm text-gray-700 font-medium max-w-xs truncate" title={chamado.criador_nome}>
                             {chamado.criador_nome || "—"}
                           </td>
                           <td className="px-6 py-4">
-                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium max-w-xs truncate" title={chamado.secretarias?.nome || chamado.secretaria_nome || "Secretaria"}>
                               {chamado.secretarias?.nome || chamado.secretaria_nome || "Secretaria"}
                             </span>
                           </td>
