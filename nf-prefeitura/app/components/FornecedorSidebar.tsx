@@ -31,7 +31,7 @@ export default function FornecedorSidebar({
     { id: "dashboard", icon: "📊", label: "Dashboard", path: "/fornecedor/dashboard" },
     { id: "requisicoes", icon: "📋", label: "Requisições", path: "/fornecedor/requisicoes" },
     { id: "notas-fiscais", icon: "📄", label: "Notas Fiscais", path: "/fornecedor/notas-fiscais" },
-    { id: "minhas-certidoes", icon: "📋✓", label: "Minhas Certidões", path: "/fornecedor/minhas-certidoes" },
+    { id: "minhas-certidoes", icon: "📑", label: "Minhas Certidões", path: "/fornecedor/minhas-certidoes" },
     { id: "minha-conta", icon: "👤", label: "Minha Conta", path: "/fornecedor/minha-conta" },
   ];
 
