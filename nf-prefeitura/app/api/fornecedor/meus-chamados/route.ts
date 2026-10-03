@@ -19,20 +19,7 @@ export async function GET(request: NextRequest) {
       // Buscar todos os chamados da prefeitura (relacionados ao fornecedor)
       const { data: chamados, error } = await supabaseAdmin
         .from("chamados")
-        .select(
-          `
-          id,
-          titulo,
-          descricao,
-          status,
-          prioridade,
-          created_at,
-          updated_at,
-          numero_chamado,
-          criado_por,
-          secretarias(nome)
-        `
-        )
+        .select("*")
         .eq("prefeitura_id", prefeituraId)
         .order("created_at", { ascending: false });
 
