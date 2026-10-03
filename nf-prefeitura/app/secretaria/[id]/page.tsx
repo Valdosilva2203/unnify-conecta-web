@@ -91,6 +91,8 @@ export default function SecretariaPage() {
   const [confirmandoChamado, setConfirmandoChamado] = useState<string | null>(null);
   const [negandoChamado, setNegandoChamado] = useState<string | null>(null);
   const [justificativaNegacao, setJustificativaNegacao] = useState<Record<string, string>>({});
+  const [notasFiscaisSecretaria, setNotasFiscaisSecretaria] = useState<any[]>([]);
+  const [carregandoNotasFiscais, setCarregandoNotasFiscais] = useState(false);
 
   useEffect(() => {
     // Carrega chamados aguardando confirmação quando secretaria é carregada
@@ -260,6 +262,9 @@ export default function SecretariaPage() {
 
       // Carregar secretário responsável
       await loadSecretarioResponsavel();
+
+      // Carregar notas fiscais da secretaria
+      await loadNotasFiscaisSecretaria();
     } catch (error) {
       console.error("Erro ao carregar secretaria:", error);
       setErro("Secretaria não encontrada");
@@ -298,6 +303,50 @@ export default function SecretariaPage() {
       }
     } catch (error) {
       console.error("Erro ao carregar secretário responsável:", error);
+    }
+  };
+
+  const loadNotasFiscaisSecretaria = async () => {
+    setCarregandoNotasFiscais(true);
+    try {
+      // Buscar IDs de notas fiscais vinculadas a esta secretaria
+      const { data: vinculacoes, error: erroVinc } = await supabase
+        .from("notas_fiscais_secretarias")
+        .select("nota_fiscal_id")
+        .eq("secretaria_id", id);
+
+      if (erroVinc) throw erroVinc;
+
+      if (!vinculacoes || vinculacoes.length === 0) {
+        setNotasFiscaisSecretaria([]);
+        return;
+      }
+
+      const notaIds = vinculacoes.map(v => v.nota_fiscal_id);
+
+      // Buscar detalhes das notas fiscais
+      const { data: notas, error: erroNotas } = await supabase
+        .from("notas_fiscais")
+        .select(`
+          id,
+          requisicao_id,
+          numero,
+          nome,
+          arquivo,
+          url_assinada,
+          criado_em,
+          requisicoes!inner(numero_requisicao, fornecedor_nome, status)
+        `)
+        .in("id", notaIds)
+        .order("criado_em", { ascending: false });
+
+      if (erroNotas) throw erroNotas;
+      setNotasFiscaisSecretaria(notas || []);
+    } catch (error) {
+      console.error("Erro ao carregar notas fiscais:", error);
+      setNotasFiscaisSecretaria([]);
+    } finally {
+      setCarregandoNotasFiscais(false);
     }
   };
 
@@ -1467,10 +1516,75 @@ export default function SecretariaPage() {
         {activeTab === "notasfiscais" && (
           <div className="bg-white rounded-lg shadow p-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6">📄 Notas Fiscais</h2>
-            <div className="text-center py-12">
-              <p className="text-gray-600">Funcionalidade em desenvolvimento</p>
-              <p className="text-sm text-gray-500 mt-2">Esta seção mostrará as notas fiscais emitidas</p>
-            </div>
+            {carregandoNotasFiscais ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Carregando notas fiscais...</p>
+              </div>
+            ) : notasFiscaisSecretaria.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Nenhuma nota fiscal vinculada a esta secretaria</p>
+                <p className="text-sm text-gray-500 mt-2">As notas fiscais enviadas pelos fornecedores apareceão aqui</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-gray-700">Requisição</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-700">Fornecedor</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-700">Nota nº</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-700">Data</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-700">Status</th>
+                      <th className="px-4 py-3 text-center font-medium text-gray-700">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {notasFiscaisSecretaria.map((nota: any) => {
+                      const requisicao = nota.requisicoes && Array.isArray(nota.requisicoes) ? nota.requisicoes[0] : nota.requisicoes;
+                      return (
+                        <tr key={nota.id} className="hover:bg-gray-50 transition">
+                          <td className="px-4 py-3 text-gray-900 font-medium">
+                            {requisicao?.numero_requisicao || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-gray-700">
+                            {requisicao?.fornecedor_nome || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-gray-700">
+                            {nota.numero || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-gray-700">
+                            {nota.criado_em ? new Date(nota.criado_em).toLocaleDateString("pt-BR") : "N/A"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              requisicao?.status === "Nota Enviada"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}>
+                              {requisicao?.status || "Desconhecido"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {nota.url_assinada ? (
+                              <a
+                                href={nota.url_assinada}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-700 font-medium"
+                              >
+                                📥 Baixar
+                              </a>
+                            ) : (
+                              <span className="text-gray-400">Sem arquivo</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
