@@ -152,28 +152,28 @@ export default function MeusChamados() {
               <p className="text-gray-500 text-lg">Nenhum chamado encontrado</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-x-auto">
-              <table className="w-full min-w-max">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="w-full">
                 <thead className="bg-blue-50 border-b border-gray-200 sticky top-0">
                   <tr>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase whitespace-nowrap">Chamado</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase whitespace-nowrap">Descrição</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase whitespace-nowrap">Prioridade</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase whitespace-nowrap">Status</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase whitespace-nowrap">Criador</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase whitespace-nowrap">Vinculado a</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase whitespace-nowrap">Ações</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Chamado</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Descrição</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Prioridade</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Status</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Criador</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Vinculado a</th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {chamadosFiltrados.map((chamado) => (
                     <tr key={chamado.id} className="border-b border-gray-200 hover:bg-gray-50 transition">
-                      <td className="px-3 md:px-6 py-4 text-gray-900 font-bold text-sm md:text-base whitespace-nowrap">{chamado.titulo}</td>
-                      <td className="px-3 md:px-6 py-4 text-gray-600 text-xs md:text-sm truncate max-w-[150px] md:max-w-none" title={chamado.descricao}>
+                      <td className="px-3 md:px-6 py-4 text-gray-900 font-bold text-sm">{chamado.titulo}</td>
+                      <td className="px-3 md:px-6 py-4 text-gray-600 text-xs md:text-sm max-w-xs line-clamp-2" title={chamado.descricao}>
                         {chamado.descricao}
                       </td>
-                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 md:px-3 py-1 rounded-full text-xs font-semibold ${getPrioridadeColor(chamado.prioridade)}`}>
+                      <td className="px-3 md:px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getPrioridadeColor(chamado.prioridade)}`}>
                           {chamado.prioridade === "alta"
                             ? "● Urgente"
                             : chamado.prioridade === "media"
@@ -183,8 +183,8 @@ export default function MeusChamados() {
                             : chamado.prioridade}
                         </span>
                       </td>
-                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 md:px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(chamado.status)}`}>
+                      <td className="px-3 md:px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(chamado.status)}`}>
                           {chamado.status === "aberto"
                             ? "● aberto"
                             : chamado.status === "em_andamento"
@@ -196,21 +196,21 @@ export default function MeusChamados() {
                             : chamado.status}
                         </span>
                       </td>
-                      <td className="px-3 md:px-6 py-4 text-gray-900 text-sm whitespace-nowrap truncate max-w-[100px] md:max-w-none" title={chamado.criado_por || "—"}>
+                      <td className="px-3 md:px-6 py-4 text-gray-900 text-sm truncate max-w-xs" title={chamado.criado_por || "—"}>
                         {chamado.criado_por || "—"}
                       </td>
-                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 md:px-6 py-4">
                         <a
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
                           }}
-                          className="text-blue-600 hover:underline font-medium text-sm truncate max-w-[100px] md:max-w-none block" title={chamado.secretaria_nome || "—"}
+                          className="text-blue-600 hover:underline font-medium text-sm truncate max-w-xs block" title={chamado.secretaria_nome || "—"}
                         >
                           {chamado.secretaria_nome || "—"}
                         </a>
                       </td>
-                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 md:px-6 py-4">
                         <button
                           onClick={() => router.push(`/fornecedor/meus-chamados/${chamado.id}`)}
                           className="text-blue-600 hover:underline font-medium text-sm"
