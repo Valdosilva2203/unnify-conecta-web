@@ -16,16 +16,29 @@ export async function GET(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
 
     try {
-      // Buscar todos os chamados da prefeitura (relacionados ao fornecedor)
+      // Buscar todos os chamados da prefeitura com secretarias
       const { data: chamados, error } = await supabaseAdmin
         .from("chamados")
-        .select("*")
+        .select(
+          `
+          id,
+          titulo,
+          descricao,
+          status,
+          prioridade,
+          created_at,
+          updated_at,
+          numero_chamado,
+          criado_por,
+          secretaria_id,
+          secretarias(id, nome)
+        `
+        )
         .eq("prefeitura_id", prefeituraId)
         .order("created_at", { ascending: false });
 
       if (error) {
         console.error("❌ Erro ao buscar chamados:", JSON.stringify(error, null, 2));
-        console.error("Erro message:", error.message);
         // Se a tabela não existe ou há erro, retornar array vazio
         return NextResponse.json({ chamados: [] });
       }
@@ -40,6 +53,7 @@ export async function GET(request: NextRequest) {
         created_at: ch.created_at,
         updated_at: ch.updated_at,
         numero_chamado: ch.numero_chamado,
+        criado_por: ch.criado_por,
         secretaria_nome: ch.secretarias?.nome,
       }));
 
