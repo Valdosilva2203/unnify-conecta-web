@@ -33,6 +33,7 @@ export default function MeusChamados() {
   const [menuAberto, setMenuAberto] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
+  const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
 
   useEffect(() => {
     verificarSessao();
@@ -202,13 +203,46 @@ export default function MeusChamados() {
                       <td className="px-3 md:px-6 py-4 text-blue-600 font-medium text-sm truncate max-w-xs" title={chamado.secretaria_nome || "—"}>
                         {chamado.secretaria_nome || "—"}
                       </td>
-                      <td className="px-3 md:px-6 py-4">
+                      <td className="px-3 md:px-6 py-4 relative">
                         <button
-                          onClick={() => router.push(`/fornecedor/meus-chamados/${chamado.id}`)}
-                          className="text-blue-600 hover:underline font-medium text-sm"
+                          onClick={() => setMenuAbertoId(menuAbertoId === chamado.id ? null : chamado.id)}
+                          className="text-gray-600 hover:text-gray-900 font-bold text-lg"
+                          title="Menu de opções"
                         >
-                          Compras
+                          ⋯
                         </button>
+                        {menuAbertoId === chamado.id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                            <button
+                              onClick={() => {
+                                router.push(`/fornecedor/meus-chamados/${chamado.id}`);
+                                setMenuAbertoId(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg"
+                            >
+                              👁️ Visualizar
+                            </button>
+                            <button
+                              onClick={() => {
+                                window.open(`/fornecedor/meus-chamados/${chamado.id}`, "_blank");
+                                setMenuAbertoId(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              📤 Abrir em Nova Aba
+                            </button>
+                            <button
+                              onClick={() => {
+                                // Copiar ID para clipboard
+                                navigator.clipboard.writeText(chamado.id);
+                                setMenuAbertoId(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg"
+                            >
+                              📋 Copiar ID
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
