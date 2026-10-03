@@ -93,6 +93,7 @@ export default function SecretariaPage() {
   const [justificativaNegacao, setJustificativaNegacao] = useState<Record<string, string>>({});
   const [notasFiscaisSecretaria, setNotasFiscaisSecretaria] = useState<any[]>([]);
   const [carregandoNotasFiscais, setCarregandoNotasFiscais] = useState(false);
+  const [baixandoNota, setBaixandoNota] = useState<string | null>(null);
 
   useEffect(() => {
     // Carrega chamados aguardando confirmação quando secretaria é carregada
@@ -303,6 +304,30 @@ export default function SecretariaPage() {
       }
     } catch (error) {
       console.error("Erro ao carregar secretário responsável:", error);
+    }
+  };
+
+  const baixarNotaFiscal = async (notaFiscalId: string) => {
+    setBaixandoNota(notaFiscalId);
+    try {
+      const response = await fetch("/api/secretaria/download-nota-fiscal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notaFiscalId })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erro ao gerar URL");
+      }
+
+      const { url } = await response.json();
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error("Erro ao baixar nota fiscal:", error);
+      alert("Erro ao baixar arquivo");
+    } finally {
+      setBaixandoNota(null);
     }
   };
 
@@ -1586,15 +1611,14 @@ export default function SecretariaPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            {nota.url_assinada ? (
-                              <a
-                                href={nota.url_assinada}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-700 font-medium"
+                            {nota.arquivo ? (
+                              <button
+                                onClick={() => baixarNotaFiscal(nota.id)}
+                                disabled={baixandoNota === nota.id}
+                                className="text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
                               >
-                                📥 Baixar
-                              </a>
+                                {baixandoNota === nota.id ? "Gerando..." : "📥 Baixar"}
+                              </button>
                             ) : (
                               <span className="text-gray-400">Sem arquivo</span>
                             )}
