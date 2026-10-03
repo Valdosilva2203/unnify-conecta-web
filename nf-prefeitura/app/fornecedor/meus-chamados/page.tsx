@@ -22,6 +22,7 @@ interface Chamado {
   updated_at: string;
   numero_chamado?: string;
   secretaria_nome?: string;
+  criado_por?: string;
 }
 
 export default function MeusChamados() {
@@ -153,56 +154,67 @@ export default function MeusChamados() {
           ) : (
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <table className="w-full">
-                <thead className="bg-gray-100 border-b border-gray-200">
+                <thead className="bg-blue-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Nº Chamado</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Título</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Secretaria</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Prioridade</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Data</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Chamado</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Descrição</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Prioridade</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Criador</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Vinculado a</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {chamadosFiltrados.map((chamado) => (
-                    <tr
-                      key={chamado.id}
-                      onClick={() => router.push(`/fornecedor/meus-chamados/${chamado.id}`)}
-                      className="border-b border-gray-200 hover:bg-gray-50 transition cursor-pointer"
-                    >
-                      <td className="px-6 py-4 text-gray-900 font-medium">{chamado.numero_chamado || chamado.id}</td>
-                      <td className="px-6 py-4 text-gray-900 truncate" title={chamado.titulo}>
-                        {chamado.titulo}
-                      </td>
-                      <td className="px-6 py-4 text-gray-600 truncate" title={chamado.secretaria_nome}>
-                        {chamado.secretaria_nome || "—"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(chamado.status)}`}>
-                          {chamado.status === "aberto"
-                            ? "🔵 Aberto"
-                            : chamado.status === "em_andamento"
-                            ? "🟡 Em Andamento"
-                            : chamado.status === "resolvido"
-                            ? "✅ Resolvido"
-                            : chamado.status === "fechado"
-                            ? "⚫ Fechado"
-                            : chamado.status}
-                        </span>
+                    <tr key={chamado.id} className="border-b border-gray-200 hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 text-gray-900 font-bold">{chamado.titulo}</td>
+                      <td className="px-6 py-4 text-gray-600 text-sm truncate" title={chamado.descricao}>
+                        {chamado.descricao}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPrioridadeColor(chamado.prioridade)}`}>
                           {chamado.prioridade === "alta"
-                            ? "🔴 Alta"
+                            ? "● Urgente"
                             : chamado.prioridade === "media"
-                            ? "🟠 Média"
+                            ? "● Normal"
                             : chamado.prioridade === "baixa"
-                            ? "🟢 Baixa"
+                            ? "● Baixa"
                             : chamado.prioridade}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-600 text-sm">
-                        {new Date(chamado.created_at).toLocaleDateString("pt-BR")}
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(chamado.status)}`}>
+                          {chamado.status === "aberto"
+                            ? "● aberto"
+                            : chamado.status === "em_andamento"
+                            ? "● em_requisicao"
+                            : chamado.status === "resolvido"
+                            ? "● Finalizada"
+                            : chamado.status === "fechado"
+                            ? "● Fechado"
+                            : chamado.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-900">{chamado.criado_por || "—"}</td>
+                      <td className="px-6 py-4">
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                          }}
+                          className="text-blue-600 hover:underline font-medium text-sm"
+                        >
+                          {chamado.secretaria_nome || "—"}
+                        </a>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => router.push(`/fornecedor/meus-chamados/${chamado.id}`)}
+                          className="text-blue-600 hover:underline font-medium text-sm"
+                        >
+                          Compras
+                        </button>
                       </td>
                     </tr>
                   ))}
