@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
 
     try {
-      // Buscar chamados criados pelo fornecedor ou relacionados a ele
+      // Buscar todos os chamados da prefeitura (relacionados ao fornecedor)
       const { data: chamados, error } = await supabaseAdmin
         .from("chamados")
         .select(
@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
           secretarias(nome)
         `
         )
-        .eq("criado_por", fornecedorId)
         .eq("prefeitura_id", prefeituraId)
         .order("created_at", { ascending: false });
 
