@@ -155,22 +155,41 @@ export default function FornecedorRequisicoes() {
       return;
     }
 
+    if (!requisicaoSelecionada || !session) return;
+
     setEnviandoParaSecretarias(true);
 
     try {
-      // Por enquanto, apenas confirmação
+      const response = await fetch("/api/fornecedor/send-nota-fiscal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requisicaoId: requisicaoSelecionada,
+          secretariaIds: secretariasSelecionadas,
+          fornecedorId: session.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro ao enviar");
+      }
+
+      const data = await response.json();
       const secretariasNomes = secretarias
         .filter((s) => secretariasSelecionadas.includes(s.id))
         .map((s) => s.nome)
         .join(", ");
 
-      alert(`✅ Nota será enviada para: ${secretariasNomes}`);
+      alert(`✅ Nota enviada para: ${secretariasNomes}`);
 
-      // TODO: Implementar envio para o banco
       setModalSecretariasAberto(false);
       setSecretariasSelecionadas([]);
       setRequisicaoSelecionada(null);
       setSecretarias([]);
+
+      // Recarrega os dados
+      await verificarSessao();
     } catch (error) {
       console.error("Erro ao enviar:", error);
       alert("❌ Erro ao enviar nota: " + (error as any).message);
