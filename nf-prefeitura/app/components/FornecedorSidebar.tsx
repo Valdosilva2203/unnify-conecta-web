@@ -61,20 +61,18 @@ export default function FornecedorSidebar({
 
         {menuItems.map((item) => {
           const requiresPrefeitura = !["prefeituras", "minha-conta"].includes(item.id);
-          const isDisabled = requiresPrefeitura && !isPrefeituraSelected;
+          const shouldShow = !requiresPrefeitura || isPrefeituraSelected;
+
+          if (!shouldShow) return null;
 
           return (
             <button
               key={item.id}
-              onClick={() => !isDisabled && router.push(item.path)}
-              disabled={isDisabled}
-              title={isDisabled ? "Selecione uma prefeitura para continuar" : ""}
+              onClick={() => router.push(item.path)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-                isDisabled
-                  ? "opacity-50 cursor-not-allowed pointer-events-none"
-                  : currentPage === item.id
-                    ? "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                    : "hover:bg-gray-100 text-gray-900 cursor-pointer"
+                currentPage === item.id
+                  ? "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                  : "hover:bg-gray-100 text-gray-900 cursor-pointer"
               }`}
             >
               <span className="text-xl">{item.icon}</span>
