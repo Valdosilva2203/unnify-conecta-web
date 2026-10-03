@@ -120,6 +120,40 @@ export default function FornecedorRequisicoes() {
     }
   };
 
+  const removerNotaFiscal = async (requisicaoId: string, nomeArquivo: string) => {
+    if (!confirm("Tem certeza que deseja remover este arquivo?")) return;
+
+    try {
+      const response = await fetch("/api/fornecedor/delete-nota-fiscal", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requisicaoId, nomeArquivo }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ${response.status}: ${errorText}`);
+      }
+
+      setRequisicoes(
+        requisicoes.map((req) =>
+          req.id === requisicaoId
+            ? {
+                ...req,
+                nota_fiscal_url: undefined,
+                nota_fiscal_arquivo: undefined,
+              }
+            : req
+        )
+      );
+
+      alert("✅ Arquivo removido com sucesso!");
+    } catch (error) {
+      console.error("Erro ao remover arquivo:", error);
+      alert("❌ Erro ao remover arquivo: " + (error as any).message);
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner message="Carregando requisições..." />;
   }
@@ -222,15 +256,24 @@ export default function FornecedorRequisicoes() {
                           </button>
                         )}
                         {req.nota_fiscal_arquivo && (
-                          <a
-                            href={req.nota_fiscal_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium rounded transition cursor-pointer"
-                            title="Abrir nota fiscal"
-                          >
-                            📄 {req.nota_fiscal_arquivo.split("/")[1]?.substring(0, 20)}...
-                          </a>
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={req.nota_fiscal_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium rounded transition cursor-pointer"
+                              title="Abrir nota fiscal"
+                            >
+                              📄 {req.nota_fiscal_arquivo.split("/")[1]?.substring(0, 20)}...
+                            </a>
+                            <button
+                              onClick={() => removerNotaFiscal(req.id, req.nota_fiscal_arquivo!)}
+                              className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium rounded transition"
+                              title="Remover arquivo"
+                            >
+                              ✖ Remover
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
