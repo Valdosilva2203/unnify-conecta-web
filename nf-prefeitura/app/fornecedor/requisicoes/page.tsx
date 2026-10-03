@@ -340,7 +340,7 @@ export default function FornecedorRequisicoes() {
                             : req.status === "aprovada"
                             ? "✅ Aprovada"
                             : req.status === "Nota Enviada"
-                            ? `✉️ Nota Enviada para ${req.secretaria_enviada?.nome || "Secretaria"}`
+                            ? "✉️ Nota Enviada"
                             : req.status === "Aguardando nota fiscal"
                             ? req.nota_fiscal_arquivo
                               ? "📄 Nota Anexada"
