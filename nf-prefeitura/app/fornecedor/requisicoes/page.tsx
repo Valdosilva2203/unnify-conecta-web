@@ -86,6 +86,27 @@ export default function FornecedorRequisicoes() {
     req.titulo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const baixarNotaFiscal = async (requisicaoId: string) => {
+    try {
+      const response = await fetch("/api/fornecedor/download-nota-fiscal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requisicaoId })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erro ao gerar URL");
+      }
+
+      const { url } = await response.json();
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error("Erro ao baixar nota fiscal:", error);
+      alert("Erro ao abrir arquivo");
+    }
+  };
+
   const enviarNotaFiscal = async (file: File) => {
     if (!requisicaoSelecionada || !session) return;
 
@@ -358,15 +379,13 @@ export default function FornecedorRequisicoes() {
                           </div>
                         )}
                         {req.nota_fiscal_arquivo && req.status === "Nota Enviada" && (
-                          <a
-                            href={req.nota_fiscal_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => baixarNotaFiscal(req.id)}
                             className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded transition cursor-pointer"
                             title="Abrir PDF da nota fiscal"
                           >
                             📥 Ver PDF
-                          </a>
+                          </button>
                         )}
                       </div>
                     </div>
