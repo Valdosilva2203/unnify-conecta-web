@@ -22,6 +22,7 @@ interface Requisicao {
   created_at: string;
   nota_fiscal_url?: string;
   nota_fiscal_arquivo?: string;
+  secretaria_enviada?: { id: string; nome: string };
 }
 
 interface Secretaria {
@@ -339,7 +340,7 @@ export default function FornecedorRequisicoes() {
                             : req.status === "aprovada"
                             ? "✅ Aprovada"
                             : req.status === "Nota Enviada"
-                            ? "✉️ Nota Enviada"
+                            ? `✉️ Nota Enviada para ${req.secretaria_enviada?.nome || "Secretaria"}`
                             : req.status === "Aguardando nota fiscal"
                             ? req.nota_fiscal_arquivo
                               ? "📄 Nota Anexada"

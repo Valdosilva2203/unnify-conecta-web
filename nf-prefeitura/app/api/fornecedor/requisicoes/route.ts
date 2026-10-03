@@ -30,7 +30,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ requisicoes });
+    // Para requisições com status "Nota Enviada", buscar secretarias vinculadas
+    const requisicoesComSecretarias = await Promise.all(
+      (requisicoes || []).map(async (req: any) => {
+        if (req.status === "Nota Enviada") {
+          // Buscar nota fiscal e suas secretarias vinculadas
+          const { data: notaComSecretarias } = await supabaseAdmin
+            .from("notas_fiscais_secretarias")
+            .select("secretarias(id, nome)")
+            .eq("requisicao_id", req.id)
+            .single();
+
+          if (notaComSecretarias?.secretarias) {
+            return {
+              ...req,
+              secretaria_enviada: notaComSecretarias.secretarias as any
+            };
+          }
+        }
+        return req;
+      })
+    );
+
+    return NextResponse.json({ requisicoes: requisicoesComSecretarias });
   } catch (error) {
     console.error("Erro na API de requisições:", error);
     return NextResponse.json(
