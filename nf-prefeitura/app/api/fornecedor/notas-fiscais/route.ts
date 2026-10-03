@@ -15,20 +15,10 @@ export async function GET(request: NextRequest) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // Buscar notas fiscais e suas requisições associadas
+    // Buscar notas fiscais
     const { data: notasFiscais, error } = await supabaseAdmin
       .from("notas_fiscais")
-      .select(
-        `
-        id,
-        numero,
-        arquivo,
-        created_at,
-        requisicao_id,
-        requisicoes!inner(numero_requisicao, titulo, fornecedor_id)
-      `
-      )
-      .eq("requisicoes.fornecedor_id", fornecedorId)
+      .select("id, numero, arquivo, created_at, requisicao_id")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -39,17 +29,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Mapear dados para o formato esperado
-    const notasFormatadas = (notasFiscais || []).map((nf: any) => ({
-      id: nf.id,
-      numero: nf.numero,
-      arquivo: nf.arquivo,
-      created_at: nf.created_at,
-      requisicao_id: nf.requisicao_id,
-      numero_requisicao: nf.requisicoes?.numero_requisicao,
-      titulo: nf.requisicoes?.titulo,
-      fornecedor_id: nf.requisicoes?.fornecedor_id,
-    }));
+    // Para cada nota fiscal, buscar a requisição associada
+    const notasComRequisicoes = await Promise.all(
+      (notasFiscais || []).map(async (nf: any) => {
+        const { data: requisicao } = await supabaseAdmin
+          .from("requisicoes")
+          .select("numero_requisicao, titulo, fornecedor_id")
+          .eq("id", nf.requisicao_id)
+          .single();
+
+        // Filtrar apenas notas do fornecedor solicitado
+        if (requisicao?.fornecedor_id !== fornecedorId) {
+          return null;
+        }
+
+        return {
+          id: nf.id,
+          numero: nf.numero,
+          arquivo: nf.arquivo,
+          created_at: nf.created_at,
+          requisicao_id: nf.requisicao_id,
+          numero_requisicao: requisicao?.numero_requisicao,
+          titulo: requisicao?.titulo,
+          fornecedor_id: requisicao?.fornecedor_id,
+        };
+      })
+    );
+
+    const notasFormatadas = notasComRequisicoes.filter((nf) => nf !== null);
 
     return NextResponse.json({ notasFiscais: notasFormatadas });
   } catch (error) {
