@@ -199,16 +199,8 @@ export default function MeusChamados() {
                       <td className="px-3 md:px-6 py-4 text-gray-900 text-sm truncate max-w-xs" title={chamado.criado_por || "—"}>
                         {chamado.criado_por || "—"}
                       </td>
-                      <td className="px-3 md:px-6 py-4">
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                          }}
-                          className="text-blue-600 hover:underline font-medium text-sm truncate max-w-xs block" title={chamado.secretaria_nome || "—"}
-                        >
-                          {chamado.secretaria_nome || "—"}
-                        </a>
+                      <td className="px-3 md:px-6 py-4 text-blue-600 font-medium text-sm truncate max-w-xs" title={chamado.secretaria_nome || "—"}>
+                        {chamado.secretaria_nome || "—"}
                       </td>
                       <td className="px-3 md:px-6 py-4">
                         <button
