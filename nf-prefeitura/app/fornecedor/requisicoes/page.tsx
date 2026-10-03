@@ -357,6 +357,17 @@ export default function FornecedorRequisicoes() {
                             </button>
                           </div>
                         )}
+                        {req.nota_fiscal_arquivo && req.status === "Nota Enviada" && (
+                          <a
+                            href={req.nota_fiscal_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded transition cursor-pointer"
+                            title="Abrir PDF da nota fiscal"
+                          >
+                            📥 Ver PDF
+                          </a>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2">
