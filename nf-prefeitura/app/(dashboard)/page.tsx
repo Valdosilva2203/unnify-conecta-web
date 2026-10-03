@@ -38,7 +38,6 @@ function DashboardContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const [tarefasPendentes, setTarefasPendentes] = useState(0);
 
   useEffect(() => {
     // Verificar se usuário é master - só master pode acessar dashboard
@@ -81,35 +80,21 @@ function DashboardContent() {
     };
 
     checkAuth();
-    loadTarefasPendentes();
   }, [router]);
-
-  const loadTarefasPendentes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("tarefas")
-        .select("id")
-        .eq("status", "pendente");
-
-      if (error) throw error;
-      setTarefasPendentes(data?.length || 0);
-    } catch (error) {
-      console.error("Erro ao carregar tarefas pendentes:", error);
-    }
-  };
 
   const loadPrefeituras = async () => {
     try {
       const { data, error } = await supabase
         .from("prefeituras")
         .select("*")
-        .eq("status", "ativa")
         .order("ordem", { ascending: true });
 
-      if (error) throw error;
-      setPrefeituras(data || []);
-    } catch (error) {
-      console.error("Erro ao carregar prefeituras:", error);
+      if (error) {
+        console.error("Erro ao carregar prefeituras:", error?.message || JSON.stringify(error));
+        setPrefeituras([]);
+      } else {
+        setPrefeituras(data || []);
+      }
     } finally {
       setLoading(false);
       setIsAuthChecking(false);
@@ -311,17 +296,6 @@ function DashboardContent() {
               color={stat.color}
             />
           ))}
-          <button
-            onClick={() => router.push("/tarefas")}
-            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition border border-gray-200 hover:border-indigo-300 cursor-pointer group text-left"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-gray-600">Tarefas</p>
-              <span className="text-2xl group-hover:scale-110 transition">📋</span>
-            </div>
-            <p className="text-3xl font-bold text-indigo-600">{tarefasPendentes}</p>
-            <p className="text-xs text-gray-500 mt-2">Pendentes</p>
-          </button>
         </div>
 
 

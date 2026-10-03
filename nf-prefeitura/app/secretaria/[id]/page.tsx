@@ -1921,7 +1921,9 @@ export default function SecretariaPage() {
                             ? "bg-yellow-100 text-yellow-800"
                             : req.status === "aprovado"
                             ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            : req.status === "Aguardando nota fiscal"
+                            ? "bg-red-200 text-red-800 font-bold"
+                            : "bg-gray-100 text-gray-800"
                         }`}>
                           {req.status}
                         </span>

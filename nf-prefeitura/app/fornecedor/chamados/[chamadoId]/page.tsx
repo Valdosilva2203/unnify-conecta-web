@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import LoadingSpinner from "@/app/components/LoadingSpinner";
 import FornecedorSidebar from "@/app/components/FornecedorSidebar";
 
 interface Chamado {
@@ -480,14 +481,7 @@ export default function DetalheChamadoPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin text-6xl mb-4">⏳</div>
-          <p className="text-gray-700 text-lg font-medium">Carregando chamado...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Carregando chamado..." />;
   }
 
   if (!chamado) {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import LoadingSpinner from "@/app/components/LoadingSpinner";
 import FornecedorSidebar from "@/app/components/FornecedorSidebar";
 
 interface SessionData {
@@ -83,14 +84,7 @@ export default function FornecedorPrefeiturasPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin text-6xl mb-4">⏳</div>
-          <p className="text-gray-700 text-lg font-medium">Carregando prefeituras...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Carregando prefeituras..." />;
   }
 
   return (

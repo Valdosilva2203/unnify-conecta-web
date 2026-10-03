@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import FornecedorSidebar from "@/app/components/FornecedorSidebar";
+import LoadingSpinner from "@/app/components/LoadingSpinner";
 
 interface SessionData {
   id: string;
@@ -28,6 +29,9 @@ export default function FornecedorRequisicoes() {
   const [loading, setLoading] = useState(true);
   const [menuAberto, setMenuAberto] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [modalNotaFiscalAberto, setModalNotaFiscalAberto] = useState(false);
+  const [requisicaoSelecionada, setRequisicaoSelecionada] = useState<string | null>(null);
+  const [enviandoNota, setEnviandoNota] = useState(false);
 
   useEffect(() => {
     verificarSessao();
@@ -52,8 +56,8 @@ export default function FornecedorRequisicoes() {
       const json = await response.json();
 
       if (!response.ok) {
-        console.error("Erro na API:", json);
-        throw new Error(json?.error || "Erro ao buscar requisições");
+        console.error("Erro na API:", response.status, json);
+        throw new Error(json?.error || `Erro ${response.status} ao buscar requisições`);
       }
 
       setRequisicoes(json?.requisicoes || []);
@@ -69,15 +73,53 @@ export default function FornecedorRequisicoes() {
     req.titulo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const enviarNotaFiscal = async (file: File) => {
+    if (!requisicaoSelecionada || !session) return;
+
+    try {
+      setEnviandoNota(true);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("requisicaoId", requisicaoSelecionada);
+      formData.append("fornecedorId", session.id);
+
+      const response = await fetch("/api/fornecedor/upload-nota-fiscal", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      if (!data.url) {
+        throw new Error("Resposta inválida do servidor");
+      }
+
+      setRequisicoes(
+        requisicoes.map((req) =>
+          req.id === requisicaoSelecionada
+            ? { ...req, nota_fiscal_url: data.url }
+            : req
+        )
+      );
+
+      alert("✅ Nota fiscal enviada com sucesso!");
+      setModalNotaFiscalAberto(false);
+      setRequisicaoSelecionada(null);
+    } catch (error) {
+      console.error("Erro ao enviar nota fiscal:", error);
+      alert("❌ Erro ao enviar nota fiscal: " + (error as any).message);
+    } finally {
+      setEnviandoNota(false);
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin text-6xl mb-4">⏳</div>
-          <p className="text-gray-700 text-lg font-medium">Carregando requisições...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Carregando requisições..." />;
   }
 
   return (
@@ -129,8 +171,7 @@ export default function FornecedorRequisicoes() {
                 {requisicoesFiltradas.map((req) => (
                   <div
                     key={req.id}
-                    className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition cursor-pointer"
-                    onClick={() => router.push(`/fornecedor/requisicoes/${req.id}`)}
+                    className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -149,14 +190,33 @@ export default function FornecedorRequisicoes() {
                               ? "bg-yellow-100 text-yellow-700"
                               : req.status === "aprovada"
                               ? "bg-green-100 text-green-700"
+                              : req.status === "Aguardando nota fiscal"
+                              ? "bg-red-200 text-red-800 font-bold"
                               : "bg-gray-100 text-gray-700"
                           }`}
                         >
                           {req.status === "pendente" ? "⏳ Pendente" : req.status === "aprovada" ? "✅ Aprovada" : req.status}
                         </span>
+                        {req.status === "Aguardando nota fiscal" && (
+                          <button
+                            onClick={() => {
+                              setRequisicaoSelecionada(req.id);
+                              setModalNotaFiscalAberto(true);
+                            }}
+                            className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded transition"
+                            title="Anexar nota fiscal"
+                          >
+                            📎 Anexar nota
+                          </button>
+                        )}
                       </div>
                     </div>
-                    <div className="text-2xl">→</div>
+                    <button
+                      onClick={() => router.push(`/fornecedor/requisicoes/${req.id}`)}
+                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded transition"
+                    >
+                      Visualizar
+                    </button>
                   </div>
                 ))}
               </div>
@@ -164,6 +224,77 @@ export default function FornecedorRequisicoes() {
           </div>
         </div>
       </div>
+
+      {/* Modal Enviar Nota Fiscal */}
+      {modalNotaFiscalAberto && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">📄 Enviar Nota Fiscal</h2>
+
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (file && file.type === "application/pdf") {
+                  enviarNotaFiscal(file);
+                } else {
+                  alert("❌ Por favor, selecione um arquivo PDF");
+                }
+              }}
+              className="border-2 border-dashed border-blue-400 rounded-lg p-8 text-center mb-4 hover:bg-blue-50 transition cursor-pointer"
+            >
+              <p className="text-gray-600 mb-2">Arraste e solte o PDF aqui</p>
+              <p className="text-sm text-gray-500 mb-4">ou</p>
+              <label className="inline-block">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.type !== "application/pdf") {
+                        alert("❌ Por favor, selecione um arquivo PDF");
+                        return;
+                      }
+                      if (file.size > 5 * 1024 * 1024) {
+                        alert("❌ Arquivo muito grande. Máximo 5MB");
+                        return;
+                      }
+                      enviarNotaFiscal(file);
+                    }
+                  }}
+                  disabled={enviandoNota}
+                  className="hidden"
+                />
+                <span className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded cursor-pointer transition inline-block disabled:opacity-50">
+                  Selecionar arquivo
+                </span>
+              </label>
+            </div>
+
+            {enviandoNota && (
+              <div className="text-center mb-4">
+                <div className="inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mb-2"></div>
+                <p className="text-gray-600 text-sm">Enviando arquivo...</p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setModalNotaFiscalAberto(false);
+                  setRequisicaoSelecionada(null);
+                }}
+                disabled={enviandoNota}
+                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium rounded transition disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
