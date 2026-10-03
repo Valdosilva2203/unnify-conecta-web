@@ -111,7 +111,7 @@ export default function MeusChamados() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {chamados.map((chamado) => (
-                    <tr key={chamado.id} className="hover:bg-blue-50 transition cursor-pointer" onClick={() => router.push(`/fornecedor/meus-chamados/${chamado.id}`)}>
+                    <tr key={chamado.id} className="hover:bg-blue-50 transition cursor-pointer" onClick={() => router.push(`/fornecedor/chamados/${chamado.id}`)}>
                       <td className="px-6 py-4">
                         <span className="font-bold text-gray-900">{chamado.titulo}</span>
                       </td>
@@ -178,7 +178,7 @@ export default function MeusChamados() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                router.push(`/fornecedor/meus-chamados/${chamado.id}`);
+                                router.push(`/fornecedor/chamados/${chamado.id}`);
                                 setMenuAbertoId(null);
                               }}
                               className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
@@ -188,7 +188,7 @@ export default function MeusChamados() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(`/fornecedor/meus-chamados/${chamado.id}`, "_blank");
+                                window.open(`/fornecedor/chamados/${chamado.id}`, "_blank");
                                 setMenuAbertoId(null);
                               }}
                               className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-b-lg"
