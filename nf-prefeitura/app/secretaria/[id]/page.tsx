@@ -369,8 +369,8 @@ export default function SecretariaPage() {
       } else {
         setNotasFiscaisSecretaria(notas);
       }
-    } catch (error) {
-      console.error("Erro ao carregar notas fiscais:", error);
+    } catch (error: any) {
+      console.error("Erro ao carregar notas fiscais:", error?.message || error?.details || error);
       setNotasFiscaisSecretaria([]);
     } finally {
       setCarregandoNotasFiscais(false);
