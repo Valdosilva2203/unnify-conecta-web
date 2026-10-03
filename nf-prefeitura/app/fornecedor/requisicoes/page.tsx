@@ -24,6 +24,12 @@ interface Requisicao {
   nota_fiscal_arquivo?: string;
 }
 
+interface Secretaria {
+  id: string;
+  nome: string;
+  email?: string;
+}
+
 export default function FornecedorRequisicoes() {
   const router = useRouter();
   const [session, setSession] = useState<SessionData | null>(null);
@@ -32,8 +38,11 @@ export default function FornecedorRequisicoes() {
   const [menuAberto, setMenuAberto] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalNotaFiscalAberto, setModalNotaFiscalAberto] = useState(false);
+  const [modalSecretariasAberto, setModalSecretariasAberto] = useState(false);
   const [requisicaoSelecionada, setRequisicaoSelecionada] = useState<string | null>(null);
   const [enviandoNota, setEnviandoNota] = useState(false);
+  const [secretarias, setSecretarias] = useState<Secretaria[]>([]);
+  const [carregandoSecretarias, setCarregandoSecretarias] = useState(false);
 
   useEffect(() => {
     verificarSessao();
@@ -112,6 +121,29 @@ export default function FornecedorRequisicoes() {
       alert("❌ Erro ao enviar nota fiscal: " + (error as any).message);
     } finally {
       setEnviandoNota(false);
+    }
+  };
+
+  const abrirModalSecretarias = async (requisicaoId: string) => {
+    setRequisicaoSelecionada(requisicaoId);
+    setModalSecretariasAberto(true);
+    setCarregandoSecretarias(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("secretarias")
+        .select("id, nome, email")
+        .eq("prefeitura_id", session?.prefeitura_id)
+        .order("nome");
+
+      if (error) throw error;
+
+      setSecretarias(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar secretarias:", error);
+      alert("❌ Erro ao carregar secretarias");
+    } finally {
+      setCarregandoSecretarias(false);
     }
   };
 
@@ -275,10 +307,7 @@ export default function FornecedorRequisicoes() {
                     <div className="flex gap-2">
                       {req.nota_fiscal_arquivo && (
                         <button
-                          onClick={() => {
-                            setRequisicaoSelecionada(req.id);
-                            setModalNotaFiscalAberto(true);
-                          }}
+                          onClick={() => abrirModalSecretarias(req.id)}
                           className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded transition"
                           title="Enviar ou atualizar nota fiscal"
                         >
@@ -367,6 +396,47 @@ export default function FornecedorRequisicoes() {
                 Cancelar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Secretarias */}
+      {modalSecretariasAberto && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">🏢 Secretarias da Prefeitura</h2>
+
+            {carregandoSecretarias ? (
+              <div className="text-center py-8">
+                <div className="inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mb-2"></div>
+                <p className="text-gray-600 text-sm">Carregando secretarias...</p>
+              </div>
+            ) : secretarias.length === 0 ? (
+              <p className="text-gray-600 text-center py-8">Nenhuma secretaria encontrada</p>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto mb-6">
+                {secretarias.map((sec) => (
+                  <div
+                    key={sec.id}
+                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
+                  >
+                    <h3 className="font-semibold text-gray-900">{sec.nome}</h3>
+                    {sec.email && <p className="text-xs text-gray-600 mt-1">{sec.email}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                setModalSecretariasAberto(false);
+                setRequisicaoSelecionada(null);
+                setSecretarias([]);
+              }}
+              className="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium rounded transition"
+            >
+              Fechar
+            </button>
           </div>
         </div>
       )}
