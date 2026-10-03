@@ -326,8 +326,6 @@ export default function SecretariaPage() {
         `)
         .eq("secretaria_id", id);
 
-      console.log("Dados:", notasComVinc, "Erro:", erro);
-
       if (erro) throw erro;
 
       if (!notasComVinc || notasComVinc.length === 0) {
@@ -340,8 +338,6 @@ export default function SecretariaPage() {
         .filter((v: any) => v.notas_fiscais)
         .map((v: any) => v.notas_fiscais);
 
-      console.log("Notas extraídas:", notas);
-
       // Buscar dados das requisições
       const reqIds = notas.map((n: any) => n.requisicao_id).filter(Boolean);
 
@@ -350,8 +346,6 @@ export default function SecretariaPage() {
           .from("requisicoes")
           .select("id, numero_requisicao, fornecedor_nome, status")
           .in("id", reqIds);
-
-        console.log("Requisições:", requisicoes, "Erro:", erroReq);
 
         // Mapear requisições por ID
         const reqMap = new Map();
