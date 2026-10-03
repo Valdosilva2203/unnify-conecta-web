@@ -235,7 +235,7 @@ export default function FornecedorRequisicoes() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      {req.status === "Aguardando nota fiscal" && (
+                      {req.nota_fiscal_arquivo && (
                         <button
                           onClick={() => {
                             setRequisicaoSelecionada(req.id);
