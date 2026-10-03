@@ -15,43 +15,43 @@ export async function GET(request: NextRequest) {
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // Buscar notas fiscais
-    const { data: notasFiscais, error } = await supabaseAdmin
-      .from("notas_fiscais")
-      .select("id, numero, arquivo, created_at, requisicao_id")
-      .order("created_at", { ascending: false });
+    // Buscar requisições do fornecedor
+    const { data: requisicoes, error: reqError } = await supabaseAdmin
+      .from("requisicoes")
+      .select("id, numero_requisicao, titulo, fornecedor_id")
+      .eq("fornecedor_id", fornecedorId)
+      .eq("prefeitura_id", prefeituraId);
 
-    if (error) {
-      console.error("❌ Erro ao buscar notas fiscais:", error);
+    if (reqError) {
+      console.error("❌ Erro ao buscar requisições:", reqError);
       return NextResponse.json(
-        { error: "Erro ao buscar notas fiscais", details: error },
+        { error: "Erro ao buscar requisições", details: reqError },
         { status: 500 }
       );
     }
 
-    // Para cada nota fiscal, buscar a requisição associada
+    // Para cada requisição, buscar sua nota fiscal
     const notasComRequisicoes = await Promise.all(
-      (notasFiscais || []).map(async (nf: any) => {
-        const { data: requisicao } = await supabaseAdmin
-          .from("requisicoes")
-          .select("numero_requisicao, titulo, fornecedor_id")
-          .eq("id", nf.requisicao_id)
+      (requisicoes || []).map(async (req: any) => {
+        const { data: notaFiscal } = await supabaseAdmin
+          .from("notas_fiscais")
+          .select("id, numero, arquivo, created_at, requisicao_id")
+          .eq("requisicao_id", req.id)
           .single();
 
-        // Filtrar apenas notas do fornecedor solicitado
-        if (requisicao?.fornecedor_id !== fornecedorId) {
+        if (!notaFiscal) {
           return null;
         }
 
         return {
-          id: nf.id,
-          numero: nf.numero,
-          arquivo: nf.arquivo,
-          created_at: nf.created_at,
-          requisicao_id: nf.requisicao_id,
-          numero_requisicao: requisicao?.numero_requisicao,
-          titulo: requisicao?.titulo,
-          fornecedor_id: requisicao?.fornecedor_id,
+          id: notaFiscal.id,
+          numero: notaFiscal.numero,
+          arquivo: notaFiscal.arquivo,
+          created_at: notaFiscal.created_at,
+          requisicao_id: notaFiscal.requisicao_id,
+          numero_requisicao: req.numero_requisicao,
+          titulo: req.titulo,
+          fornecedor_id: req.fornecedor_id,
         };
       })
     );
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Erro na API de notas fiscais:", error);
     return NextResponse.json(
-      { error: "Erro ao processar requisição" },
+      { error: "Erro ao processar requisição", details: String(error) },
       { status: 500 }
     );
   }
