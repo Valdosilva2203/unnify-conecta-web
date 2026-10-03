@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const { data: requisicoes, error } = await supabaseAdmin
       .from("requisicoes")
-      .select("id, numero_requisicao, titulo, descricao, status, created_at, fornecedor_id, prefeitura_id")
+      .select("id, numero_requisicao, titulo, descricao, status, created_at, fornecedor_id, prefeitura_id, nota_fiscal_url, nota_fiscal_arquivo")
       .eq("fornecedor_id", fornecedorId)
       .eq("prefeitura_id", prefeituraId)
       .order("created_at", { ascending: false });

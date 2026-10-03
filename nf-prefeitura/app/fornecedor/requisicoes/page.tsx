@@ -20,6 +20,8 @@ interface Requisicao {
   descricao: string;
   status: string;
   created_at: string;
+  nota_fiscal_url?: string;
+  nota_fiscal_arquivo?: string;
 }
 
 export default function FornecedorRequisicoes() {
@@ -197,7 +199,7 @@ export default function FornecedorRequisicoes() {
                         >
                           {req.status === "pendente" ? "⏳ Pendente" : req.status === "aprovada" ? "✅ Aprovada" : req.status}
                         </span>
-                        {req.status === "Aguardando nota fiscal" && (
+                        {req.status === "Aguardando nota fiscal" && !req.nota_fiscal_arquivo && (
                           <button
                             onClick={() => {
                               setRequisicaoSelecionada(req.id);
@@ -209,14 +211,39 @@ export default function FornecedorRequisicoes() {
                             📎 Anexar nota
                           </button>
                         )}
+                        {req.nota_fiscal_arquivo && (
+                          <a
+                            href={req.nota_fiscal_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium rounded transition cursor-pointer"
+                            title="Abrir nota fiscal"
+                          >
+                            📄 {req.nota_fiscal_arquivo.split("/")[1]?.substring(0, 20)}...
+                          </a>
+                        )}
                       </div>
                     </div>
-                    <button
-                      onClick={() => router.push(`/fornecedor/requisicoes/${req.id}`)}
-                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded transition"
-                    >
-                      Visualizar
-                    </button>
+                    <div className="flex gap-2">
+                      {req.status === "Aguardando nota fiscal" && (
+                        <button
+                          onClick={() => {
+                            setRequisicaoSelecionada(req.id);
+                            setModalNotaFiscalAberto(true);
+                          }}
+                          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded transition"
+                          title="Enviar ou atualizar nota fiscal"
+                        >
+                          📤 Enviar nota
+                        </button>
+                      )}
+                      <button
+                        onClick={() => router.push(`/fornecedor/requisicoes/${req.id}`)}
+                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded transition"
+                      >
+                        Visualizar
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
