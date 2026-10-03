@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 interface FornecedorSidebarProps {
   menuAberto: boolean;
   onToggleMenu: () => void;
-  currentPage?: "dashboard" | "requisicoes" | "prefeituras" | "minha-conta";
+  currentPage?: "dashboard" | "requisicoes" | "prefeituras" | "minha-conta" | "notas-fiscais";
   onLogout?: () => void;
 }
 
@@ -30,6 +30,7 @@ export default function FornecedorSidebar({
     { id: "prefeituras", icon: "🏛️", label: "Minhas Prefeituras", path: "/fornecedor/prefeituras" },
     { id: "dashboard", icon: "📊", label: "Dashboard", path: "/fornecedor/dashboard" },
     { id: "requisicoes", icon: "📋", label: "Requisições", path: "/fornecedor/requisicoes" },
+    { id: "notas-fiscais", icon: "📄", label: "Notas Fiscais", path: "/fornecedor/notas-fiscais" },
     { id: "minha-conta", icon: "👤", label: "Minha Conta", path: "/fornecedor/minha-conta" },
   ];
 
