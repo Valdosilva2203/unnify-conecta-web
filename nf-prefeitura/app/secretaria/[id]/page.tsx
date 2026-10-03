@@ -1581,7 +1581,8 @@ export default function SecretariaPage() {
                       <th className="px-4 py-3 text-left font-medium text-gray-700">Nota nº</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-700">Data</th>
                       <th className="px-4 py-3 text-left font-medium text-gray-700">Status</th>
-                      <th className="px-4 py-3 text-center font-medium text-gray-700">Ação</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-700">Certidões</th>
+                      <th className="px-4 py-3 text-center font-medium text-gray-700">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -1615,18 +1616,31 @@ export default function SecretariaPage() {
                               {requisicao?.status || "Desconhecido"}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                                ✓ Certificado
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => window.open(`/secretaria/${id}/requisicoes/${nota.requisicao_id}`, "_blank")}
+                              className="text-blue-600 hover:text-blue-700 font-medium text-sm px-3 py-1 rounded hover:bg-blue-50"
+                              title="Visualizar detalhes"
+                            >
+                              👁️ Ver
+                            </button>
                             {nota.arquivo ? (
                               <button
                                 onClick={() => baixarNotaFiscal(nota.id)}
                                 disabled={baixandoNota === nota.id}
-                                className="text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                                className="text-blue-600 hover:text-blue-700 font-medium text-sm px-3 py-1 rounded hover:bg-blue-50 disabled:opacity-50"
+                                title="Baixar arquivo"
                               >
-                                {baixandoNota === nota.id ? "Gerando..." : "📥 Baixar"}
+                                {baixandoNota === nota.id ? "..." : "📥"}
                               </button>
-                            ) : (
-                              <span className="text-gray-400">Sem arquivo</span>
-                            )}
+                            ) : null}
                           </td>
                         </tr>
                       );
