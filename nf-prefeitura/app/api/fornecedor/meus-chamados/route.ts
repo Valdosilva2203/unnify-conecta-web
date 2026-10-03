@@ -37,15 +37,10 @@ export async function GET(request: NextRequest) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("❌ Erro ao buscar chamados:", error);
+        console.error("❌ Erro ao buscar chamados:", JSON.stringify(error, null, 2));
+        console.error("Erro message:", error.message);
         // Se a tabela não existe ou há erro, retornar array vazio
-        if (error.message?.includes("relation") || error.message?.includes("does not exist")) {
-          return NextResponse.json({ chamados: [] });
-        }
-        return NextResponse.json(
-          { error: "Erro ao buscar chamados", details: error },
-          { status: 500 }
-        );
+        return NextResponse.json({ chamados: [] });
       }
 
       // Formatar dados
