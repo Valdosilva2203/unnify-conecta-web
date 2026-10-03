@@ -46,24 +46,31 @@ export async function GET(request: NextRequest) {
           }
 
           if (ch.criado_por) {
-            // Tentar buscar em fornecedores primeiro
-            const { data: fornecedor } = await supabaseAdmin
-              .from("fornecedores")
+            // Tentar buscar em prefeitura_users primeiro
+            const { data: prefeituraUser } = await supabaseAdmin
+              .from("prefeitura_users")
               .select("nome")
               .eq("id", ch.criado_por)
-              .single();
+              .single()
+              .catch(() => ({ data: null }));
 
-            if (fornecedor) {
-              criador_nome = fornecedor.nome;
+            if (prefeituraUser?.nome) {
+              criador_nome = prefeituraUser.nome;
             } else {
-              // Se não encontrar em fornecedores, tentar em usuarios
-              const { data: usuario } = await supabaseAdmin
-                .from("usuarios")
+              // Se não encontrar, tentar em fornecedores
+              const { data: fornecedor } = await supabaseAdmin
+                .from("fornecedores")
                 .select("nome")
                 .eq("id", ch.criado_por)
-                .single();
+                .single()
+                .catch(() => ({ data: null }));
 
-              criador_nome = usuario?.nome;
+              if (fornecedor?.nome) {
+                criador_nome = fornecedor.nome;
+              } else {
+                // Fallback: retornar os primeiros caracteres do UUID
+                criador_nome = ch.criado_por.substring(0, 8);
+              }
             }
           }
 
