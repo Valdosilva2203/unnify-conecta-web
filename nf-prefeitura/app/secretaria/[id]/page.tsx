@@ -315,6 +315,8 @@ export default function SecretariaPage() {
         .select("nota_fiscal_id")
         .eq("secretaria_id", id);
 
+      console.log("Vinculações:", vinculacoes, "Erro:", erroVinc);
+
       if (erroVinc) throw erroVinc;
 
       if (!vinculacoes || vinculacoes.length === 0) {
@@ -323,6 +325,7 @@ export default function SecretariaPage() {
       }
 
       const notaIds = vinculacoes.map(v => v.nota_fiscal_id);
+      console.log("IDs das notas:", notaIds);
 
       // Buscar detalhes das notas fiscais
       const { data: notas, error: erroNotas } = await supabase
@@ -335,10 +338,12 @@ export default function SecretariaPage() {
           arquivo,
           url_assinada,
           criado_em,
-          requisicoes!inner(numero_requisicao, fornecedor_nome, status)
+          requisicoes(numero_requisicao, fornecedor_nome, status)
         `)
         .in("id", notaIds)
         .order("criado_em", { ascending: false });
+
+      console.log("Notas fiscais:", notas, "Erro:", erroNotas);
 
       if (erroNotas) throw erroNotas;
       setNotasFiscaisSecretaria(notas || []);
