@@ -1590,7 +1590,12 @@ export default function SecretariaPage() {
                       return (
                         <tr key={nota.id} className="hover:bg-gray-50 transition">
                           <td className="px-4 py-3 text-gray-900 font-medium">
-                            {requisicao?.numero_requisicao || "N/A"}
+                            <button
+                              onClick={() => router.push(`/secretaria/${id}/requisicoes/${nota.requisicao_id}`)}
+                              className="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
+                            >
+                              {requisicao?.numero_requisicao || "N/A"}
+                            </button>
                           </td>
                           <td className="px-4 py-3 text-gray-700">
                             {requisicao?.fornecedor_nome || "N/A"}
