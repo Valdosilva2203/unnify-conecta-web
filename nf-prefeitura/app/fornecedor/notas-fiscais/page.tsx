@@ -106,6 +106,7 @@ export default function FornecedorNotasFiscais() {
         menuAberto={menuAberto}
         onToggleMenu={() => setMenuAberto(!menuAberto)}
         currentPage="notas-fiscais"
+        prefeituraId={session?.prefeitura_id}
       />
 
       <main className="flex-1 overflow-auto">

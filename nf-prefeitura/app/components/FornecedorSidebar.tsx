@@ -7,6 +7,7 @@ interface FornecedorSidebarProps {
   onToggleMenu: () => void;
   currentPage?: "dashboard" | "requisicoes" | "prefeituras" | "minha-conta" | "notas-fiscais" | "minhas-certidoes" | "meus-chamados";
   onLogout?: () => void;
+  prefeituraId?: string;
 }
 
 export default function FornecedorSidebar({
@@ -14,8 +15,10 @@ export default function FornecedorSidebar({
   onToggleMenu,
   currentPage = "dashboard",
   onLogout,
+  prefeituraId,
 }: FornecedorSidebarProps) {
   const router = useRouter();
+  const isPrefeituraSelected = !!prefeituraId;
 
   const handleLogout = () => {
     if (onLogout) {
@@ -56,20 +59,29 @@ export default function FornecedorSidebar({
           Menu
         </div>
 
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => router.push(item.path)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-              currentPage === item.id
-                ? "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                : "hover:bg-gray-100 text-gray-900"
-            }`}
-          >
-            <span className="text-xl">{item.icon}</span>
-            {menuAberto && <span>{item.label}</span>}
-          </button>
-        ))}
+        {menuItems.map((item) => {
+          const requiresPrefeitura = !["prefeituras", "minha-conta"].includes(item.id);
+          const isDisabled = requiresPrefeitura && !isPrefeituraSelected;
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => !isDisabled && router.push(item.path)}
+              disabled={isDisabled}
+              title={isDisabled ? "Selecione uma prefeitura para continuar" : ""}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                isDisabled
+                  ? "opacity-50 cursor-not-allowed pointer-events-none"
+                  : currentPage === item.id
+                    ? "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                    : "hover:bg-gray-100 text-gray-900 cursor-pointer"
+              }`}
+            >
+              <span className="text-xl">{item.icon}</span>
+              {menuAberto && <span>{item.label}</span>}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Footer */}

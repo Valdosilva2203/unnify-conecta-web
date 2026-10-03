@@ -338,6 +338,7 @@ export default function FornecedorDashboardPage() {
         onToggleMenu={() => setMenuAberto(!menuAberto)}
         currentPage="dashboard"
         onLogout={handleLogout}
+        prefeituraId={session?.prefeitura_id}
       />
 
       {/* Main Content */}

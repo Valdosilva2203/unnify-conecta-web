@@ -93,6 +93,7 @@ export default function MinhasCertidoes() {
         menuAberto={menuAberto}
         onToggleMenu={() => setMenuAberto(!menuAberto)}
         currentPage="minhas-certidoes"
+        prefeituraId={session?.prefeitura_id}
       />
 
       <main className="flex-1 overflow-auto">

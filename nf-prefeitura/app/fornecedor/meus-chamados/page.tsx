@@ -275,6 +275,7 @@ export default function MeusChamados() {
         onToggleMenu={() => setMenuAberto(!menuAberto)}
         currentPage="meus-chamados"
         onLogout={handleLogout}
+        prefeituraId={session?.prefeitura_id}
       />
 
       <div className="flex-1 flex flex-col">

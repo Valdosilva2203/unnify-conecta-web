@@ -134,6 +134,7 @@ export default function MinhaContaFornecedorPage() {
         onToggleMenu={() => setMenuAberto(!menuAberto)}
         currentPage="minha-conta"
         onLogout={handleLogout}
+        prefeituraId={session?.prefeitura_id}
       />
 
       <main className="flex-1 overflow-auto flex flex-col">

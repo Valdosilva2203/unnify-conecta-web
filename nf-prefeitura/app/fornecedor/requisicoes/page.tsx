@@ -264,6 +264,7 @@ export default function FornecedorRequisicoes() {
         menuAberto={menuAberto}
         onToggleMenu={() => setMenuAberto(!menuAberto)}
         currentPage="requisicoes"
+        prefeituraId={session?.prefeitura_id}
         onLogout={() => {
           localStorage.removeItem("fornecedor_session");
           router.push("/login");
