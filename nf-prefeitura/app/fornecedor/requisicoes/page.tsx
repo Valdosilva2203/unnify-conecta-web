@@ -382,9 +382,9 @@ export default function FornecedorRequisicoes() {
                           <button
                             onClick={() => baixarNotaFiscal(req.id)}
                             className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded transition cursor-pointer"
-                            title="Abrir PDF da nota fiscal"
+                            title="Baixar nota fiscal"
                           >
-                            📥 Ver PDF
+                            📥 Baixar nota
                           </button>
                         )}
                       </div>
