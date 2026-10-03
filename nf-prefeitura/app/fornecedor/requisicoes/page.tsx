@@ -101,17 +101,12 @@ export default function FornecedorRequisicoes() {
         throw new Error("Resposta inválida do servidor");
       }
 
-      setRequisicoes(
-        requisicoes.map((req) =>
-          req.id === requisicaoSelecionada
-            ? { ...req, nota_fiscal_url: data.url }
-            : req
-        )
-      );
-
       alert("✅ Nota fiscal enviada com sucesso!");
       setModalNotaFiscalAberto(false);
       setRequisicaoSelecionada(null);
+
+      // Recarrega os dados
+      await verificarSessao();
     } catch (error) {
       console.error("Erro ao enviar nota fiscal:", error);
       alert("❌ Erro ao enviar nota fiscal: " + (error as any).message);
