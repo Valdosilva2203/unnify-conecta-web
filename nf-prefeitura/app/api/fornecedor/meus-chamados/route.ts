@@ -16,24 +16,10 @@ export async function GET(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
 
     try {
-      // Buscar todos os chamados da prefeitura com secretarias
+      // Buscar todos os chamados da prefeitura
       const { data: chamados, error } = await supabaseAdmin
         .from("chamados")
-        .select(
-          `
-          id,
-          titulo,
-          descricao,
-          status,
-          prioridade,
-          created_at,
-          updated_at,
-          numero_chamado,
-          criado_por,
-          secretaria_id,
-          secretarias(id, nome)
-        `
-        )
+        .select("*")
         .eq("prefeitura_id", prefeituraId)
         .order("created_at", { ascending: false });
 
@@ -43,21 +29,37 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ chamados: [] });
       }
 
-      // Formatar dados
-      const chamadosFormatados = (chamados || []).map((ch: any) => ({
-        id: ch.id,
-        titulo: ch.titulo,
-        descricao: ch.descricao,
-        status: ch.status,
-        prioridade: ch.prioridade,
-        created_at: ch.created_at,
-        updated_at: ch.updated_at,
-        numero_chamado: ch.numero_chamado,
-        criado_por: ch.criado_por,
-        secretaria_nome: ch.secretarias?.nome,
-      }));
+      // Para cada chamado, buscar a secretaria se existir secretaria_id
+      const chamadosComSecretarias = await Promise.all(
+        (chamados || []).map(async (ch: any) => {
+          let secretaria_nome = null;
 
-      return NextResponse.json({ chamados: chamadosFormatados });
+          if (ch.secretaria_id) {
+            const { data: secretaria } = await supabaseAdmin
+              .from("secretarias")
+              .select("nome")
+              .eq("id", ch.secretaria_id)
+              .single();
+
+            secretaria_nome = secretaria?.nome;
+          }
+
+          return {
+            id: ch.id,
+            titulo: ch.titulo,
+            descricao: ch.descricao,
+            status: ch.status,
+            prioridade: ch.prioridade,
+            created_at: ch.created_at,
+            updated_at: ch.updated_at,
+            numero_chamado: ch.numero_chamado,
+            criado_por: ch.criado_por,
+            secretaria_nome: secretaria_nome,
+          };
+        })
+      );
+
+      return NextResponse.json({ chamados: chamadosComSecretarias });
     } catch (catchError) {
       console.error("❌ Exception ao buscar chamados:", catchError);
       // Retornar array vazio em caso de exceção (tabela não existe)
