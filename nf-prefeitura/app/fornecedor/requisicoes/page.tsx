@@ -43,6 +43,8 @@ export default function FornecedorRequisicoes() {
   const [enviandoNota, setEnviandoNota] = useState(false);
   const [secretarias, setSecretarias] = useState<Secretaria[]>([]);
   const [carregandoSecretarias, setCarregandoSecretarias] = useState(false);
+  const [secretariasSelecionadas, setSecretariasSelecionadas] = useState<string[]>([]);
+  const [enviandoParaSecretarias, setEnviandoParaSecretarias] = useState(false);
 
   useEffect(() => {
     verificarSessao();
@@ -144,6 +146,36 @@ export default function FornecedorRequisicoes() {
       alert("❌ Erro ao carregar secretarias");
     } finally {
       setCarregandoSecretarias(false);
+    }
+  };
+
+  const enviarParaSecretarias = async () => {
+    if (secretariasSelecionadas.length === 0) {
+      alert("❌ Selecione pelo menos uma secretaria");
+      return;
+    }
+
+    setEnviandoParaSecretarias(true);
+
+    try {
+      // Por enquanto, apenas confirmação
+      const secretariasNomes = secretarias
+        .filter((s) => secretariasSelecionadas.includes(s.id))
+        .map((s) => s.nome)
+        .join(", ");
+
+      alert(`✅ Nota será enviada para: ${secretariasNomes}`);
+
+      // TODO: Implementar envio para o banco
+      setModalSecretariasAberto(false);
+      setSecretariasSelecionadas([]);
+      setRequisicaoSelecionada(null);
+      setSecretarias([]);
+    } catch (error) {
+      console.error("Erro ao enviar:", error);
+      alert("❌ Erro ao enviar nota: " + (error as any).message);
+    } finally {
+      setEnviandoParaSecretarias(false);
     }
   };
 
@@ -416,27 +448,54 @@ export default function FornecedorRequisicoes() {
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto mb-6">
                 {secretarias.map((sec) => (
-                  <div
+                  <label
                     key={sec.id}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
+                    className="flex items-start p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
                   >
-                    <h3 className="font-semibold text-gray-900">{sec.nome}</h3>
-                    {sec.email && <p className="text-xs text-gray-600 mt-1">{sec.email}</p>}
-                  </div>
+                    <input
+                      type="checkbox"
+                      checked={secretariasSelecionadas.includes(sec.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSecretariasSelecionadas([...secretariasSelecionadas, sec.id]);
+                        } else {
+                          setSecretariasSelecionadas(
+                            secretariasSelecionadas.filter((id) => id !== sec.id)
+                          );
+                        }
+                      }}
+                      className="mt-1 mr-3 w-4 h-4 cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{sec.nome}</h3>
+                      {sec.email && <p className="text-xs text-gray-600 mt-1">{sec.email}</p>}
+                    </div>
+                  </label>
                 ))}
               </div>
             )}
 
-            <button
-              onClick={() => {
-                setModalSecretariasAberto(false);
-                setRequisicaoSelecionada(null);
-                setSecretarias([]);
-              }}
-              className="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium rounded transition"
-            >
-              Fechar
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setModalSecretariasAberto(false);
+                  setRequisicaoSelecionada(null);
+                  setSecretarias([]);
+                  setSecretariasSelecionadas([]);
+                }}
+                disabled={enviandoParaSecretarias}
+                className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium rounded transition disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={enviarParaSecretarias}
+                disabled={enviandoParaSecretarias || secretariasSelecionadas.length === 0}
+                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded transition disabled:opacity-50"
+              >
+                📤 Enviar
+              </button>
+            </div>
           </div>
         </div>
       )}
