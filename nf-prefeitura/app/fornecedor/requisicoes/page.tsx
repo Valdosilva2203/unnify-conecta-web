@@ -304,6 +304,8 @@ export default function FornecedorRequisicoes() {
                               ? "bg-yellow-100 text-yellow-700"
                               : req.status === "aprovada"
                               ? "bg-green-100 text-green-700"
+                              : req.status === "Nota Enviada"
+                              ? "bg-blue-100 text-blue-700"
                               : req.status === "Aguardando nota fiscal"
                               ? req.nota_fiscal_arquivo
                                 ? "bg-green-100 text-green-700"
@@ -315,6 +317,8 @@ export default function FornecedorRequisicoes() {
                             ? "⏳ Pendente"
                             : req.status === "aprovada"
                             ? "✅ Aprovada"
+                            : req.status === "Nota Enviada"
+                            ? "✉️ Nota Enviada"
                             : req.status === "Aguardando nota fiscal"
                             ? req.nota_fiscal_arquivo
                               ? "📄 Nota Anexada"
@@ -333,7 +337,7 @@ export default function FornecedorRequisicoes() {
                             📎 Anexar nota
                           </button>
                         )}
-                        {req.nota_fiscal_arquivo && (
+                        {req.nota_fiscal_arquivo && req.status !== "Nota Enviada" && (
                           <div className="flex items-center gap-2">
                             <a
                               href={req.nota_fiscal_url}
@@ -356,7 +360,7 @@ export default function FornecedorRequisicoes() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      {req.nota_fiscal_arquivo && (
+                      {req.nota_fiscal_arquivo && req.status !== "Nota Enviada" && (
                         <button
                           onClick={() => abrirModalSecretarias(req.id)}
                           className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded transition"

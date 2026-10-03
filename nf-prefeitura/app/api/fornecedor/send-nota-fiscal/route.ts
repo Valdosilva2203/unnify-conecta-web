@@ -75,6 +75,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Atualizar status da requisição para "Nota Enviada"
+    const { error: statusError } = await supabase
+      .from("requisicoes")
+      .update({ status: "Nota Enviada" })
+      .eq("id", requisicaoId);
+
+    if (statusError) {
+      console.error("Erro ao atualizar status:", statusError);
+    }
+
     return NextResponse.json({
       success: true,
       notaFiscalId: notaFiscal.id,
