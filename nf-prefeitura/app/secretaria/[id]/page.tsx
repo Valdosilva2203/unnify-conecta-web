@@ -1638,7 +1638,7 @@ export default function SecretariaPage() {
                                 className="text-blue-600 hover:text-blue-700 font-medium text-sm px-3 py-1 rounded hover:bg-blue-50 disabled:opacity-50"
                                 title="Baixar arquivo"
                               >
-                                {baixandoNota === nota.id ? "..." : "📥"}
+                                {baixandoNota === nota.id ? "Gerando..." : "📥 Baixar nota"}
                               </button>
                             ) : null}
                           </td>
