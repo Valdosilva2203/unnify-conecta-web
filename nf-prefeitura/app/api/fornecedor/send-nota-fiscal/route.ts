@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Buscar a nota fiscal existente
     const { data: requisicao, error: reqError } = await supabase
       .from("requisicoes")
-      .select("nota_fiscal_arquivo, nota_fiscal_url, numero_requisicao, prefeitura_id, numero")
+      .select("nota_fiscal_arquivo, nota_fiscal_url, numero_requisicao, prefeitura_id, contrato_numero")
       .eq("id", requisicaoId)
       .single();
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       .insert({
         requisicao_id: requisicaoId,
         prefeitura_id: requisicao.prefeitura_id,
-        numero: requisicao.numero,
+        numero: requisicao.contrato_numero,
         nome: "Minhas certidões",
         arquivo: requisicao.nota_fiscal_arquivo,
         url_assinada: requisicao.nota_fiscal_url,
