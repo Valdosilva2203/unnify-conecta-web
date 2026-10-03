@@ -309,44 +309,66 @@ export default function SecretariaPage() {
   const loadNotasFiscaisSecretaria = async () => {
     setCarregandoNotasFiscais(true);
     try {
-      // Buscar IDs de notas fiscais vinculadas a esta secretaria
-      const { data: vinculacoes, error: erroVinc } = await supabase
+      // Buscar notas fiscais vinculadas a esta secretaria com os detalhes
+      const { data: notasComVinc, error: erro } = await supabase
         .from("notas_fiscais_secretarias")
-        .select("nota_fiscal_id")
+        .select(`
+          nota_fiscal_id,
+          notas_fiscais(
+            id,
+            requisicao_id,
+            numero,
+            nome,
+            arquivo,
+            url_assinada,
+            criado_em
+          )
+        `)
         .eq("secretaria_id", id);
 
-      console.log("Vinculações:", vinculacoes, "Erro:", erroVinc);
+      console.log("Dados:", notasComVinc, "Erro:", erro);
 
-      if (erroVinc) throw erroVinc;
+      if (erro) throw erro;
 
-      if (!vinculacoes || vinculacoes.length === 0) {
+      if (!notasComVinc || notasComVinc.length === 0) {
         setNotasFiscaisSecretaria([]);
         return;
       }
 
-      const notaIds = vinculacoes.map(v => v.nota_fiscal_id);
-      console.log("IDs das notas:", notaIds);
+      // Extrair as notas e buscar dados das requisições
+      const notas = notasComVinc
+        .filter((v: any) => v.notas_fiscais)
+        .map((v: any) => v.notas_fiscais);
 
-      // Buscar detalhes das notas fiscais
-      const { data: notas, error: erroNotas } = await supabase
-        .from("notas_fiscais")
-        .select(`
-          id,
-          requisicao_id,
-          numero,
-          nome,
-          arquivo,
-          url_assinada,
-          criado_em,
-          requisicoes(numero_requisicao, fornecedor_nome, status)
-        `)
-        .in("id", notaIds)
-        .order("criado_em", { ascending: false });
+      console.log("Notas extraídas:", notas);
 
-      console.log("Notas fiscais:", notas, "Erro:", erroNotas);
+      // Buscar dados das requisições
+      const reqIds = notas.map((n: any) => n.requisicao_id).filter(Boolean);
 
-      if (erroNotas) throw erroNotas;
-      setNotasFiscaisSecretaria(notas || []);
+      if (reqIds.length > 0) {
+        const { data: requisicoes, error: erroReq } = await supabase
+          .from("requisicoes")
+          .select("id, numero_requisicao, fornecedor_nome, status")
+          .in("id", reqIds);
+
+        console.log("Requisições:", requisicoes, "Erro:", erroReq);
+
+        // Mapear requisições por ID
+        const reqMap = new Map();
+        (requisicoes || []).forEach((r: any) => {
+          reqMap.set(r.id, r);
+        });
+
+        // Adicionar dados da requisição às notas
+        const notasCompletas = notas.map((nota: any) => ({
+          ...nota,
+          requisicoes: reqMap.get(nota.requisicao_id)
+        }));
+
+        setNotasFiscaisSecretaria(notasCompletas);
+      } else {
+        setNotasFiscaisSecretaria(notas);
+      }
     } catch (error) {
       console.error("Erro ao carregar notas fiscais:", error);
       setNotasFiscaisSecretaria([]);
