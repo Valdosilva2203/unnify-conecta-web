@@ -193,7 +193,9 @@ export default function FornecedorRequisicoes() {
                               : req.status === "aprovada"
                               ? "bg-green-100 text-green-700"
                               : req.status === "Aguardando nota fiscal"
-                              ? "bg-red-200 text-red-800 font-bold"
+                              ? req.nota_fiscal_arquivo
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-200 text-red-800 font-bold"
                               : "bg-gray-100 text-gray-700"
                           }`}
                         >
