@@ -29,10 +29,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ chamados: [] });
       }
 
-      // Para cada chamado, buscar a secretaria se existir secretaria_id
+      // Para cada chamado, buscar a secretaria e o nome do criador
       const chamadosComSecretarias = await Promise.all(
         (chamados || []).map(async (ch: any) => {
           let secretaria_nome = null;
+          let criador_nome = null;
 
           if (ch.secretaria_id) {
             const { data: secretaria } = await supabaseAdmin
@@ -44,6 +45,28 @@ export async function GET(request: NextRequest) {
             secretaria_nome = secretaria?.nome;
           }
 
+          if (ch.criado_por) {
+            // Tentar buscar em fornecedores primeiro
+            const { data: fornecedor } = await supabaseAdmin
+              .from("fornecedores")
+              .select("nome")
+              .eq("id", ch.criado_por)
+              .single();
+
+            if (fornecedor) {
+              criador_nome = fornecedor.nome;
+            } else {
+              // Se não encontrar em fornecedores, tentar em usuarios
+              const { data: usuario } = await supabaseAdmin
+                .from("usuarios")
+                .select("nome")
+                .eq("id", ch.criado_por)
+                .single();
+
+              criador_nome = usuario?.nome;
+            }
+          }
+
           return {
             id: ch.id,
             titulo: ch.titulo,
@@ -53,7 +76,7 @@ export async function GET(request: NextRequest) {
             created_at: ch.created_at,
             updated_at: ch.updated_at,
             numero_chamado: ch.numero_chamado,
-            criado_por: ch.criado_por,
+            criado_por: criador_nome,
             secretaria_nome: secretaria_nome,
           };
         })
