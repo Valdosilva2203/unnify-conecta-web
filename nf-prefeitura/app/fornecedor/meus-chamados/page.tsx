@@ -202,8 +202,8 @@ export default function MeusChamados() {
                       <td className="px-3 md:px-6 py-4 text-gray-900 text-sm truncate max-w-xs font-medium" title={chamado.criador_nome || "—"}>
                         {chamado.criador_nome || "—"}
                       </td>
-                      <td className="px-3 md:px-6 py-4 text-blue-600 font-medium text-sm truncate max-w-xs" title={chamado.secretaria_nome || "—"}>
-                        {chamado.secretaria_nome || "—"}
+                      <td className="px-3 md:px-6 py-4 text-blue-600 font-medium text-sm truncate max-w-xs" title={chamado.secretarias?.nome || chamado.secretaria_nome || "—"}>
+                        {chamado.secretarias?.nome || chamado.secretaria_nome || "—"}
                       </td>
                       <td className="px-3 md:px-6 py-4 relative">
                         <button
