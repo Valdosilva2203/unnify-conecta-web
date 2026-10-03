@@ -321,7 +321,7 @@ export default function SecretariaPage() {
             nome,
             arquivo,
             url_assinada,
-            criado_em
+            created_at
           )
         `)
         .eq("secretaria_id", id);
@@ -1580,7 +1580,7 @@ export default function SecretariaPage() {
                             {nota.numero || "N/A"}
                           </td>
                           <td className="px-4 py-3 text-gray-700">
-                            {nota.criado_em ? new Date(nota.criado_em).toLocaleDateString("pt-BR") : "N/A"}
+                            {nota.created_at ? new Date(nota.created_at).toLocaleDateString("pt-BR") : "N/A"}
                           </td>
                           <td className="px-4 py-3">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
