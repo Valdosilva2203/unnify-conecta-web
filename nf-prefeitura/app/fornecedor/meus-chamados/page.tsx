@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import FornecedorSidebar from "@/app/components/FornecedorSidebar";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 
@@ -19,10 +20,6 @@ interface Chamado {
   status: string;
   prioridade: string;
   created_at: string;
-  updated_at: string;
-  numero_chamado?: string;
-  secretaria_nome?: string;
-  criado_por?: string;
   criador_nome?: string;
   secretarias?: { nome: string };
 }
@@ -33,13 +30,26 @@ export default function MeusChamados() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuAberto, setMenuAberto] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState("");
   const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     verificarSessao();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuAbertoId(null);
+      }
+    };
+
+    if (menuAbertoId) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [menuAbertoId]);
 
   const verificarSessao = async () => {
     try {
@@ -52,59 +62,16 @@ export default function MeusChamados() {
       const sessionData: SessionData = JSON.parse(sessionStr);
       setSession(sessionData);
 
-      // Buscar chamados do fornecedor
       const response = await fetch(
         `/api/fornecedor/meus-chamados?fornecedor_id=${sessionData.id}&prefeitura_id=${sessionData.prefeitura_id}`
       );
 
       const json = await response.json();
-
-      if (!response.ok) {
-        console.error("Erro na API:", response.status, json);
-        throw new Error(json?.error || `Erro ${response.status}`);
-      }
-
       setChamados(json?.chamados || []);
     } catch (error) {
       console.error("Erro ao buscar chamados:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const chamadosFiltrados = chamados.filter((chamado) => {
-    const matchSearch =
-      chamado.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      chamado.numero_chamado?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = !filtroStatus || chamado.status === filtroStatus;
-    return matchSearch && matchStatus;
-  });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "aberto":
-        return "bg-blue-100 text-blue-700";
-      case "em_andamento":
-        return "bg-yellow-100 text-yellow-700";
-      case "resolvido":
-        return "bg-green-100 text-green-700";
-      case "fechado":
-        return "bg-gray-100 text-gray-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getPrioridadeColor = (prioridade: string) => {
-    switch (prioridade) {
-      case "alta":
-        return "bg-red-100 text-red-700";
-      case "media":
-        return "bg-orange-100 text-orange-700";
-      case "baixa":
-        return "bg-green-100 text-green-700";
-      default:
-        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -122,35 +89,9 @@ export default function MeusChamados() {
 
       <main className="flex-1 overflow-auto">
         <div className="p-8 w-full">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">🎫 Meus Chamados</h1>
-              <p className="text-gray-600 mt-2">Acompanhe todos os seus chamados abertos com as secretarias</p>
-            </div>
-          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-8">🎫 Meus Chamados</h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <input
-              type="text"
-              placeholder="Buscar por título ou número..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <select
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Todos os Status</option>
-              <option value="aberto">Aberto</option>
-              <option value="em_andamento">Em Andamento</option>
-              <option value="resolvido">Resolvido</option>
-              <option value="fechado">Fechado</option>
-            </select>
-          </div>
-
-          {chamadosFiltrados.length === 0 ? (
+          {chamados.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">Nenhum chamado encontrado</p>
             </div>
@@ -159,89 +100,100 @@ export default function MeusChamados() {
               <table className="w-full">
                 <thead className="bg-blue-50 border-b border-gray-200 sticky top-0">
                   <tr>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Chamado</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Descrição</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Prioridade</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Status</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Criador</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Vinculado a</th>
-                    <th className="px-3 md:px-6 py-3 text-left text-xs font-bold text-blue-600 uppercase">Ações</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-blue-600">CHAMADO</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-blue-600">DESCRIÇÃO</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-blue-600">PRIORIDADE</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-blue-600">STATUS</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-blue-600">CRIADOR</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-blue-600">VINCULADO A</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold text-blue-600">AÇÕES</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {chamadosFiltrados.map((chamado) => (
-                    <tr key={chamado.id} className="border-b border-gray-200 hover:bg-gray-50 transition">
-                      <td className="px-3 md:px-6 py-4 text-gray-900 font-bold text-sm">{chamado.titulo}</td>
-                      <td className="px-3 md:px-6 py-4 text-gray-600 text-xs md:text-sm max-w-xs line-clamp-2" title={chamado.descricao}>
-                        {chamado.descricao}
+                <tbody className="divide-y divide-gray-200">
+                  {chamados.map((chamado) => (
+                    <tr key={chamado.id} className="hover:bg-blue-50 transition cursor-pointer" onClick={() => router.push(`/fornecedor/meus-chamados/${chamado.id}`)}>
+                      <td className="px-6 py-4">
+                        <span className="font-bold text-gray-900">{chamado.titulo}</span>
                       </td>
-                      <td className="px-3 md:px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getPrioridadeColor(chamado.prioridade)}`}>
-                          {chamado.prioridade === "alta"
-                            ? "● Urgente"
-                            : chamado.prioridade === "media"
-                            ? "● Normal"
-                            : chamado.prioridade === "baixa"
-                            ? "● Baixa"
-                            : chamado.prioridade}
+                      <td className="px-6 py-4 text-gray-700 line-clamp-2">{chamado.descricao}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          chamado.prioridade === "urgente"
+                            ? "bg-red-50 text-red-700"
+                            : chamado.prioridade === "normal"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-emerald-50 text-emerald-700"
+                        }`}>
+                          {chamado.prioridade === "urgente" ? "🔴 Urgente" : chamado.prioridade === "normal" ? "🟠 Normal" : "🟢 Baixa"}
                         </span>
                       </td>
-                      <td className="px-3 md:px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(chamado.status)}`}>
-                          {chamado.status === "aberto"
-                            ? "● aberto"
+                      <td className="px-6 py-4">
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          chamado.status === "pendente"
+                            ? "bg-orange-100 text-orange-700"
                             : chamado.status === "em_andamento"
-                            ? "● em_requisicao"
-                            : chamado.status === "resolvido"
-                            ? "● Finalizada"
-                            : chamado.status === "fechado"
-                            ? "● Fechado"
-                            : chamado.status}
+                            ? "bg-blue-100 text-blue-700"
+                            : chamado.status === "finalizada"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}>
+                          {chamado.status === "em_andamento" ? "Em Andamento" : chamado.status === "finalizada" ? "Finalizada" : chamado.status === "pendente" ? "Pendente" : chamado.status}
                         </span>
                       </td>
-                      <td className="px-3 md:px-6 py-4 text-gray-900 text-sm truncate max-w-xs font-medium" title={chamado.criador_nome || "—"}>
+                      <td className="px-6 py-4 text-sm text-gray-700 font-medium">
                         {chamado.criador_nome || "—"}
                       </td>
-                      <td className="px-3 md:px-6 py-4 text-blue-600 font-medium text-sm truncate max-w-xs" title={chamado.secretarias?.nome || chamado.secretaria_nome || "—"}>
-                        {chamado.secretarias?.nome || chamado.secretaria_nome || "—"}
+                      <td className="px-6 py-4">
+                        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                          {chamado.secretarias?.nome || "—"}
+                        </span>
                       </td>
-                      <td className="px-3 md:px-6 py-4 relative">
+                      <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => setMenuAbertoId(menuAbertoId === chamado.id ? null : chamado.id)}
-                          className="text-gray-600 hover:text-gray-900 font-bold text-lg"
-                          title="Menu de opções"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                            setMenuPos({
+                              top: rect.bottom + 8,
+                              left: rect.left - 180
+                            });
+                            setMenuAbertoId(menuAbertoId === chamado.id ? null : chamado.id);
+                          }}
+                          className="p-2 rounded-full hover:bg-gray-200 text-gray-600 font-bold text-lg"
                         >
-                          ⋯
+                          ⋮
                         </button>
-                        {menuAbertoId === chamado.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        {menuAbertoId === chamado.id && menuPos && (
+                          <div
+                            ref={menuRef}
+                            className="fixed bg-white border-2 border-gray-200 rounded-lg shadow-2xl z-[9999] w-56"
+                            style={{
+                              top: `${menuPos.top}px`,
+                              left: `${menuPos.left}px`
+                            }}
+                          >
+                            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+                              <p className="text-sm font-bold text-gray-800">AÇÕES</p>
+                            </div>
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 router.push(`/fornecedor/meus-chamados/${chamado.id}`);
                                 setMenuAbertoId(null);
                               }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg"
+                              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
                             >
-                              👁️ Visualizar
+                              👁️ Visualizar Detalhes
                             </button>
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 window.open(`/fornecedor/meus-chamados/${chamado.id}`, "_blank");
                                 setMenuAbertoId(null);
                               }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-b-lg"
                             >
                               📤 Abrir em Nova Aba
-                            </button>
-                            <button
-                              onClick={() => {
-                                // Copiar ID para clipboard
-                                navigator.clipboard.writeText(chamado.id);
-                                setMenuAbertoId(null);
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg"
-                            >
-                              📋 Copiar ID
                             </button>
                           </div>
                         )}
