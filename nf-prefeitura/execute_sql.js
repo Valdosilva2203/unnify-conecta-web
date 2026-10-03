@@ -1,14 +1,17 @@
 const { Pool } = require("pg");
 
+// Carregar .env.local
+require("dotenv").config();
+
 // Desabilitar verificação de certificado SSL
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const pool = new Pool({
-  host: "aws-0-sa-east-1.pooler.supabase.com",
-  port: 6543,
-  database: "postgres",
-  user: "postgres.zubvmhvizvcnudognfqw",
-  password: "!@#VV220390220390vv#@!",
+  host: process.env.DATABASE_HOST,
+  port: parseInt(process.env.DATABASE_PORT || "6543"),
+  database: process.env.DATABASE_NAME,
+  user: process.env.DATABASE_USER,
+  password: process.env.DATABASE_PASSWORD,
   ssl: true,
 });
 
