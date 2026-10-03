@@ -23,6 +23,8 @@ interface Chamado {
   numero_chamado?: string;
   secretaria_nome?: string;
   criado_por?: string;
+  criador_nome?: string;
+  secretarias?: { nome: string };
 }
 
 export default function MeusChamados() {
@@ -197,8 +199,8 @@ export default function MeusChamados() {
                             : chamado.status}
                         </span>
                       </td>
-                      <td className="px-3 md:px-6 py-4 text-gray-900 text-sm truncate max-w-xs" title={chamado.criado_por || "—"}>
-                        {chamado.criado_por || "—"}
+                      <td className="px-3 md:px-6 py-4 text-gray-900 text-sm truncate max-w-xs font-medium" title={chamado.criador_nome || "—"}>
+                        {chamado.criador_nome || "—"}
                       </td>
                       <td className="px-3 md:px-6 py-4 text-blue-600 font-medium text-sm truncate max-w-xs" title={chamado.secretaria_nome || "—"}>
                         {chamado.secretaria_nome || "—"}
