@@ -199,7 +199,15 @@ export default function FornecedorRequisicoes() {
                               : "bg-gray-100 text-gray-700"
                           }`}
                         >
-                          {req.status === "pendente" ? "⏳ Pendente" : req.status === "aprovada" ? "✅ Aprovada" : req.status}
+                          {req.status === "pendente"
+                            ? "⏳ Pendente"
+                            : req.status === "aprovada"
+                            ? "✅ Aprovada"
+                            : req.status === "Aguardando nota fiscal"
+                            ? req.nota_fiscal_arquivo
+                              ? "📄 Nota Anexada"
+                              : "⏳ Aguardando nota fiscal"
+                            : req.status}
                         </span>
                         {req.status === "Aguardando nota fiscal" && !req.nota_fiscal_arquivo && (
                           <button
