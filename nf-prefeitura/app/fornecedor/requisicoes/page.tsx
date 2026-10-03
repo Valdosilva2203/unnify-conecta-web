@@ -382,7 +382,7 @@ export default function FornecedorRequisicoes() {
                         {req.nota_fiscal_arquivo && req.status === "Nota Enviada" && (
                           <button
                             onClick={() => baixarNotaFiscal(req.id)}
-                            className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded transition cursor-pointer"
+                            className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded-full transition cursor-pointer"
                             title="Baixar nota fiscal"
                           >
                             📥 Baixar nota
