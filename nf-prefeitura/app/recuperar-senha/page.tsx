@@ -31,10 +31,6 @@ export default function RecuperarSenhaPage() {
         setEnviado(true);
         setEmail("");
 
-        // Em desenvolvimento, mostrar o link no console
-        if (process.env.NODE_ENV === "development") {
-          console.log("🔐 [DEV MODE] Link de recuperação:", data.resetLink);
-        }
       } else {
         setMensagem({
           tipo: "erro",

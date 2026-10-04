@@ -246,7 +246,6 @@ function MinhaContaContent() {
 
       if (funcionario) {
         tabelaUsuario = "funcionarios";
-        console.log("Usuário encontrado em funcionarios");
       } else {
         const { data: admin, error: errAdmin } = await supabase
           .from("admins")
@@ -256,7 +255,6 @@ function MinhaContaContent() {
 
         if (admin) {
           tabelaUsuario = "admins";
-          console.log("Usuário encontrado em admins");
         } else {
           const { data: prefUser, error: errPref } = await supabase
             .from("prefeitura_users")

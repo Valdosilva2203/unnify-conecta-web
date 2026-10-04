@@ -107,7 +107,6 @@ export default function LoginContent() {
             prefeitura_id: fornecedor.prefeitura_id,
           };
 
-          console.log("🔐 FORNECEDOR LOGIN");
           localStorage.removeItem("prefeitura_session");
           localStorage.setItem("fornecedor_session", JSON.stringify(sessionData));
 
@@ -159,7 +158,6 @@ export default function LoginContent() {
             funcionario_id: funcionarioId,
           };
 
-          console.log("🔐 Admin login - sessionData:", sessionData);
           localStorage.removeItem("fornecedor_session");
           localStorage.setItem("prefeitura_session", JSON.stringify(sessionData));
 
@@ -209,8 +207,6 @@ export default function LoginContent() {
             secretaria_id: secretariaId || null,
           };
 
-          console.log("🔐 FUNCIONÁRIO LOGIN");
-          console.log("📛 Nome:", funcionario.nome);
           localStorage.removeItem("fornecedor_session");
           localStorage.setItem("prefeitura_session", JSON.stringify(sessionData));
 

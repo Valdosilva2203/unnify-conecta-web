@@ -417,8 +417,6 @@ function FuncionariosContent() {
         const senhaHash = await hashSenha(senhaFinal);
         dataToInsert.senha = senhaHash;
 
-        console.log("Criando funcionário com email:", formData.email, "e senha:", senhaFinal);
-
         const { data: novoFuncionario, error } = await supabase
           .from("funcionarios")
           .insert([dataToInsert])

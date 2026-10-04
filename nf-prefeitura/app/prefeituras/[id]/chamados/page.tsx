@@ -266,8 +266,6 @@ export default function ChamadosPage() {
         console.error("❌ Erro ao carregar fornecedores:", error);
         setFornecedores([]);
       } else {
-        console.log("✅ Fornecedores carregados:", data);
-        console.log("Total:", data?.length || 0);
         setFornecedores(data || []);
       }
     } catch (error) {
@@ -333,7 +331,6 @@ export default function ChamadosPage() {
         throw error;
       }
 
-      console.log("✅ Chamados carregados:", data);
       setChamados(data || []);
     } catch (error: any) {
       console.error("❌ Erro ao carregar chamados:", error?.message || error);
@@ -380,7 +377,6 @@ export default function ChamadosPage() {
         throw error;
       }
 
-      console.log("✅ Chamado criado:", data);
       await loadChamados();
       setIsModalOpen(false);
       setFormData({ titulo: "", descricao: "", prioridade: "normal", fornecedor_id: "" });
