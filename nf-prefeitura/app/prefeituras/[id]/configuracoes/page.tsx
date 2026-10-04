@@ -56,13 +56,9 @@ function ConfiguracoesContent() {
 
   const loadConfiguracao = async () => {
     try {
-      const { data, error } = await supabase
-        .from("configuracao_prefeitura")
-        .select("*")
-        .eq("prefeitura_id", id)
-        .single();
-
-      if (error && error.code !== "PGRST116") throw error;
+      const response = await fetch(`/api/prefeitura/configuracoes?prefeitura_id=${id}`);
+      const json = await response.json();
+      const data = json.data;
 
       if (data) {
         setConfiguracao(data);
@@ -135,28 +131,15 @@ function ConfiguracoesContent() {
         cor_botao_secundario: formData.cor_botao_secundario,
       };
 
-      if (configuracao) {
-        const { error } = await supabase
-          .from("configuracao_prefeitura")
-          .update(dataToSave)
-          .eq("id", configuracao.id);
+      const response = await fetch(`/api/prefeitura/configuracoes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dataToSave),
+      });
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("configuracao_prefeitura")
-          .insert([dataToSave]);
-
-        if (error) throw error;
+      if (!response.ok) {
+        throw new Error("Erro ao salvar configuração");
       }
-
-      // Salvar logo_url também na tabela prefeituras
-      const { error: logoError } = await supabase
-        .from("prefeituras")
-        .update({ logo_url: logoPrevisualizacao || null })
-        .eq("id", id);
-
-      if (logoError) throw logoError;
 
       alert("Configurações salvas com sucesso!");
       router.push(`/prefeituras/${id}`);
