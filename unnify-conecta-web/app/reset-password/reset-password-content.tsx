@@ -12,6 +12,7 @@ export default function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const processedRef = useRef(false);
+  const supabaseRef = useRef(createClient()); // Single instance for entire component lifecycle
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -38,21 +39,34 @@ export default function ResetPasswordContent() {
         const code = searchParams.get('code');
 
         if (type === 'recovery' && code) {
-          const supabase = createClient();
+          const supabase = supabaseRef.current; // Use single instance
 
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          console.log('[ResetPassword] 1. Attempting to exchange recovery code');
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
           if (error) {
+            console.error('[ResetPassword] 2. Code exchange failed:', {
+              errorName: error.name,
+              errorMessage: error.message,
+              errorStatus: (error as any).status,
+            });
             setTokenError('Link de recuperação inválido ou expirado. Solicite um novo link.');
             setIsValidToken(false);
           } else {
+            console.log('[ResetPassword] 2. Code exchange successful, session established');
+            console.log('[ResetPassword] 3. Session user ID:', data?.session?.user?.id);
             setIsValidToken(true);
           }
         } else {
+          console.warn('[ResetPassword] Missing type or code in URL', {
+            hasType: !!searchParams.get('type'),
+            hasCode: !!searchParams.get('code'),
+          });
           setTokenError('Link de recuperação inválido.');
           setIsValidToken(false);
         }
       } catch (error) {
+        console.error('[ResetPassword] Exception during code exchange:', error);
         setTokenError('Erro ao processar o link de recuperação.');
         setIsValidToken(false);
       }
@@ -97,20 +111,28 @@ export default function ResetPasswordContent() {
     setErrors({});
 
     try {
-      const supabase = createClient();
+      const supabase = supabaseRef.current; // Use same instance
 
+      console.log('[ResetPassword] 4. Attempting to update password');
       const { error } = await supabase.auth.updateUser({
         password: password,
       });
 
       if (error) {
+        console.error('[ResetPassword] 5. Password update failed:', {
+          errorName: error.name,
+          errorMessage: error.message,
+          errorStatus: (error as any).status,
+        });
         setErrors({ submit: error.message });
         setLoading(false);
         return;
       }
 
+      console.log('[ResetPassword] 5. Password update successful');
       setSubmitted(true);
     } catch (err) {
+      console.error('[ResetPassword] Exception during password update:', err);
       setErrors({
         submit: err instanceof Error ? err.message : 'Erro ao atualizar senha',
       });
