@@ -81,6 +81,7 @@ export function LoginForm() {
       if (role === 'admin_master' || role === 'admin') {
         router.push('/admin');
       } else if (role === 'user') {
+        // Check for accounting office membership (contador)
         const { data: membership } = await supabase
           .from('user_accounting_office_memberships')
           .select('id')
@@ -89,9 +90,23 @@ export function LoginForm() {
 
         if (membership) {
           router.push('/contador');
-        } else {
-          router.push('/onboarding');
+          return;
         }
+
+        // Check for company (empresa)
+        const { data: company } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('created_by', user.id)
+          .maybeSingle();
+
+        if (company) {
+          router.push('/app');
+          return;
+        }
+
+        // No membership or company → onboarding
+        router.push('/onboarding');
       } else {
         router.push('/onboarding');
       }
