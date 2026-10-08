@@ -63,18 +63,28 @@ export default function EmpresasPage() {
         setLoading(true);
         const supabase = createClient();
 
+        console.log('[AdminEmpresas] 1. Iniciando fetch de empresas');
+
         const { data, error: fetchError } = await supabase
           .from('companies')
           .select('*')
           .order('created_at', { ascending: false });
 
+        console.log('[AdminEmpresas] 2. Resposta do Supabase:', {
+          hasError: !!fetchError,
+          errorMessage: fetchError?.message,
+          dataLength: data ? (Array.isArray(data) ? data.length : 'não é array') : 'null',
+          rawData: data,
+        });
+
         if (fetchError) {
-          setError('Erro ao carregar empresas');
+          console.error('[AdminEmpresas] 3. Erro na consulta:', fetchError);
+          setError(`Erro ao carregar empresas: ${fetchError.message}`);
           return;
         }
 
         const companiesData = (data || []) as Company[];
-        setCompanies(companiesData);
+        console.log('[AdminEmpresas] 4. Empresas carregadas:', companiesData.length);
 
         // Calculate stats
         const totalCount = companiesData.length;
@@ -199,27 +209,26 @@ export default function EmpresasPage() {
           icon={<Building2 className="w-6 h-6" />}
           label="Total de empresas"
           value={stats.total}
-          change="+12% em relação ao mês anterior"
           color="orange"
         />
         <StatsCard
           label="Empresas ativas"
           value={stats.active}
-          percentage={(stats.active / stats.total * 100).toFixed(1) + '%'}
+          percentage={stats.total > 0 ? (stats.active / stats.total * 100).toFixed(1) + '%' : '—'}
           percentageLabel="do total"
           color="green"
         />
         <StatsCard
           label="Empresas pendentes"
           value={stats.pending}
-          percentage={(stats.pending / stats.total * 100).toFixed(1) + '%'}
+          percentage={stats.total > 0 ? (stats.pending / stats.total * 100).toFixed(1) + '%' : '—'}
           percentageLabel="do total"
           color="orange"
         />
         <StatsCard
           label="Empresas inativas"
           value={stats.inactive}
-          percentage={(stats.inactive / stats.total * 100).toFixed(1) + '%'}
+          percentage={stats.total > 0 ? (stats.inactive / stats.total * 100).toFixed(1) + '%' : '—'}
           percentageLabel="do total"
           color="gray"
         />
@@ -288,8 +297,18 @@ export default function EmpresasPage() {
           </div>
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p className="text-red-700">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <p className="text-red-700 font-medium mb-2">Erro ao carregar empresas</p>
+          <p className="text-red-600 text-sm">{error}</p>
+          <p className="text-red-600 text-xs mt-3 font-mono">
+            Verifique se há problemas de permissão RLS ou se o Supabase está acessível.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+          >
+            Tentar novamente
+          </button>
         </div>
       ) : filteredCompanies.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
