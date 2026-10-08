@@ -4,57 +4,70 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2, Building2, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-interface AccountingOfficeData {
+interface BusinessData {
   trade_name: string | null;
   legal_name: string;
   cnpj: string;
   city: string;
   state: string;
+  type: 'office' | 'company';
 }
 
 export function SuccessCard() {
-  const [office, setOffice] = useState<AccountingOfficeData | null>(null);
+  const [business, setBusiness] = useState<BusinessData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadOfficeData = async () => {
+    const loadBusinessData = async () => {
       try {
         const supabase = createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Usuário não autenticado');
 
-        const { data: membership, error: membershipError } = await supabase
+        // Try to find accounting office (contador flow)
+        const { data: membership } = await supabase
           .from('user_accounting_office_memberships')
           .select('accounting_office_id')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (membershipError || !membership) {
-          throw new Error('Membership não encontrada');
+        if (membership) {
+          const { data: officeData, error: officeError } = await supabase
+            .from('accounting_offices')
+            .select('trade_name, legal_name, cnpj, city, state')
+            .eq('id', membership.accounting_office_id)
+            .single();
+
+          if (!officeError && officeData) {
+            setBusiness({ ...officeData, type: 'office' });
+            setLoading(false);
+            return;
+          }
         }
 
-        const { data: officeData, error: officeError } = await supabase
-          .from('accounting_offices')
+        // Try to find company (empresa flow)
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
           .select('trade_name, legal_name, cnpj, city, state')
-          .eq('id', membership.accounting_office_id)
-          .single();
+          .eq('created_by', user.id)
+          .maybeSingle();
 
-        if (officeError || !officeData) {
-          throw new Error('Escritório não encontrado');
+        if (companyError || !companyData) {
+          throw new Error('Nenhuma empresa ou escritório encontrado');
         }
 
-        setOffice(officeData);
+        setBusiness({ ...companyData, type: 'company' });
       } catch (err) {
-        console.error('Erro ao carregar dados do escritório:', err);
-        setError('Não foi possível carregar as informações do seu escritório.');
+        console.error('Erro ao carregar dados:', err);
+        setError('Não foi possível carregar as informações do seu negócio.');
       } finally {
         setLoading(false);
       }
     };
 
-    loadOfficeData();
+    loadBusinessData();
   }, []);
 
   if (loading) {
@@ -66,13 +79,22 @@ export function SuccessCard() {
     );
   }
 
-  if (error || !office) {
+  if (error || !business) {
     return (
       <div className="bg-red-50 rounded-2xl p-8 md:p-10 border border-red-200">
         <p className="text-red-700 text-center">{error || 'Erro ao carregar dados'}</p>
       </div>
     );
   }
+
+  const isOffice = business.type === 'office';
+  const businessType = isOffice ? 'escritório' : 'empresa';
+  const title = isOffice
+    ? 'Seu escritório está pronto!'
+    : 'Sua empresa está pronta!';
+  const subtitle = isOffice
+    ? 'Seu escritório foi configurado com sucesso no Unnify Conecta. Agora você já pode começar a organizar seus clientes e trabalhar conectado às empresas.'
+    : 'Sua empresa foi cadastrada com sucesso no Unnify Conecta. Agora você já pode começar a gerenciar seus dados e acessar seus serviços.';
 
   return (
     <div className="space-y-8">
@@ -90,22 +112,21 @@ export function SuccessCard() {
 
         {/* Title */}
         <h1 className="text-3xl md:text-4xl font-black text-black mb-3">
-          Seu escritório está pronto!
+          {title}
         </h1>
 
         {/* Subtitle */}
         <p className="text-gray-600 text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-          Seu escritório foi configurado com sucesso no Unnify Conecta. Agora você já pode começar
-          a organizar seus clientes e trabalhar conectado às empresas.
+          {subtitle}
         </p>
       </div>
 
       {/* Checklist */}
       <div className="space-y-4">
         {[
-          { title: 'Escritório cadastrado', desc: 'As informações do seu escritório foram registradas com sucesso.' },
-          { title: 'Sua conta foi definida como proprietária', desc: 'Você tem acesso completo ao ambiente do escritório.' },
-          { title: 'Ambiente configurado', desc: 'Seu ambiente está pronto para uso no Unnify Conecta.' },
+          { title: `${businessType.charAt(0).toUpperCase() + businessType.slice(1)} cadastrad${isOffice ? 'o' : 'a'}`, desc: `As informações do seu ${businessType} foram registradas com sucesso.` },
+          { title: 'Sua conta foi definida como proprietária', desc: `Você tem acesso completo ao ambiente do ${businessType}.` },
+          { title: 'Ambiente configurado', desc: `Seu ambiente está pronto para uso no Unnify Conecta.` },
         ].map((item, idx) => (
           <div key={idx} className="flex gap-4 items-start bg-white rounded-lg p-4 border border-gray-200 hover:border-green-300 transition-colors">
             <div className="flex-shrink-0 mt-1">
@@ -119,7 +140,7 @@ export function SuccessCard() {
         ))}
       </div>
 
-      {/* Office Card */}
+      {/* Business Card */}
       <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-sm">
         <div className="flex gap-4">
           {/* Icon */}
@@ -132,13 +153,13 @@ export function SuccessCard() {
           {/* Info */}
           <div className="flex-1">
             <p className="text-lg font-bold text-gray-900">
-              {office.trade_name || office.legal_name}
+              {business.trade_name || business.legal_name}
             </p>
-            <p className="text-sm text-gray-600 mt-1">CNPJ {office.cnpj}</p>
+            <p className="text-sm text-gray-600 mt-1">CNPJ {business.cnpj}</p>
             <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
               <MapPin className="w-4 h-4" />
               <span>
-                {office.city} - {office.state}
+                {business.city} - {business.state}
               </span>
             </div>
           </div>
