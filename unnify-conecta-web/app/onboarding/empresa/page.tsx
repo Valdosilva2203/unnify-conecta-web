@@ -235,7 +235,7 @@ export default function OnboardingEmpresaPage() {
 
   const steps = [
     { number: 1, title: 'Etapa 1', subtitle: 'Tipo de perfil', status: 'completed' as const },
-    { number: 2, title: 'Etapa 2', subtitle: 'Dados do escritório', status: 'current' as const },
+    { number: 2, title: 'Etapa 2', subtitle: 'Dados do escritório', status: 'active' as const },
     { number: 3, title: 'Etapa 3', subtitle: 'Conclusão', status: 'pending' as const },
   ];
 
