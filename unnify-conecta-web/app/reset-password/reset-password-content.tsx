@@ -26,39 +26,35 @@ export default function ResetPasswordContent() {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  // Validate token on mount
+  // Process recovery code on mount
   useEffect(() => {
-    const validateToken = async () => {
+    const processRecoveryCode = async () => {
       try {
         const type = searchParams.get('type');
-        const tokenHash = searchParams.get('token_hash');
+        const code = searchParams.get('code');
 
-        // Verify the recovery token with Supabase
-        if (type === 'recovery' && tokenHash) {
+        if (type === 'recovery' && code) {
           const supabase = createClient();
 
-          // Try to verify the token by attempting to get the user
-          // If the token is invalid or expired, this will fail
-          const { data: { user }, error } = await supabase.auth.getUser();
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-          // Token is valid if user exists (no error) OR if the error is NOT about invalid/expired token
-          if (user || !error?.message.includes('invalid')) {
-            setIsValidToken(true);
-          } else {
+          if (error) {
             setTokenError('Link de recuperação inválido ou expirado. Solicite um novo link.');
             setIsValidToken(false);
+          } else {
+            setIsValidToken(true);
           }
         } else {
           setTokenError('Link de recuperação inválido.');
           setIsValidToken(false);
         }
       } catch (error) {
-        setTokenError('Erro ao validar o link de recuperação.');
+        setTokenError('Erro ao processar o link de recuperação.');
         setIsValidToken(false);
       }
     };
 
-    validateToken();
+    processRecoveryCode();
   }, [searchParams]);
 
   const validateForm = () => {
