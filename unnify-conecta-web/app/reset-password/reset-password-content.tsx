@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 export default function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const processedRef = useRef(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,8 +27,11 @@ export default function ResetPasswordContent() {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  // Process recovery code on mount
+  // Process recovery code on mount (only once, prevent React Strict Mode double-execution)
   useEffect(() => {
+    if (processedRef.current) return;
+    processedRef.current = true;
+
     const processRecoveryCode = async () => {
       try {
         const type = searchParams.get('type');
