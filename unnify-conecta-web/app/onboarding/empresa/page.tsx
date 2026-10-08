@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { StepsIndicator } from '@/components/onboarding/StepsIndicator';
 import { Button } from '@/components/ui/button';
+import { SearchIcon } from 'lucide-react';
 
 const BRAZILIAN_STATES = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -86,6 +87,8 @@ export default function OnboardingEmpresaPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [loadingCNPJ, setLoadingCNPJ] = useState(false);
+  const [cnpjLookupMessage, setCNPJLookupMessage] = useState('');
 
   useEffect(() => {
     if (processedRef.current) return;
@@ -154,6 +157,52 @@ export default function OnboardingEmpresaPage() {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
+  const handleConsultarCNPJ = async () => {
+    if (!validateCNPJ(formData.cnpj)) {
+      setErrors({ cnpj: 'CNPJ inválido' });
+      return;
+    }
+
+    setLoadingCNPJ(true);
+    setCNPJLookupMessage('');
+
+    try {
+      const cleanCNPJ = formData.cnpj.replace(/\D/g, '');
+      const response = await fetch('/api/companies/lookup-cnpj', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cnpj: cleanCNPJ })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        if (data.canFillManually) {
+          setCNPJLookupMessage('API indisponível. Preencha os dados manualmente.');
+        } else {
+          setError(data.error || 'Erro ao consultar CNPJ');
+        }
+        setLoadingCNPJ(false);
+        return;
+      }
+
+      // Auto-fill form
+      setFormData((prev) => ({
+        ...prev,
+        legalName: data.data?.legal_name || prev.legalName,
+        tradeName: data.data?.trade_name || prev.tradeName,
+        city: data.data?.city || prev.city,
+        state: data.data?.state || prev.state
+      }));
+
+      setCNPJLookupMessage('✓ Dados carregados com sucesso');
+    } catch (err) {
+      setCNPJLookupMessage('Erro ao consultar CNPJ. Tente novamente.');
+    } finally {
+      setLoadingCNPJ(false);
+    }
+  };
+
   const handleChange = (field: string, value: string) => {
     let processedValue = value;
 
@@ -185,9 +234,9 @@ export default function OnboardingEmpresaPage() {
       const supabase = createClient();
 
       const { data, error: rpcError } = await supabase.rpc(
-        'create_accounting_office_with_owner_membership',
+        'create_company',
         {
-          p_cnpj: formData.cnpj.replace(/\D/g, ''),
+          p_cnpj: formData.cnpj,
           p_legal_name: formData.legalName,
           p_trade_name: formData.tradeName || null,
           p_phone: formData.phone.replace(/\D/g, ''),
@@ -210,7 +259,7 @@ export default function OnboardingEmpresaPage() {
       }
 
       const result = Array.isArray(data) ? data[0] : data;
-      console.log('RPC Response:', result);
+      console.log('Company created:', result);
 
       if (!result) {
         setError('Erro ao criar empresa: sem resposta do servidor');
@@ -231,7 +280,7 @@ export default function OnboardingEmpresaPage() {
         return;
       }
 
-      if (result.office_id && result.membership_id) {
+      if (result.company_id) {
         router.push('/onboarding/conclusao');
       } else {
         console.error('Invalid RPC response:', result);
@@ -263,7 +312,7 @@ export default function OnboardingEmpresaPage() {
 
   const steps = [
     { number: 1, title: 'Etapa 1', subtitle: 'Tipo de perfil', status: 'completed' as const },
-    { number: 2, title: 'Etapa 2', subtitle: 'Dados do escritório', status: 'active' as const },
+    { number: 2, title: 'Etapa 2', subtitle: 'Dados da empresa', status: 'active' as const },
     { number: 3, title: 'Etapa 3', subtitle: 'Conclusão', status: 'pending' as const },
   ];
 
@@ -278,10 +327,10 @@ export default function OnboardingEmpresaPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-10 shadow-lg">
             <div className="mb-8">
               <h1 className="text-3xl md:text-4xl font-black text-black mb-2">
-                Dados do escritório
+                Dados da empresa
               </h1>
               <p className="text-gray-600">
-                Preencha as informações da sua empresa para continuar
+                Informe o CNPJ para consultar os dados ou preencha manualmente
               </p>
             </div>
 
@@ -298,16 +347,41 @@ export default function OnboardingEmpresaPage() {
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                   CNPJ *
                 </label>
-                <input
-                  type="text"
-                  value={formData.cnpj}
-                  onChange={(e) => handleChange('cnpj', e.target.value)}
-                  onBlur={() => handleBlur('cnpj')}
-                  placeholder="XX.XXX.XXX/XXXX-XX"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.cnpj}
+                    onChange={(e) => handleChange('cnpj', e.target.value)}
+                    onBlur={() => handleBlur('cnpj')}
+                    placeholder="XX.XXX.XXX/XXXX-XX"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleConsultarCNPJ}
+                    disabled={loadingCNPJ || !formData.cnpj || !!errors.cnpj}
+                    className="px-6 py-3 bg-orange-100 text-orange-600 hover:bg-orange-200 disabled:bg-gray-100 disabled:text-gray-400 rounded-lg font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
+                  >
+                    {loadingCNPJ ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                        Consultando...
+                      </>
+                    ) : (
+                      <>
+                        <SearchIcon className="w-4 h-4" />
+                        Consultar
+                      </>
+                    )}
+                  </button>
+                </div>
                 {touched.cnpj && errors.cnpj && (
                   <p className="text-xs text-red-600 mt-1">{errors.cnpj}</p>
+                )}
+                {cnpjLookupMessage && (
+                  <p className={`text-xs mt-1 ${cnpjLookupMessage.includes('✓') ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {cnpjLookupMessage}
+                  </p>
                 )}
               </div>
 
