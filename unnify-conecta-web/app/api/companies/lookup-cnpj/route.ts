@@ -1,5 +1,3 @@
-import { createClient } from '@/lib/supabase/server';
-
 interface BrasilAPIResponse {
   cnpj: string;
   name: string;
@@ -24,23 +22,23 @@ interface LookupResponse {
 }
 
 const BRASIL_API_TIMEOUT = 5000; // 5 seconds
+const BRASIL_API_URL = 'https://brasilapi.com.br/api/cnpj/v1';
 
 async function fetchFromBrasilAPI(cnpj: string): Promise<BrasilAPIResponse> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), BRASIL_API_TIMEOUT);
 
   try {
-    const response = await fetch(
-      `https://brasilapi.com.br/api/cnpj/v1/${cnpj}`,
-      {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Unnify-Conecta/1.0'
-        },
-        signal: controller.signal
-      }
-    );
+    const response = await fetch(`${BRASIL_API_URL}/${cnpj}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Unnify-Conecta/1.0'
+      },
+      signal: controller.signal,
+      // @ts-ignore - NextJS specific option
+      cache: 'no-store'
+    });
 
     clearTimeout(timeout);
 
@@ -80,24 +78,10 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    // 3. Verify user is authenticated
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return Response.json(
-        { success: false, error: 'Não autorizado' } as LookupResponse,
-        { status: 401 }
-      );
-    }
-
-    // 4. Consult BrasilAPI
+    // 3. Consult BrasilAPI (public endpoint, no auth needed)
     const apiData = await fetchFromBrasilAPI(cleanCNPJ);
 
-    // 5. Format response
+    // 4. Format response
     const response: LookupResponse = {
       success: true,
       data: {
