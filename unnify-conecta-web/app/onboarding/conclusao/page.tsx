@@ -42,14 +42,20 @@ export default function OnboardingConclusivelPage() {
           return;
         }
 
-        // 4. Verificar membership (escritório)
+        // 4. Verificar se tem empresa ou escritório contábil
         const { data: membership, error: membershipError } = await supabase
           .from('user_accounting_office_memberships')
           .select('id, role')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (membershipError || !membership) {
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('created_by', user.id)
+          .maybeSingle();
+
+        if ((membershipError || !membership) && (companyError || !company)) {
           router.push('/onboarding');
           return;
         }
