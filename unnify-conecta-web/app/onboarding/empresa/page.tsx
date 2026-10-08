@@ -198,8 +198,9 @@ export default function OnboardingEmpresaPage() {
       );
 
       if (rpcError) {
+        console.error('RPC Error:', rpcError);
         const message = rpcError.message || 'Erro ao criar empresa';
-        if (message.includes('CNPJ')) {
+        if (message.includes('CNPJ') || message.includes('duplicate')) {
           setError('CNPJ já cadastrado no sistema');
         } else {
           setError(message);
@@ -208,15 +209,38 @@ export default function OnboardingEmpresaPage() {
         return;
       }
 
-      if (data && !data.success) {
-        setError(data.message || 'Erro ao criar empresa');
+      const result = Array.isArray(data) ? data[0] : data;
+      console.log('RPC Response:', result);
+
+      if (!result) {
+        setError('Erro ao criar empresa: sem resposta do servidor');
         setSubmitting(false);
         return;
       }
 
-      router.push('/onboarding/conclusao');
+      if (!result.success) {
+        const errorMsg = result.message || 'Erro desconhecido';
+        if (errorMsg.includes('CNPJ')) {
+          setError('CNPJ já cadastrado no sistema');
+        } else if (errorMsg.includes('autenticado')) {
+          setError('Sessão expirada. Por favor, faça login novamente');
+        } else {
+          setError(errorMsg);
+        }
+        setSubmitting(false);
+        return;
+      }
+
+      if (result.office_id && result.membership_id) {
+        router.push('/onboarding/conclusao');
+      } else {
+        console.error('Invalid RPC response:', result);
+        setError('Resposta inesperada do servidor');
+        setSubmitting(false);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro inesperado';
+      console.error('Form submission error:', err);
       setError(`Erro ao criar empresa: ${errorMessage}`);
       setSubmitting(false);
     }
