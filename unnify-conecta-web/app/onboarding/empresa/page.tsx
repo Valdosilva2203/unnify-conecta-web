@@ -17,25 +17,29 @@ function validateCNPJ(cnpj: string): boolean {
   const cleaned = cnpj.replace(/\D/g, '');
   if (cleaned.length !== 14) return false;
 
+  const digits = cleaned.split('').map(Number);
+
+  // Primeiro dígito verificador (posição 12)
+  // Sequência oficial: 5 4 3 2 9 8 7 6 5 4 3 2
   let sum = 0;
-  let multiplier = 5;
-  for (let i = 0; i < 8; i++) {
-    sum += parseInt(cleaned[i]) * multiplier--;
-    if (multiplier === 0) multiplier = 9;
+  const mult1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  for (let i = 0; i < 12; i++) {
+    sum += digits[i] * mult1[i];
   }
   let firstDigit = 11 - (sum % 11);
-  if (firstDigit > 9) firstDigit = 0;
+  firstDigit = firstDigit > 9 ? 0 : firstDigit;
 
+  // Segundo dígito verificador (posição 13)
+  // Sequência oficial: 6 5 4 3 2 9 8 7 6 5 4 3 2 (inclui primeiro verificador)
   sum = 0;
-  multiplier = 6;
-  for (let i = 0; i < 9; i++) {
-    sum += parseInt(cleaned[i]) * multiplier--;
-    if (multiplier === 0) multiplier = 9;
+  const mult2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  for (let i = 0; i < 13; i++) {
+    sum += digits[i] * mult2[i];
   }
   let secondDigit = 11 - (sum % 11);
-  if (secondDigit > 9) secondDigit = 0;
+  secondDigit = secondDigit > 9 ? 0 : secondDigit;
 
-  return parseInt(cleaned[12]) === firstDigit && parseInt(cleaned[13]) === secondDigit;
+  return digits[12] === firstDigit && digits[13] === secondDigit;
 }
 
 function maskCNPJ(value: string): string {
