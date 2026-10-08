@@ -41,35 +41,51 @@ export default function ContadorPage() {
           return;
         }
 
-        // 3. Verificar membership
+        // 3. Verificar membership (contador) ou company (empresa)
         const { data: membership } = await supabase
           .from('user_accounting_office_memberships')
           .select('accounting_office_id')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (!membership) {
-          router.push('/onboarding');
-          return;
+        let businessName: string | null = null;
+
+        if (membership) {
+          // 4. Obter dados do escritório (contador)
+          const { data: office } = await supabase
+            .from('accounting_offices')
+            .select('trade_name, legal_name')
+            .eq('id', membership.accounting_office_id)
+            .single();
+
+          if (office) {
+            businessName = office.trade_name || office.legal_name;
+          }
+        } else {
+          // 4. Obter dados da empresa (empresa)
+          const { data: company } = await supabase
+            .from('companies')
+            .select('trade_name, legal_name')
+            .eq('created_by', user.id)
+            .maybeSingle();
+
+          if (company) {
+            businessName = company.trade_name || company.legal_name;
+          } else {
+            router.push('/onboarding');
+            return;
+          }
         }
 
-        // 4. Obter dados do escritório
-        const { data: office } = await supabase
-          .from('accounting_offices')
-          .select('trade_name, legal_name')
-          .eq('id', membership.accounting_office_id)
-          .single();
-
-        if (office) {
-          const name = office.trade_name || office.legal_name;
-          const initials = name
+        if (businessName) {
+          const initials = businessName
             .split(' ')
             .slice(0, 2)
             .map((word: string) => word[0])
             .join('')
             .toUpperCase();
 
-          setOfficeData({ name, initials });
+          setOfficeData({ name: businessName, initials });
         }
 
         setAuthorized(true);
