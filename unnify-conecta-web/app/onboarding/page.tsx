@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, Calculator } from 'lucide-react';
 import { OnboardingHeader } from '@/components/OnboardingHeader';
@@ -10,34 +10,6 @@ import { createClient } from '@/lib/supabase/client';
 export default function OnboardingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
-  // Verify authentication only
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session) {
-          router.push('/login');
-          setCheckingAuth(false);
-          return;
-        }
-
-        // Layout will handle admin_master redirect
-        setIsAuthenticated(true);
-        setCheckingAuth(false);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        setCheckingAuth(false);
-        router.push('/login');
-      }
-    };
-
-    checkAuth();
-  }, [router]);
 
   const handleContinueAsEmpresa = async () => {
     setLoading(true);
@@ -86,21 +58,6 @@ export default function OnboardingPage() {
       setLoading(false);
     }
   };
-
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-white py-12 px-6 md:py-16">
