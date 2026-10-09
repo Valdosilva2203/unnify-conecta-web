@@ -32,21 +32,19 @@ export default function OnboardingPage() {
           setUserEmail(session.user.email);
         }
 
-        // Query profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('global_role')
-          .eq('user_id', session.user.id)
-          .single();
+        const roleResponse = await fetch('/api/admin/check-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: session.user.id }),
+        });
 
-        console.log('Onboarding check:', { user_id: session.user.id, role: profile?.global_role });
+        const roleData = await roleResponse.json();
 
         // Redirect admin_master and admin
-        if (profile?.global_role === 'admin_master' || profile?.global_role === 'admin') {
+        if (roleData.global_role === 'admin_master' || roleData.global_role === 'admin') {
           router.replace('/admin');
           return;
         }
-
         // Allow others to see onboarding
         setCanRender(true);
       } catch (error) {

@@ -16,20 +16,12 @@ export default function AdminLayout({
   useEffect(() => {
     const checkAuthorization = async () => {
       try {
-        console.log('Starting admin authorization check...');
         const supabase = createClient();
 
         // Get session from getSession (more reliable than getUser)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        console.log('Session check:', {
-          hasSession: !!session,
-          userId: session?.user?.id,
-          error: sessionError
-        });
-
         if (sessionError || !session?.user?.id) {
-          console.log('No session, redirecting to login');
           setLoading(false);
           router.push('/login');
           return;
@@ -37,36 +29,29 @@ export default function AdminLayout({
 
         const userId = session.user.id;
 
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('global_role')
-          .eq('user_id', userId)
-          .single();
-
-        console.log('Profile query result:', {
-          userId,
-          profile,
-          error: profileError
+        // Use API endpoint to check role (uses service role to bypass RLS)
+        const roleResponse = await fetch('/api/admin/check-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
         });
 
-        if (profileError || !profile) {
-          console.log('No profile found, redirecting to login');
+        const roleData = await roleResponse.json();
+
+        if (roleData.status !== 'ok' || !roleData.global_role) {
           setLoading(false);
           router.push('/login');
           return;
         }
 
-        if (profile.global_role === 'admin_master' || profile.global_role === 'admin') {
-          console.log('User is authorized as:', profile.global_role);
+        if (roleData.global_role === 'admin_master' || roleData.global_role === 'admin') {
           setAuthorized(true);
           setLoading(false);
         } else {
-          console.log('User is not admin, redirecting to onboarding. Role:', profile.global_role);
           setLoading(false);
           router.push('/onboarding');
         }
       } catch (error) {
-        console.error('Authorization check error:', error);
         setLoading(false);
         router.push('/login');
       }
