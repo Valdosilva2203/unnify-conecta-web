@@ -33,16 +33,13 @@ export default function OnboardingPage() {
           .eq('user_id', session.user.id)
           .single();
 
-        // Log detailed error info for debugging
-        if (error) {
-          console.error('Profile fetch error:', error);
-          console.log('User ID:', session.user.id);
-          console.log('Error keys:', Object.keys(error));
-        }
+        // Log for debugging
+        console.log('Profile query result:', { profile, error, userId: session.user.id });
 
         // If profile not found or error, allow onboarding
         // (profile will be created during first onboarding step)
         if (error || !profile) {
+          console.log('Profile not found or error - allowing onboarding');
           setIsAuthenticated(true);
           setCheckingAuth(false);
           return;
