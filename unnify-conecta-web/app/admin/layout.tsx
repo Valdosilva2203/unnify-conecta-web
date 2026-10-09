@@ -27,14 +27,28 @@ export default function AdminLayout({
           return;
         }
 
-        const userId = session.user.id;
+        const token = session.access_token;
 
-        // Use API endpoint to check role (uses service role to bypass RLS)
+        if (!token) {
+          setLoading(false);
+          router.push('/login');
+          return;
+        }
+
+        // Use API endpoint to check role (validates token on server)
         const roleResponse = await fetch('/api/admin/check-role', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId }),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
         });
+
+        if (!roleResponse.ok) {
+          setLoading(false);
+          router.push('/login');
+          return;
+        }
 
         const roleData = await roleResponse.json();
 

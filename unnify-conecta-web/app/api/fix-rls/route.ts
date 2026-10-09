@@ -1,15 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-
-const supabaseUrl = 'https://bvwfoafkqjquxcbijffj.supabase.co';
-const supabaseServiceKey = 'sb_secret_IE2ixB_BfCw8LCbDN22d7Q_5oRjAajW';
 
 export async function POST() {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      db: { schema: 'public' },
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    const supabase = createClient();
 
     // Use rpc to execute raw SQL via a dynamic approach
     // First, let's try to just read and see if service role bypasses RLS

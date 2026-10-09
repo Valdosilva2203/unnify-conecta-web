@@ -32,11 +32,28 @@ export default function OnboardingPage() {
           setUserEmail(session.user.email);
         }
 
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        const token = authSession?.access_token;
+
+        if (!token) {
+          router.replace('/login');
+          return;
+        }
+
         const roleResponse = await fetch('/api/admin/check-role', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: session.user.id }),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
         });
+
+        if (!roleResponse.ok) {
+          if (roleResponse.status === 401) {
+            router.replace('/login');
+          }
+          return;
+        }
 
         const roleData = await roleResponse.json();
 
