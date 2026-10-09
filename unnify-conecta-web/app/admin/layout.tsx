@@ -15,40 +15,64 @@ export default function AdminLayout({
 
   useEffect(() => {
     const checkAuthorization = async () => {
-      const supabase = createClient();
+      try {
+        const supabase = createClient();
 
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
 
-      if (authError || !user) {
-        router.push('/login');
-        return;
-      }
+        console.log('Admin check - User:', { user: user?.id, email: user?.email, error: authError });
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('global_role')
-        .eq('user_id', user.id)
-        .single();
+        if (authError || !user) {
+          console.log('No user, redirecting to login');
+          router.push('/login');
+          return;
+        }
 
-      if (profileError || !profile) {
-        router.push('/login');
-        return;
-      }
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('global_role')
+          .eq('user_id', user.id)
+          .single();
 
-      const role = profile.global_role;
+        console.log('Admin check - Profile:', { profile, error: profileError });
 
-      if (role === 'admin_master' || role === 'admin') {
-        setAuthorized(true);
+        if (profileError || !profile) {
+          console.log('Profile error or not found, redirecting to login');
+          router.push('/login');
+          return;
+        }
+
+        const role = profile.global_role;
+
+        console.log('Admin check - Role:', role);
+
+        if (role === 'admin_master' || role === 'admin') {
+          setAuthorized(true);
+          setLoading(false);
+        } else {
+          console.log('Not authorized, redirecting to onboarding');
+          router.push('/onboarding');
+        }
+      } catch (error) {
+        console.error('Admin authorization check failed:', error);
         setLoading(false);
-      } else {
-        router.push('/onboarding');
+        router.push('/login');
       }
     };
 
+    // Add timeout to prevent infinite loading
+    const timer = setTimeout(() => {
+      console.error('Admin auth check timeout');
+      setLoading(false);
+      router.push('/login');
+    }, 5000);
+
     checkAuthorization();
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   if (loading) {
