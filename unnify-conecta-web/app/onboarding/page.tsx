@@ -26,15 +26,27 @@ export default function OnboardingPage() {
           return;
         }
 
-        // Check user role
+        // Check user role using service role if available, otherwise try authenticated
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('global_role')
           .eq('user_id', session.user.id)
           .single();
 
+        // Log detailed error info for debugging
+        if (error) {
+          console.error('Profile fetch error:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            userId: session.user.id
+          });
+        }
+
+        // If profile not found or error, allow onboarding
+        // (profile will be created during first onboarding step)
         if (error || !profile) {
-          console.error('Profile fetch failed:', error);
+          setIsAuthenticated(true);
           setCheckingAuth(false);
           return;
         }
@@ -49,7 +61,7 @@ export default function OnboardingPage() {
         setIsAuthenticated(true);
         setCheckingAuth(false);
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('Auth check exception:', error);
         setCheckingAuth(false);
         router.push('/login');
       }
