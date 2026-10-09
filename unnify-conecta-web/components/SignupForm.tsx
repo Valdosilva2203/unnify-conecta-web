@@ -84,7 +84,25 @@ export function SignupForm() {
       // 2. Wait a moment for the trigger to create the profile
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // 3. Redirect to onboarding
+      // 3. If user was created, manually create the profile as backup
+      if (authData?.user?.id) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert(
+            {
+              user_id: authData.user.id,
+              email,
+              full_name: fullName,
+            },
+            { onConflict: 'user_id' }
+          );
+
+        if (profileError) {
+          console.warn('Profile creation warning:', profileError.message);
+        }
+      }
+
+      // 4. Redirect to onboarding
       router.push('/onboarding');
     } catch (err) {
       setErrors({ submit: err instanceof Error ? err.message : 'Erro ao criar conta' });
