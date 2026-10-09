@@ -13,40 +13,24 @@ export default function OnboardingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Verify authentication and role
+  // Verify authentication only
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const supabase = createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
-        if (!session?.access_token) {
+        if (!session) {
           router.push('/login');
           setCheckingAuth(false);
           return;
         }
 
-        // Check user role via API (uses service role to bypass RLS)
-        const response = await fetch('/api/auth/check-role', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        const { role } = await response.json();
-        console.log('User role:', role);
-
-        // Redirect Admin Master to dashboard
-        if (role === 'admin_master') {
-          setCheckingAuth(false);
-          router.push('/admin');
-          return;
-        }
-
+        // Layout will handle admin_master redirect
         setIsAuthenticated(true);
         setCheckingAuth(false);
       } catch (error) {
-        console.error('Auth check exception:', error);
+        console.error('Auth check failed:', error);
         setCheckingAuth(false);
         router.push('/login');
       }
