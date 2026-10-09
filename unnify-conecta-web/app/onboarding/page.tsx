@@ -35,12 +35,9 @@ export default function OnboardingPage() {
 
         // Log detailed error info for debugging
         if (error) {
-          console.error('Profile fetch error:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            userId: session.user.id
-          });
+          console.error('Profile fetch error:', error);
+          console.log('User ID:', session.user.id);
+          console.log('Error keys:', Object.keys(error));
         }
 
         // If profile not found or error, allow onboarding
