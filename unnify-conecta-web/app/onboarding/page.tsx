@@ -26,27 +26,14 @@ export default function OnboardingPage() {
           return;
         }
 
-        // Check user role using service role if available, otherwise try authenticated
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('global_role')
-          .eq('user_id', session.user.id)
-          .single();
+        // Check user role via API (uses service role to bypass RLS)
+        const response = await fetch('/api/auth/check-role');
+        const { role } = await response.json();
 
-        // Log for debugging
-        console.log('Profile query result:', { profile, error, userId: session.user.id });
-
-        // If profile not found or error, allow onboarding
-        // (profile will be created during first onboarding step)
-        if (error || !profile) {
-          console.log('Profile not found or error - allowing onboarding');
-          setIsAuthenticated(true);
-          setCheckingAuth(false);
-          return;
-        }
+        console.log('User role:', role);
 
         // Redirect Admin Master to dashboard
-        if (profile.global_role === 'admin_master') {
+        if (role === 'admin_master') {
           setCheckingAuth(false);
           router.push('/admin');
           return;
