@@ -1,68 +1,126 @@
-import { redirect } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Building2, Calculator } from 'lucide-react';
 import { OnboardingHeader } from '@/components/OnboardingHeader';
 import { OnboardingCard } from '@/components/OnboardingCard';
-import { OnboardingPageClient } from './page-client';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/client';
 
-export const dynamic = 'force-dynamic';
+export default function OnboardingPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [canRender, setCanRender] = useState(false);
 
-export default async function OnboardingPage() {
-  try {
-    const cookieStore = await cookies();
+  useEffect(() => {
+    const checkRole = async () => {
+      try {
+        const supabase = createClient();
 
-    // Create auth client to get user from session
-    const authClient = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        // Get user session
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.user?.id) {
+          router.replace('/login');
+          return;
+        }
+
+        // Query profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('global_role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        console.log('Onboarding check:', { user_id: session.user.id, role: profile?.global_role });
+
+        // Redirect admin_master and admin
+        if (profile?.global_role === 'admin_master' || profile?.global_role === 'admin') {
+          router.replace('/admin');
+          return;
+        }
+
+        // Allow others to see onboarding
+        setCanRender(true);
+      } catch (error) {
+        console.error('Check role error:', error);
+        setCanRender(true); // Allow render on error
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkRole();
+  }, [router]);
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Verificando autenticação...</p>
+        </div>
+      </div>
     );
-
-    // Try to get user from existing auth state (via cookie parsing)
-    const authToken = cookieStore.get('sb-bvwfoafkqjquxcbijffj-auth-token')?.value;
-
-    if (!authToken) {
-      redirect('/login');
-    }
-
-    // Parse JWT to get user_id (middle part of JWT)
-    const parts = authToken.split('.');
-    if (parts.length !== 3) {
-      redirect('/login');
-    }
-
-    let userId: string;
-    try {
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-      userId = payload.sub;
-    } catch {
-      redirect('/login');
-    }
-
-    if (!userId) {
-      redirect('/login');
-    }
-
-    // Query profile using service role (bypasses RLS)
-    const supabase = createClient();
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('global_role')
-      .eq('user_id', userId)
-      .single();
-
-    console.log('Onboarding check:', { userId, profile, error });
-
-    // Redirect admin_master and admin to /admin
-    if (profile?.global_role === 'admin_master' || profile?.global_role === 'admin') {
-      redirect('/admin');
-    }
-
-    // Only regular users see onboarding
-    return <OnboardingPageClient />;
-  } catch (error) {
-    console.error('Onboarding page error:', error);
-    redirect('/login');
   }
+
+  if (!canRender) {
+    return null;
+  }
+
+  const handleContinueAsEmpresa = async () => {
+    setLoading(true);
+    try {
+      router.push('/onboarding/empresa');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContinueAsContador = async () => {
+    setLoading(true);
+    try {
+      router.push('/onboarding/contador');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white py-12 px-6 md:py-16">
+      <div className="max-w-6xl mx-auto">
+        <OnboardingHeader />
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+          <OnboardingCard
+            icon={<Building2 className="w-6 h-6 text-orange-600" />}
+            title="Tenho uma empresa"
+            description="Quero organizar minhas finanças e trabalhar conectado ao meu contador."
+            buttonLabel="Continuar como empresa"
+            buttonOnClick={handleContinueAsEmpresa}
+            imageSrc="/images/empresario.png"
+            imageAlt="Empresário com laptop"
+            isLoading={loading}
+          />
+
+          <OnboardingCard
+            icon={<Calculator className="w-6 h-6 text-orange-600" />}
+            title="Sou contador"
+            description="Quero gerenciar meus clientes e conectar minhas empresas ao Unnify Conecta."
+            buttonLabel="Continuar como contador"
+            buttonOnClick={handleContinueAsContador}
+            imageSrc="/images/empresario.png"
+            imageAlt="Profissional contábil"
+            isLoading={loading}
+          />
+        </div>
+
+        <div className="text-center max-w-2xl mx-auto text-sm text-gray-600 space-y-2">
+          <p>🔒 Proteção de dados integrada à arquitetura do Unnify Conecta.</p>
+          <p>Você poderá participar de outras empresas ou escritórios posteriormente conforme suas permissões.</p>
+        </div>
+      </div>
+    </div>
+  );
 }
