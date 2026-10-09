@@ -7,6 +7,8 @@ import { OnboardingCard } from '@/components/OnboardingCard';
 import { OnboardingPageClient } from './page-client';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 export default async function OnboardingPage() {
   try {
     const cookieStore = await cookies();
