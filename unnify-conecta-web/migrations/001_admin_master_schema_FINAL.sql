@@ -48,8 +48,6 @@ CREATE INDEX idx_profiles_global_role ON public.profiles(global_role);
 CREATE INDEX idx_profiles_mfa_enabled ON public.profiles(mfa_enabled);
 CREATE INDEX idx_profiles_status ON public.profiles(status);
 
-RAISE NOTICE '✅ Layer 1: Columns added with CHECK constraints';
-
 -- ============================================================================
 -- LAYER 2: AUDITORIA - Tabela imutável
 -- ============================================================================
@@ -92,8 +90,6 @@ CREATE POLICY "Admin Master views all audit" ON public.audit_logs
 
 CREATE POLICY "Service role unrestricted" ON public.audit_logs
   USING (true) WITH CHECK (true);
-
-RAISE NOTICE '✅ Layer 2: Audit logs table created';
 
 -- ============================================================================
 -- LAYER 3: ADMINISTRAÇÃO TÉCNICA
@@ -138,8 +134,6 @@ CREATE POLICY "Admin Master sees all" ON admin_operations.pending_changes
 
 CREATE POLICY "Admin Master can approve" ON admin_operations.pending_changes
   FOR UPDATE USING (public.is_admin_master(auth.uid()) AND status = 'pending');
-
-RAISE NOTICE '✅ Layer 3: Admin operations schema';
 
 -- ============================================================================
 -- FUNÇÕES - CORRIGIDAS E SEGURAS
@@ -332,8 +326,6 @@ BEFORE UPDATE ON public.profiles
 FOR EACH ROW
 EXECUTE FUNCTION public.prevent_privilege_escalation();
 
-RAISE NOTICE '✅ Security Trigger: Privilege escalation protection (OLD vs NEW comparison)';
-
 -- ============================================================================
 -- RLS POLICIES - SIMPLES (Segurança via TRIGGER, não via policy complexa)
 -- ============================================================================
@@ -376,8 +368,6 @@ CREATE POLICY "Service role all" ON public.profiles
 REVOKE DELETE ON public.profiles FROM anon;
 REVOKE DELETE ON public.profiles FROM authenticated;
 
-RAISE NOTICE '✅ RLS Policies: Simple + Trigger enforcement';
-
 -- ============================================================================
 -- ATUALIZAR HANDLE_NEW_USER
 -- ============================================================================
@@ -418,8 +408,6 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
-
-RAISE NOTICE '✅ Trigger: on_auth_user_created with safety values';
 
 -- ============================================================================
 -- VALIDAÇÕES PÓS-MIGRATION
