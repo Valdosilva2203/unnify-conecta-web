@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AdminLayout } from '@/components/AdminLayout';
 
 interface Contador {
   id: string;
@@ -252,7 +253,8 @@ export default function ContadoresPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <AdminLayout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
@@ -524,5 +526,6 @@ export default function ContadoresPage() {
         </div>
       </div>
     </div>
+    </AdminLayout>
   );
 }
