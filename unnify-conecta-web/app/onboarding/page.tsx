@@ -27,9 +27,15 @@ export default function OnboardingPage() {
         }
 
         // Check user role via API (uses service role to bypass RLS)
-        const response = await fetch('/api/auth/check-role');
-        const { role } = await response.json();
+        const { data: { session: { access_token } } } = await supabase.auth.getSession();
 
+        const response = await fetch('/api/auth/check-role', {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        });
+
+        const { role } = await response.json();
         console.log('User role:', role);
 
         // Redirect Admin Master to dashboard
