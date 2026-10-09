@@ -12,6 +12,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [canRender, setCanRender] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   useEffect(() => {
     const checkRole = async () => {
@@ -24,6 +25,11 @@ export default function OnboardingPage() {
         if (!session?.user?.id) {
           router.replace('/login');
           return;
+        }
+
+        // Store user email
+        if (session.user.email) {
+          setUserEmail(session.user.email);
         }
 
         // Query profile
@@ -90,6 +96,13 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-white py-12 px-6 md:py-16">
       <div className="max-w-6xl mx-auto">
+        {/* User info */}
+        <div className="mb-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
+          <p className="text-sm text-gray-600">
+            Logado como: <span className="font-semibold text-orange-600">{userEmail}</span>
+          </p>
+        </div>
+
         <OnboardingHeader />
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
