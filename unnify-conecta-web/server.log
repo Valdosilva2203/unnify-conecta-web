@@ -1,0 +1,3003 @@
+
+> unnify-conecta-web@0.1.0 dev
+> next dev
+
+▲ Next.js 16.4.0 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://54.232.189.113:3000
+- Environments: .env.local
+✓ Ready in 672ms
+✓ Running next.config.ts took 46ms
+⚠ Slow filesystem detected. The benchmark took 617ms. If \\?\C:\Users\DELL\Documents\Projetos em Claude\unnify-conecta-web\.next\dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+- Cache Components enabled
+- Partial Prefetching enabled
+
+ GET / 200 in 1223ms (next.js: 796ms, application-code: 426ms)
+ GET / 200 in 87ms (next.js: 4ms, application-code: 83ms)
+ GET /login 200 in 63ms (next.js: 18ms, application-code: 45ms)
+ GET /forgot-password 200 in 45ms (next.js: 12ms, application-code: 33ms)
+ GET /reset-password?code=f7ee1969-1ef5-4d77-86c8-8435b9f99126 200 in 137ms (next.js: 9ms, application-code: 128ms)
+✓ Compiled in 199ms
+✓ Compiled in 87ms
+✓ Compiled in 33ms
+ GET /reset-password?error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired 200 in 63ms (next.js: 4ms, application-code: 59ms)
+[browser] [ResetPassword] Missing type or code in URL { hasCode: [33mfalse[39m, hasType: [33mfalse[39m } (app/reset-password/reset-password-content.tsx:61:19)
+ GET /forgot-password 200 in 33ms (next.js: 3ms, application-code: 30ms)
+ GET /login 200 in 37ms (next.js: 3ms, application-code: 34ms)
+ GET /admin 200 in 188ms (next.js: 21ms, application-code: 167ms)
+Error: Route "/admin": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 404 in 431ms (next.js: 398ms, application-code: 34ms)
+ GET /admin/empresas 404 in 76ms (next.js: 18ms, application-code: 58ms)
+ GET /admin 200 in 107ms (next.js: 1.7ms, application-code: 105ms)
+Error: Route "/admin": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 404 in 35ms (next.js: 10ms, application-code: 26ms)
+ GET /admin/empresas 404 in 60ms (next.js: 17ms, application-code: 42ms)
+⨯ ./app/admin/empresas/page.tsx:7:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/CompaniesTable'
+  [90m 5 |[0m [36mimport[0m { [33mAdminLayout[0m } [36mfrom[0m [32m'@/components/AdminLayout'[0m;
+  [90m 6 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/lib/supabase/client'[0m;
+[31m[1m>[0m [90m 7 |[0m [36mimport[0m { [33mCompaniesTable[0m } [36mfrom[0m [32m'@/components/admin/empresas/CompaniesTable'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m [36mimport[0m { [33mStatsCard[0m } [36mfrom[0m [32m'@/components/admin/empresas/StatsCard'[0m;
+  [90m 9 |[0m
+  [90m10 |[0m [36minterface[0m [33mCompany[0m {
+
+Import map: aliased to relative './components/admin/empresas/CompaniesTable' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./app/admin/empresas/page.tsx:8:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/StatsCard'
+  [90m 6 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/lib/supabase/client'[0m;
+  [90m 7 |[0m [36mimport[0m { [33mCompaniesTable[0m } [36mfrom[0m [32m'@/components/admin/empresas/CompaniesTable'[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { [33mStatsCard[0m } [36mfrom[0m [32m'@/components/admin/empresas/StatsCard'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m
+  [90m10 |[0m [36minterface[0m [33mCompany[0m {
+  [90m11 |[0m   id: string;
+
+Import map: aliased to relative './components/admin/empresas/StatsCard' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /admin/empresas 500 in 1625ms (next.js: 1476ms, application-code: 149ms)
+⨯ ./app/admin/empresas/page.tsx:7:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/CompaniesTable'
+  [90m 5 |[0m [36mimport[0m { [33mAdminLayout[0m } [36mfrom[0m [32m'@/components/AdminLayout'[0m;
+  [90m 6 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/lib/supabase/client'[0m;
+[31m[1m>[0m [90m 7 |[0m [36mimport[0m { [33mCompaniesTable[0m } [36mfrom[0m [32m'@/components/admin/empresas/CompaniesTable'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m [36mimport[0m { [33mStatsCard[0m } [36mfrom[0m [32m'@/components/admin/empresas/StatsCard'[0m;
+  [90m 9 |[0m
+  [90m10 |[0m [36minterface[0m [33mCompany[0m {
+
+Import map: aliased to relative './components/admin/empresas/CompaniesTable' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./app/admin/empresas/page.tsx:8:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/StatsCard'
+  [90m 6 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/lib/supabase/client'[0m;
+  [90m 7 |[0m [36mimport[0m { [33mCompaniesTable[0m } [36mfrom[0m [32m'@/components/admin/empresas/CompaniesTable'[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { [33mStatsCard[0m } [36mfrom[0m [32m'@/components/admin/empresas/StatsCard'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m
+  [90m10 |[0m [36minterface[0m [33mCompany[0m {
+  [90m11 |[0m   id: string;
+
+Import map: aliased to relative './components/admin/empresas/StatsCard' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /admin/empresas 500 in 24ms (next.js: 13ms, application-code: 11ms)
+[browser] Uncaught Error: ./app/admin/empresas/page.tsx:7:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/CompaniesTable'
+   5 | import { AdminLayout } from '@/components/AdminLayout';
+   6 | import { createClient } from '@/lib/supabase/client';
+>  7 | import { CompaniesTable } from '@/components/admin/empresas/CompaniesTable';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import { StatsCard } from '@/components/admin/empresas/StatsCard';
+   9 |
+  10 | interface Company {
+
+Import map: aliased to relative './components/admin/empresas/CompaniesTable' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+⨯ ./app/admin/empresas/page.tsx:7:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/CompaniesTable'
+  [90m 5 |[0m [36mimport[0m { [33mAdminLayout[0m } [36mfrom[0m [32m'@/components/AdminLayout'[0m;
+  [90m 6 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/lib/supabase/client'[0m;
+[31m[1m>[0m [90m 7 |[0m [36mimport[0m { [33mCompaniesTable[0m } [36mfrom[0m [32m'@/components/admin/empresas/CompaniesTable'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m [36mimport[0m { [33mStatsCard[0m } [36mfrom[0m [32m'@/components/admin/empresas/StatsCard'[0m;
+  [90m 9 |[0m
+  [90m10 |[0m [36minterface[0m [33mCompany[0m {
+
+Import map: aliased to relative './components/admin/empresas/CompaniesTable' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/admin/empresas/page.tsx:7:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/CompaniesTable'
+  [90m 5 |[0m [36mimport[0m { [33mAdminLayout[0m } [36mfrom[0m [32m'@/components/AdminLayout'[0m;
+  [90m 6 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/lib/supabase/client'[0m;
+[31m[1m>[0m [90m 7 |[0m [36mimport[0m { [33mCompaniesTable[0m } [36mfrom[0m [32m'@/components/admin/empresas/CompaniesTable'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m [36mimport[0m { [33mStatsCard[0m } [36mfrom[0m [32m'@/components/admin/empresas/StatsCard'[0m;
+  [90m 9 |[0m
+  [90m10 |[0m [36minterface[0m [33mCompany[0m {
+
+Import map: aliased to relative './components/admin/empresas/CompaniesTable' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/admin/empresas/page.tsx:7:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/CompaniesTable'
+  [90m 5 |[0m [36mimport[0m { [33mAdminLayout[0m } [36mfrom[0m [32m'@/components/AdminLayout'[0m;
+  [90m 6 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/lib/supabase/client'[0m;
+[31m[1m>[0m [90m 7 |[0m [36mimport[0m { [33mCompaniesTable[0m } [36mfrom[0m [32m'@/components/admin/empresas/CompaniesTable'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m [36mimport[0m { [33mStatsCard[0m } [36mfrom[0m [32m'@/components/admin/empresas/StatsCard'[0m;
+  [90m 9 |[0m
+  [90m10 |[0m [36minterface[0m [33mCompany[0m {
+
+Import map: aliased to relative './components/admin/empresas/CompaniesTable' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/admin/empresas/page.tsx:7:1
+Error: Module not found: Can't resolve '@/components/admin/empresas/CompaniesTable'
+  [90m 5 |[0m [36mimport[0m { [33mAdminLayout[0m } [36mfrom[0m [32m'@/components/AdminLayout'[0m;
+  [90m 6 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/lib/supabase/client'[0m;
+[31m[1m>[0m [90m 7 |[0m [36mimport[0m { [33mCompaniesTable[0m } [36mfrom[0m [32m'@/components/admin/empresas/CompaniesTable'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m [36mimport[0m { [33mStatsCard[0m } [36mfrom[0m [32m'@/components/admin/empresas/StatsCard'[0m;
+  [90m 9 |[0m
+  [90m10 |[0m [36minterface[0m [33mCompany[0m {
+
+Import map: aliased to relative './components/admin/empresas/CompaniesTable' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+✓ Compiled in 516ms
+ GET /admin/empresas 200 in 121ms (next.js: 11ms, application-code: 110ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 54ms (next.js: 2ms, application-code: 52ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 45ms (next.js: 3ms, application-code: 42ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 44ms (next.js: 2ms, application-code: 41ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+Route /admin/empresas is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+ GET /admin/empresas 200 in 44ms (next.js: 2ms, application-code: 42ms)
+ GET /admin/empresas 200 in 65ms (next.js: 4ms, application-code: 61ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+✓ Compiled in 50ms
+✓ Compiled in 89ms
+✓ Compiled in 49ms
+ GET /admin/empresas 200 in 49ms (next.js: 4ms, application-code: 44ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+✓ Compiled in 130ms
+✓ Compiled in 51ms
+ GET /admin/empresas 200 in 53ms (next.js: 3ms, application-code: 50ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 45ms (next.js: 3ms, application-code: 42ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 53ms (next.js: 4ms, application-code: 49ms)
+✓ Compiled in 121ms
+ GET /admin/empresas 200 in 47ms (next.js: 3ms, application-code: 45ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 88ms (next.js: 3ms, application-code: 84ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 43ms (next.js: 2ms, application-code: 41ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 49ms (next.js: 4ms, application-code: 45ms)
+ GET /admin/empresas 200 in 103ms (next.js: 7ms, application-code: 97ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 404 in 152ms (next.js: 103ms, application-code: 48ms)
+ GET /admin/contadores 404 in 91ms (next.js: 25ms, application-code: 66ms)
+ GET /admin/empresas 200 in 55ms (next.js: 3ms, application-code: 52ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 45ms (next.js: 2ms, application-code: 42ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 404 in 52ms (next.js: 13ms, application-code: 38ms)
+ GET /admin/contadores 404 in 38ms (next.js: 12ms, application-code: 26ms)
+ GET /admin/contadores 404 in 64ms (next.js: 16ms, application-code: 48ms)
+⨯ ./app/admin/contadores/page.tsx:4:1
+Error: Module not found: Can't resolve '@/utils/supabase/client'
+  [90m2 |[0m
+  [90m3 |[0m [36mimport[0m { useEffect, useState } [36mfrom[0m [32m'react'[0m;
+[31m[1m>[0m [90m4 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/utils/supabase/client'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m5 |[0m [36mimport[0m [33mLink[0m [36mfrom[0m [32m'next/link'[0m;
+  [90m6 |[0m [36mimport[0m { [33mAlertCircle[0m, [33mSearch[0m } [36mfrom[0m [32m'lucide-react'[0m;
+  [90m7 |[0m
+
+Import map: aliased to relative './utils/supabase/client' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /admin/contadores 500 in 306ms (next.js: 277ms, application-code: 29ms)
+⨯ ./app/admin/contadores/page.tsx:4:1
+Error: Module not found: Can't resolve '@/utils/supabase/client'
+  [90m2 |[0m
+  [90m3 |[0m [36mimport[0m { useEffect, useState } [36mfrom[0m [32m'react'[0m;
+[31m[1m>[0m [90m4 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m'@/utils/supabase/client'[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m5 |[0m [36mimport[0m [33mLink[0m [36mfrom[0m [32m'next/link'[0m;
+  [90m6 |[0m [36mimport[0m { [33mAlertCircle[0m, [33mSearch[0m } [36mfrom[0m [32m'lucide-react'[0m;
+  [90m7 |[0m
+
+Import map: aliased to relative './utils/supabase/client' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /admin/contadores 500 in 33ms (next.js: 17ms, application-code: 16ms)
+[browser] Uncaught Error: ./app/admin/contadores/page.tsx:4:1
+Error: Module not found: Can't resolve '@/utils/supabase/client'
+  2 |
+  3 | import { useEffect, useState } from 'react';
+> 4 | import { createClient } from '@/utils/supabase/client';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import Link from 'next/link';
+  6 | import { AlertCircle, Search } from 'lucide-react';
+  7 |
+
+Import map: aliased to relative './utils/supabase/client' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+✓ Compiled in 519ms
+ GET /admin/contadores 200 in 91ms (next.js: 29ms, application-code: 62ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 49ms (next.js: 2ms, application-code: 47ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 60ms (next.js: 2ms, application-code: 58ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 67ms (next.js: 3ms, application-code: 63ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 57ms (next.js: 3ms, application-code: 55ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin 200 in 46ms (next.js: 3ms, application-code: 44ms)
+Error: Route "/admin": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 43ms (next.js: 5ms, application-code: 38ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 39ms (next.js: 3ms, application-code: 36ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 68ms (next.js: 5ms, application-code: 63ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 38ms (next.js: 3ms, application-code: 35ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 58ms (next.js: 4ms, application-code: 55ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 58ms (next.js: 4ms, application-code: 54ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 62ms (next.js: 6ms, application-code: 57ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 45ms (next.js: 2ms, application-code: 43ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 43ms (next.js: 4ms, application-code: 39ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 58ms (next.js: 3ms, application-code: 56ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 51ms (next.js: 3ms, application-code: 48ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+Route /admin/contadores is rendering with server caches disabled. For this navigation, Component Metadata in React DevTools will not accurately reflect what is statically prerenderable and runtime prefetchable. See more info here: https://nextjs.org/docs/messages/cache-bypass-in-dev
+ GET /admin/contadores 200 in 51ms (next.js: 5ms, application-code: 46ms)
+ GET /admin/contadores 200 in 61ms (next.js: 3ms, application-code: 58ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 61ms (next.js: 4ms, application-code: 57ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+✓ Compiled in 186ms
+✓ Compiled in 89ms
+✓ Compiled in 112ms
+ GET /admin/contadores 200 in 68ms (next.js: 33ms, application-code: 34ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+[browser] ./app/admin/contadores/page.tsx:191:9
+Error: 'const' declarations must be initialized
+  189 |   const ativosCount = contadoresFicticios.filter((c) => c.status === 'ativo').length;
+  190 |   const pendentesCount = contadoresFicticios.filter((c) => c.status === 'pendente').length;
+> 191 |   const inativos Count = contadoresFicticios.filter((c) => c.status === 'inativo').length;
+      |         ^^^^^^^^
+  192 |
+  193 |   // Filtrar contadores
+  194 |   const filteredContadores = contadoresFicticios.filter((contador) => {
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component] 
+[browser] ./app/admin/contadores/page.tsx:191:18
+Error: Expected a semicolon
+  189 |   const ativosCount = contadoresFicticios.filter((c) => c.status === 'ativo').length;
+  190 |   const pendentesCount = contadoresFicticios.filter((c) => c.status === 'pendente').length;
+> 191 |   const inativos Count = contadoresFicticios.filter((c) => c.status === 'inativo').length;
+      |                  ^^^^^
+  192 |
+  193 |   // Filtrar contadores
+  194 |   const filteredContadores = contadoresFicticios.filter((contador) => {
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component] 
+[browser] ./app/admin/contadores/page.tsx:310:78
+Error: Expected '</', got 'ident'
+  308 | ...
+  309 | ...y-600 text-sm">Contadores inativos</p>
+> 310 | ... font-bold text-gray-900 mt-2">{inativos Count}</p>
+      |                                             ^^^^^
+  311 | ...text-red-700 font-semibold mt-2">
+  312 | ... ? ((inativos Count / totalContadores) * 100).toFixed(1) : '0'}% do total
+  313 | ...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component] 
+[browser] ./app/admin/contadores/page.tsx:310:78
+Error: Expected '</', got 'ident'
+  308 | ...
+  309 | ...y-600 text-sm">Contadores inativos</p>
+> 310 | ... font-bold text-gray-900 mt-2">{inativos Count}</p>
+      |                                             ^^^^^
+  311 | ...text-red-700 font-semibold mt-2">
+  312 | ... ? ((inativos Count / totalContadores) * 100).toFixed(1) : '0'}% do total
+  313 | ...
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component] 
+ GET /admin/contadores 200 in 73ms (next.js: 5ms, application-code: 68ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 45ms (next.js: 1.9ms, application-code: 43ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+✓ Compiled in 65ms
+✓ Compiled in 64ms
+✓ Compiled in 361ms
+ GET /admin/contadores 200 in 51ms (next.js: 5ms, application-code: 46ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 69ms (next.js: 2ms, application-code: 67ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 43ms (next.js: 2ms, application-code: 41ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 35ms (next.js: 2ms, application-code: 33ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+[browser] ./app/admin/contadores/page.tsx:530:1
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  528 |     </div>
+  529 |   );
+> 530 | }
+      | ^
+  531 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component] 
+[browser] ./app/admin/contadores/page.tsx:530:1
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  528 |     </div>
+  529 |   );
+> 530 | }
+      | ^
+  531 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/contadores/page.tsx [Client Component Browser]
+    ./app/admin/contadores/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/contadores/page.tsx [Client Component SSR]
+    ./app/admin/contadores/page.tsx [Server Component] 
+ GET /admin/contadores 200 in 45ms (next.js: 2ms, application-code: 43ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 69ms (next.js: 4ms, application-code: 65ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 38ms (next.js: 3ms, application-code: 35ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 404 in 90ms (next.js: 48ms, application-code: 42ms)
+ GET /admin/escritorios 404 in 67ms (next.js: 18ms, application-code: 49ms)
+ GET /admin/contadores 200 in 44ms (next.js: 1.8ms, application-code: 42ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 76ms (next.js: 4ms, application-code: 72ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 404 in 104ms (next.js: 39ms, application-code: 65ms)
+ GET /admin/escritorios 404 in 124ms (next.js: 29ms, application-code: 95ms)
+ GET /admin/escritorios 200 in 44ms (next.js: 12ms, application-code: 31ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 53ms (next.js: 2ms, application-code: 50ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 43ms (next.js: 3ms, application-code: 40ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 50ms (next.js: 5ms, application-code: 46ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 81ms (next.js: 4ms, application-code: 77ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin 200 in 75ms (next.js: 6ms, application-code: 68ms)
+Error: Route "/admin": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 54ms (next.js: 3ms, application-code: 50ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 52ms (next.js: 2ms, application-code: 50ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 404 in 83ms (next.js: 56ms, application-code: 27ms)
+ GET /admin/assinaturas 404 in 56ms (next.js: 16ms, application-code: 40ms)
+ GET /admin/escritorios 200 in 66ms (next.js: 3ms, application-code: 63ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 32ms (next.js: 3ms, application-code: 30ms)
+✓ Compiled in 168ms
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 58ms (next.js: 4ms, application-code: 54ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 200 in 62ms (next.js: 14ms, application-code: 48ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 200 in 64ms (next.js: 4ms, application-code: 59ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 40ms (next.js: 3ms, application-code: 37ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 200 in 41ms (next.js: 3ms, application-code: 38ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 200 in 40ms (next.js: 3ms, application-code: 37ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 404 in 49ms (next.js: 19ms, application-code: 30ms)
+ GET /admin/parceiros 404 in 70ms (next.js: 18ms, application-code: 51ms)
+ GET /admin/assinaturas 200 in 62ms (next.js: 3ms, application-code: 59ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 200 in 37ms (next.js: 3ms, application-code: 34ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 404 in 50ms (next.js: 14ms, application-code: 35ms)
+ GET /admin/parceiros 404 in 77ms (next.js: 18ms, application-code: 58ms)
+ GET /admin/assinaturas 200 in 71ms (next.js: 4ms, application-code: 67ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+✓ Compiled in 143ms
+ GET /admin/assinaturas 200 in 76ms (next.js: 1.9ms, application-code: 74ms)
+ GET /admin/assinaturas 200 in 81ms (next.js: 12ms, application-code: 69ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+⨯ ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  [90m197 |[0m   [36mconst[0m ativosCount = parceirosFicticios.filter((p) => p.status === [32m'ativo'[0m).length;
+  [90m198 |[0m   [36mconst[0m pendentesCount = parceirosFicticios.filter((p) => p.status === [32m'pendente'[0m).length;
+[31m[1m>[0m [90m199 |[0m   [36mconst[0m inativos [33mCount[0m = parceirosFicticios.filter((p) => p.status === [32m'inativo'[0m).length;
+  [90m    |[0m         [31m[1m^^^^^^^^[0m
+  [90m200 |[0m
+  [90m201 |[0m   [90m// Filtrar parceiros[0m
+  [90m202 |[0m   [36mconst[0m filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed
+
+
+
+./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  [90m197 |[0m   [36mconst[0m ativosCount = parceirosFicticios.filter((p) => p.status === [32m'ativo'[0m).length;
+  [90m198 |[0m   [36mconst[0m pendentesCount = parceirosFicticios.filter((p) => p.status === [32m'pendente'[0m).length;
+[31m[1m>[0m [90m199 |[0m   [36mconst[0m inativos [33mCount[0m = parceirosFicticios.filter((p) => p.status === [32m'inativo'[0m).length;
+  [90m    |[0m                  [31m[1m^^^^^[0m
+  [90m200 |[0m
+  [90m201 |[0m   [90m// Filtrar parceiros[0m
+  [90m202 |[0m   [36mconst[0m filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed
+
+
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+ GET /admin/parceiros 500 in 265ms (next.js: 214ms, application-code: 52ms)
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+⨯ ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  [90m197 |[0m   [36mconst[0m ativosCount = parceirosFicticios.filter((p) => p.status === [32m'ativo'[0m).length;
+  [90m198 |[0m   [36mconst[0m pendentesCount = parceirosFicticios.filter((p) => p.status === [32m'pendente'[0m).length;
+[31m[1m>[0m [90m199 |[0m   [36mconst[0m inativos [33mCount[0m = parceirosFicticios.filter((p) => p.status === [32m'inativo'[0m).length;
+  [90m    |[0m         [31m[1m^^^^^^^^[0m
+  [90m200 |[0m
+  [90m201 |[0m   [90m// Filtrar parceiros[0m
+  [90m202 |[0m   [36mconst[0m filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed
+
+
+
+./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  [90m197 |[0m   [36mconst[0m ativosCount = parceirosFicticios.filter((p) => p.status === [32m'ativo'[0m).length;
+  [90m198 |[0m   [36mconst[0m pendentesCount = parceirosFicticios.filter((p) => p.status === [32m'pendente'[0m).length;
+[31m[1m>[0m [90m199 |[0m   [36mconst[0m inativos [33mCount[0m = parceirosFicticios.filter((p) => p.status === [32m'inativo'[0m).length;
+  [90m    |[0m                  [31m[1m^^^^^[0m
+  [90m200 |[0m
+  [90m201 |[0m   [90m// Filtrar parceiros[0m
+  [90m202 |[0m   [36mconst[0m filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed
+
+
+ GET /admin/parceiros 500 in 46ms (next.js: 17ms, application-code: 29ms)
+[browser] Uncaught Error: ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed
+
+
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+ GET /admin/assinaturas 500 in 66ms (next.js: 46ms, application-code: 20ms)
+[browser] Uncaught Error: ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed
+
+
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+ GET /admin/assinaturas 500 in 23ms (next.js: 10ms, application-code: 13ms)
+[browser] Uncaught Error: ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed
+
+
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+ GET /admin/escritorios 500 in 27ms (next.js: 12ms, application-code: 16ms)
+[browser] Uncaught Error: ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed
+
+
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:9
+Error: 'const' declarations must be initialized
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |         ^^^^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:199:18
+Error: Expected a semicolon
+  197 |   const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
+  198 |   const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
+> 199 |   const inativos Count = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+      |                  ^^^^^
+  200 |
+  201 |   // Filtrar parceiros
+  202 |   const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:333:52
+Error: Expected '</', got 'ident'
+  331 | ...      <p className="text-3xl font-bold text-gray-900 mt-2">{inativosCount}</p>
+  332 | ...      <p className="text-xs text-red-700 font-semibold mt-2">
+> 333 | ...        {totalParceiros > 0 ? ((inativos Count / totalParceiros) * 100).toFixed(1) : '...
+      |                                             ^^^^^
+  334 | ...      </p>
+  335 | ...    </div>
+  336 | ...    <span className="text-2xl">✕</span>
+
+Parsing ecmascript source code failed 
+ GET /admin/assinaturas 500 in 23ms (next.js: 10ms, application-code: 13ms)
+[browser] Uncaught Error: ./app/admin/parceiros/page.tsx:333:52
+Error: Expected '</', got 'ident'
+  331 | ...      <p className="text-3xl font-bold text-gray-900 mt-2">{inativosCount}</p>
+  332 | ...      <p className="text-xs text-red-700 font-semibold mt-2">
+> 333 | ...        {totalParceiros > 0 ? ((inativos Count / totalParceiros) * 100).toFixed(1) : '...
+      |                                             ^^^^^
+  334 | ...      </p>
+  335 | ...    </div>
+  336 | ...    <span className="text-2xl">✕</span>
+
+Parsing ecmascript source code failed
+
+
+[browser] ./app/admin/parceiros/page.tsx:333:52
+Error: Expected '</', got 'ident'
+  331 | ...      <p className="text-3xl font-bold text-gray-900 mt-2">{inativosCount}</p>
+  332 | ...      <p className="text-xs text-red-700 font-semibold mt-2">
+> 333 | ...        {totalParceiros > 0 ? ((inativos Count / totalParceiros) * 100).toFixed(1) : '...
+      |                                             ^^^^^
+  334 | ...      </p>
+  335 | ...    </div>
+  336 | ...    <span className="text-2xl">✕</span>
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:333:52
+Error: Expected '</', got 'ident'
+  331 | ...      <p className="text-3xl font-bold text-gray-900 mt-2">{inativosCount}</p>
+  332 | ...      <p className="text-xs text-red-700 font-semibold mt-2">
+> 333 | ...        {totalParceiros > 0 ? ((inativos Count / totalParceiros) * 100).toFixed(1) : '...
+      |                                             ^^^^^
+  334 | ...      </p>
+  335 | ...    </div>
+  336 | ...    <span className="text-2xl">✕</span>
+
+Parsing ecmascript source code failed 
+ GET /admin/escritorios 500 in 25ms (next.js: 13ms, application-code: 12ms)
+[browser] Uncaught Error: ./app/admin/parceiros/page.tsx:333:52
+Error: Expected '</', got 'ident'
+  331 | ...      <p className="text-3xl font-bold text-gray-900 mt-2">{inativosCount}</p>
+  332 | ...      <p className="text-xs text-red-700 font-semibold mt-2">
+> 333 | ...        {totalParceiros > 0 ? ((inativos Count / totalParceiros) * 100).toFixed(1) : '...
+      |                                             ^^^^^
+  334 | ...      </p>
+  335 | ...    </div>
+  336 | ...    <span className="text-2xl">✕</span>
+
+Parsing ecmascript source code failed
+
+
+[browser] ./app/admin/parceiros/page.tsx:333:52
+Error: Expected '</', got 'ident'
+  331 | ...      <p className="text-3xl font-bold text-gray-900 mt-2">{inativosCount}</p>
+  332 | ...      <p className="text-xs text-red-700 font-semibold mt-2">
+> 333 | ...        {totalParceiros > 0 ? ((inativos Count / totalParceiros) * 100).toFixed(1) : '...
+      |                                             ^^^^^
+  334 | ...      </p>
+  335 | ...    </div>
+  336 | ...    <span className="text-2xl">✕</span>
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:333:52
+Error: Expected '</', got 'ident'
+  331 | ...      <p className="text-3xl font-bold text-gray-900 mt-2">{inativosCount}</p>
+  332 | ...      <p className="text-xs text-red-700 font-semibold mt-2">
+> 333 | ...        {totalParceiros > 0 ? ((inativos Count / totalParceiros) * 100).toFixed(1) : '...
+      |                                             ^^^^^
+  334 | ...      </p>
+  335 | ...    </div>
+  336 | ...    <span className="text-2xl">✕</span>
+
+Parsing ecmascript source code failed 
+[browser] ./app/admin/parceiros/page.tsx:333:52
+Error: Expected '</', got 'ident'
+  331 | ...      <p className="text-3xl font-bold text-gray-900 mt-2">{inativosCount}</p>
+  332 | ...      <p className="text-xs text-red-700 font-semibold mt-2">
+> 333 | ...        {totalParceiros > 0 ? ((inativos Count / totalParceiros) * 100).toFixed(1) : '...
+      |                                             ^^^^^
+  334 | ...      </p>
+  335 | ...    </div>
+  336 | ...    <span className="text-2xl">✕</span>
+
+Parsing ecmascript source code failed 
+✓ Compiled in 90ms
+ GET /admin/escritorios 200 in 85ms (next.js: 4ms, application-code: 81ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 200 in 38ms (next.js: 3ms, application-code: 35ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 200 in 152ms (next.js: 36ms, application-code: 115ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 200 in 53ms (next.js: 2ms, application-code: 51ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/comissoes 404 in 40ms (next.js: 18ms, application-code: 22ms)
+ GET /admin/comissoes 404 in 51ms (next.js: 17ms, application-code: 33ms)
+ GET /admin/parceiros 200 in 57ms (next.js: 4ms, application-code: 53ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 200 in 63ms (next.js: 3ms, application-code: 60ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 200 in 36ms (next.js: 3ms, application-code: 33ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 200 in 52ms (next.js: 4ms, application-code: 49ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/comissoes 404 in 47ms (next.js: 12ms, application-code: 35ms)
+ GET /admin/comissoes 404 in 59ms (next.js: 15ms, application-code: 44ms)
+ GET /admin/parceiros 200 in 53ms (next.js: 2ms, application-code: 51ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/comissoes 404 in 104ms (next.js: 81ms, application-code: 23ms)
+ GET /admin/comissoes 404 in 53ms (next.js: 14ms, application-code: 39ms)
+ GET /admin/parceiros 200 in 54ms (next.js: 2ms, application-code: 52ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 200 in 33ms (next.js: 4ms, application-code: 29ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 200 in 51ms (next.js: 3ms, application-code: 49ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/comissoes 200 in 44ms (next.js: 11ms, application-code: 33ms)
+Error: Route "/admin/comissoes": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/comissoes/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 200 in 40ms (next.js: 3ms, application-code: 37ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/assinaturas 200 in 48ms (next.js: 3ms, application-code: 45ms)
+Error: Route "/admin/assinaturas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/assinaturas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 58ms (next.js: 2ms, application-code: 56ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 35ms (next.js: 3ms, application-code: 32ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 36ms (next.js: 2ms, application-code: 33ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin 200 in 45ms (next.js: 4ms, application-code: 41ms)
+Error: Route "/admin": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/comissoes 200 in 39ms (next.js: 3ms, application-code: 36ms)
+Error: Route "/admin/comissoes": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/comissoes/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+✓ Compiled in 140ms
+ GET /admin/comissoes 200 in 93ms (next.js: 11ms, application-code: 82ms)
+ GET /admin/comissoes 200 in 91ms (next.js: 2ms, application-code: 88ms)
+Error: Route "/admin/comissoes": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/comissoes/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/comissoes 200 in 51ms (next.js: 3ms, application-code: 49ms)
+Error: Route "/admin/comissoes": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/comissoes/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/usuarios 200 in 48ms (next.js: 15ms, application-code: 34ms)
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/comissoes 200 in 44ms (next.js: 3ms, application-code: 41ms)
+Error: Route "/admin/comissoes": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/comissoes/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/usuarios 200 in 43ms (next.js: 2ms, application-code: 40ms)
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/auditoria 404 in 50ms (next.js: 19ms, application-code: 31ms)
+ GET /admin/auditoria 404 in 60ms (next.js: 17ms, application-code: 43ms)
+ GET /admin/usuarios 200 in 72ms (next.js: 4ms, application-code: 69ms)
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/usuarios 200 in 48ms (next.js: 3ms, application-code: 46ms)
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/auditoria 404 in 42ms (next.js: 13ms, application-code: 30ms)
+ GET /admin/auditoria 404 in 67ms (next.js: 18ms, application-code: 50ms)
+ GET /admin/usuarios 200 in 46ms (next.js: 3ms, application-code: 42ms)
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/comissoes 200 in 37ms (next.js: 3ms, application-code: 34ms)
+Error: Route "/admin/comissoes": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/comissoes/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/parceiros 200 in 41ms (next.js: 3ms, application-code: 38ms)
+Error: Route "/admin/parceiros": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/parceiros/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 43ms (next.js: 3ms, application-code: 41ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 51ms (next.js: 3ms, application-code: 48ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 32ms (next.js: 2ms, application-code: 30ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 38ms (next.js: 3ms, application-code: 35ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/escritorios 200 in 41ms (next.js: 3ms, application-code: 38ms)
+Error: Route "/admin/escritorios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/escritorios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/usuarios 200 in 38ms (next.js: 3ms, application-code: 35ms)
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+✓ Compiled in 253ms
+ GET /admin/usuarios 200 in 71ms (next.js: 1.7ms, application-code: 70ms)
+ GET /admin/usuarios 200 in 76ms (next.js: 12ms, application-code: 65ms)
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/usuarios 200 in 55ms (next.js: 3ms, application-code: 53ms)
+Error: Route "/admin/usuarios": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/usuarios/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/auditoria 200 in 48ms (next.js: 13ms, application-code: 35ms)
+Error: Route "/admin/auditoria": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/auditoria/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/auditoria 200 in 84ms (next.js: 2ms, application-code: 82ms)
+Error: Route "/admin/auditoria": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/auditoria/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/auditoria 200 in 39ms (next.js: 4ms, application-code: 36ms)
+✓ Compiled in 209ms
+Error: Route "/admin/auditoria": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/auditoria/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/auditoria 200 in 107ms (next.js: 3ms, application-code: 104ms)
+Error: Route "/admin/auditoria": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/auditoria/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/configuracoes 200 in 50ms (next.js: 11ms, application-code: 39ms)
+Error: Route "/admin/configuracoes": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/configuracoes/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin 200 in 40ms (next.js: 3ms, application-code: 37ms)
+Error: Route "/admin": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/contadores 200 in 37ms (next.js: 3ms, application-code: 34ms)
+Error: Route "/admin/contadores": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/contadores/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET / 200 in 274ms (next.js: 4ms, application-code: 271ms)
+ GET /login 200 in 118ms (next.js: 3ms, application-code: 115ms)
+ GET /?error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired 200 in 79ms (next.js: 3ms, application-code: 76ms)
+ GET /login 200 in 41ms (next.js: 4ms, application-code: 37ms)
+ GET /signup 200 in 44ms (next.js: 12ms, application-code: 32ms)
+ GET /admin/empresas 200 in 66ms (next.js: 5ms, application-code: 61ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+[browser] ./app/admin/empresas/page.tsx:180:9
+Error: the name `handleClearFilters` is defined multiple times
+  178 |     searchTerm || statusFilter !== 'all' || cityFilter;
+  179 |
+> 180 |   const handleClearFilters = () => {
+      |         ^^^^^^^^^^^^^^^^^^
+  181 |     setSearchTerm('');
+  182 |     setStatusFilter('all');
+  183 |     setCityFilter('');
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component] 
+[browser] ./app/admin/empresas/page.tsx:180:9
+Error: the name `handleClearFilters` is defined multiple times
+  178 |     searchTerm || statusFilter !== 'all' || cityFilter;
+  179 |
+> 180 |   const handleClearFilters = () => {
+      |         ^^^^^^^^^^^^^^^^^^
+  181 |     setSearchTerm('');
+  182 |     setStatusFilter('all');
+  183 |     setCityFilter('');
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component] 
+✓ Compiled in 155ms
+ GET /signup 200 in 61ms (next.js: 10ms, application-code: 51ms)
+ GET /admin/empresas 200 in 80ms (next.js: 38ms, application-code: 41ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /admin/empresas 200 in 415ms (next.js: 3ms, application-code: 411ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+[browser] You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`. 
+ GET /admin/empresas 200 in 55ms (next.js: 3ms, application-code: 52ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+[browser] You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`. 
+✓ Compiled in 60ms
+✓ Compiled in 67ms
+✓ Compiled in 49ms
+✓ Compiled in 50ms
+✓ Compiled in 173ms
+[browser] ./app/admin/empresas/page.tsx:469:7
+Error: Expected '</', got 'ident'
+  467 |         </>
+  468 |       )}
+> 469 |     </AdminLayout>
+      |       ^^^^^^^^^^^
+  470 |   );
+  471 | }
+  472 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component] 
+[browser] ./app/admin/empresas/page.tsx:469:7
+Error: Expected '</', got 'ident'
+  467 |         </>
+  468 |       )}
+> 469 |     </AdminLayout>
+      |       ^^^^^^^^^^^
+  470 |   );
+  471 | }
+  472 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component] 
+✓ Compiled in 62ms
+ GET /signup 200 in 69ms (next.js: 4ms, application-code: 65ms)
+ GET /admin/empresas 200 in 35ms (next.js: 3ms, application-code: 32ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+✓ Compiled in 45ms
+[browser] You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`. 
+[browser] You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`. 
+[browser] You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`. 
+    at Set.forEach (<anonymous>) (<anonymous>)
+[browser] ./app/admin/empresas/page.tsx:469:7
+Error: Expected '</', got 'ident'
+  467 |         </>
+  468 |       )}
+> 469 |     </AdminLayout>
+      |       ^^^^^^^^^^^
+  470 |   );
+  471 | }
+  472 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component] 
+[browser] ./app/admin/empresas/page.tsx:469:7
+Error: Expected '</', got 'ident'
+  467 |         </>
+  468 |       )}
+> 469 |     </AdminLayout>
+      |       ^^^^^^^^^^^
+  470 |   );
+  471 | }
+  472 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/admin/empresas/page.tsx [Client Component Browser]
+    ./app/admin/empresas/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/admin/empresas/page.tsx [Client Component SSR]
+    ./app/admin/empresas/page.tsx [Server Component] 
+ GET /admin/empresas 200 in 54ms (next.js: 2ms, application-code: 52ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+[browser] You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`. 
+✓ Compiled in 57ms
+ GET /admin/empresas 200 in 76ms (next.js: 3ms, application-code: 73ms)
+Error: Route "/admin/empresas": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/empresas/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
+ GET /onboarding 200 in 40ms (next.js: 10ms, application-code: 30ms)
+ GET /login 200 in 51ms (next.js: 3ms, application-code: 48ms)
+ GET /login 200 in 33ms (next.js: 3ms, application-code: 30ms)
+ GET /?code=ef8c5a5f-a7a6-43bf-94d6-1ae2593047ad 200 in 88ms (next.js: 6ms, application-code: 82ms)
+ GET /login 200 in 36ms (next.js: 3ms, application-code: 34ms)
+ GET /signup 200 in 42ms (next.js: 3ms, application-code: 39ms)
+ GET /onboarding 200 in 44ms (next.js: 4ms, application-code: 40ms)
+ GET /login 200 in 58ms (next.js: 6ms, application-code: 51ms)
+ GET /login 200 in 55ms (next.js: 28ms, application-code: 27ms)
+ GET /?error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired 200 in 97ms (next.js: 5ms, application-code: 92ms)
+ GET /login 200 in 39ms (next.js: 3ms, application-code: 36ms)
+ GET /?error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired 200 in 70ms (next.js: 5ms, application-code: 65ms)
+ GET / 200 in 67ms (next.js: 3ms, application-code: 65ms)
+ GET /signup 200 in 36ms (next.js: 2ms, application-code: 33ms)
+ GET /onboarding 200 in 33ms (next.js: 2ms, application-code: 31ms)
+ GET /login 200 in 72ms (next.js: 3ms, application-code: 69ms)
+ GET /login 200 in 39ms (next.js: 3ms, application-code: 37ms)
+ GET /?error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired 200 in 71ms (next.js: 2ms, application-code: 68ms)
+ GET /?error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired 200 in 62ms (next.js: 2ms, application-code: 60ms)
+ GET /login 200 in 38ms (next.js: 3ms, application-code: 35ms)
+ GET /admin 200 in 35ms (next.js: 3ms, application-code: 33ms)
+Error: Route "/admin": Could not validate that a segment in your UI has instant navigation.
+
+This segment was dropped from rendering. Issues that would prevent instant navigation will go undetected.
+
+Dropped segment:
+  app/admin/page.tsx
+
+Ways to fix this:
+  - [render] Render the dropped segment
+  - [ignore] Set `export const instant = false` to opt the dropped segment out of instant-navigation validation
+
+Learn more: https://nextjs.org/docs/messages/instant-unrendered-segment
+    at ignore-listed frames
