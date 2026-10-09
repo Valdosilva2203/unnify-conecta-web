@@ -16,63 +16,63 @@ export default function AdminLayout({
   useEffect(() => {
     const checkAuthorization = async () => {
       try {
+        console.log('Starting admin authorization check...');
         const supabase = createClient();
 
-        const {
-          data: { user },
-          error: authError,
-        } = await supabase.auth.getUser();
+        // Get session from getSession (more reliable than getUser)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        console.log('Admin check - User:', { user: user?.id, email: user?.email, error: authError });
+        console.log('Session check:', {
+          hasSession: !!session,
+          userId: session?.user?.id,
+          error: sessionError
+        });
 
-        if (authError || !user) {
-          console.log('No user, redirecting to login');
+        if (sessionError || !session?.user?.id) {
+          console.log('No session, redirecting to login');
+          setLoading(false);
           router.push('/login');
           return;
         }
+
+        const userId = session.user.id;
 
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('global_role')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .single();
 
-        console.log('Admin check - Profile:', { profile, error: profileError });
+        console.log('Profile query result:', {
+          userId,
+          profile,
+          error: profileError
+        });
 
         if (profileError || !profile) {
-          console.log('Profile error or not found, redirecting to login');
+          console.log('No profile found, redirecting to login');
+          setLoading(false);
           router.push('/login');
           return;
         }
 
-        const role = profile.global_role;
-
-        console.log('Admin check - Role:', role);
-
-        if (role === 'admin_master' || role === 'admin') {
+        if (profile.global_role === 'admin_master' || profile.global_role === 'admin') {
+          console.log('User is authorized as:', profile.global_role);
           setAuthorized(true);
           setLoading(false);
         } else {
-          console.log('Not authorized, redirecting to onboarding');
+          console.log('User is not admin, redirecting to onboarding. Role:', profile.global_role);
+          setLoading(false);
           router.push('/onboarding');
         }
       } catch (error) {
-        console.error('Admin authorization check failed:', error);
+        console.error('Authorization check error:', error);
         setLoading(false);
         router.push('/login');
       }
     };
 
-    // Add timeout to prevent infinite loading
-    const timer = setTimeout(() => {
-      console.error('Admin auth check timeout');
-      setLoading(false);
-      router.push('/login');
-    }, 5000);
-
     checkAuthorization();
-
-    return () => clearTimeout(timer);
   }, [router]);
 
   if (loading) {
