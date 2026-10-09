@@ -22,6 +22,7 @@ export default function OnboardingPage() {
 
         if (!session) {
           router.push('/login');
+          setCheckingAuth(false);
           return;
         }
 
@@ -32,24 +33,25 @@ export default function OnboardingPage() {
           .eq('user_id', session.user.id)
           .single();
 
-        if (error) {
+        if (error || !profile) {
           console.error('Profile fetch failed:', error);
-          router.push('/login');
+          setCheckingAuth(false);
           return;
         }
 
         // Redirect Admin Master to dashboard
-        if (profile?.global_role === 'admin_master') {
+        if (profile.global_role === 'admin_master') {
+          setCheckingAuth(false);
           router.push('/admin');
           return;
         }
 
         setIsAuthenticated(true);
+        setCheckingAuth(false);
       } catch (error) {
         console.error('Auth check failed:', error);
-        router.push('/login');
-      } finally {
         setCheckingAuth(false);
+        router.push('/login');
       }
     };
 
