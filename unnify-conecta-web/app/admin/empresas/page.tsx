@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Building2, Search, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminLayout } from '@/components/AdminLayout';
+import { createClient } from '@/lib/supabase/client';
 
 interface Company {
   id: string;
@@ -13,7 +14,7 @@ interface Company {
   commercial_email: string;
   city: string;
   state: string;
-  registration_status: 'ATIVA' | 'SUSPENSA' | 'PENDENTE';
+  registration_status: 'ATIVA' | 'SUSPENSA' | 'PENDENTE' | null;
   created_at: string;
 }
 
@@ -29,49 +30,11 @@ type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 10;
 
-// Dados fictícios de empresas
-const companiesFicticias: Company[] = [
-  {
-    id: '1',
-    cnpj: '12.345.678/0001-90',
-    legal_name: 'Comercial Ferreira LTDA',
-    trade_name: 'Ferreira',
-    phone: '(63) 99999-1111',
-    commercial_email: 'contato@ferreira.com.br',
-    city: 'Augustinópolis',
-    state: 'TO',
-    registration_status: 'ATIVA',
-    created_at: '2026-02-15T10:30:00Z',
-  },
-  {
-    id: '2',
-    cnpj: '23.456.789/0001-01',
-    legal_name: 'Top Serviços LTDA',
-    trade_name: 'Top Serviços',
-    phone: '(63) 99999-2222',
-    commercial_email: 'contato@topservicos.com.br',
-    city: 'Goianésia',
-    state: 'TO',
-    registration_status: 'ATIVA',
-    created_at: '2026-02-10T14:45:00Z',
-  },
-  {
-    id: '3',
-    cnpj: '34.567.890/0001-12',
-    legal_name: 'Mercado Almeida LTDA',
-    trade_name: 'Mercado Almeida',
-    phone: '(63) 99999-3333',
-    commercial_email: 'contato@mercadoalmeida.com.br',
-    city: 'Palmas',
-    state: 'TO',
-    registration_status: 'ATIVA',
-    created_at: '2026-03-05T09:15:00Z',
-  },
-];
-
 export default function EmpresasPage() {
-  const [companies] = useState<Company[]>(companiesFicticias);
-  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>(companiesFicticias);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Filters and search
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,6 +43,38 @@ export default function EmpresasPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Fetch companies from Supabase
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setLoading(true);
+        const supabase = createClient();
+
+        const { data, error: fetchError } = await supabase
+          .from('companies')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (fetchError) {
+          console.error('Erro ao carregar empresas:', fetchError);
+          setError(`Erro ao carregar empresas: ${fetchError.message}`);
+          return;
+        }
+
+        const companiesData = (data || []) as Company[];
+        setCompanies(companiesData);
+        setFilteredCompanies(companiesData);
+      } catch (err) {
+        console.error('Erro:', err);
+        setError('Erro ao carregar dados');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
 
   // Calculate stats
   const stats: Stats = {
@@ -102,7 +97,7 @@ export default function EmpresasPage() {
       result = result.filter(
         (c) =>
           c.legal_name.toLowerCase().includes(term) ||
-          (c.trade_name?.toLowerCase().includes(term) || false) ||
+          (c.trade_name ? c.trade_name.toLowerCase().includes(term) : false) ||
           c.cnpj.toLowerCase().includes(term)
       );
     }
@@ -132,8 +127,8 @@ export default function EmpresasPage() {
         aVal = new Date(aVal).getTime();
         bVal = new Date(bVal).getTime();
       } else {
-        aVal = aVal?.toString().toLowerCase() || '';
-        bVal = bVal?.toString().toLowerCase() || '';
+        aVal = aVal ? aVal.toString().toLowerCase() : '';
+        bVal = bVal ? bVal.toString().toLowerCase() : '';
       }
 
       return sortDirection === 'asc'
@@ -145,26 +140,27 @@ export default function EmpresasPage() {
     setCurrentPage(1);
   };
 
+  // Apply filters whenever search/filter changes
+  useEffect(() => {
+    applyFilters(searchTerm, statusFilter, cityFilter);
+  }, [searchTerm, statusFilter, cityFilter, companies]);
+
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
-    applyFilters(value, statusFilter, cityFilter);
   };
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value);
-    applyFilters(searchTerm, value, cityFilter);
   };
 
   const handleCityChange = (value: string) => {
     setCityFilter(value);
-    applyFilters(searchTerm, statusFilter, value);
   };
 
   const handleClearFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
     setCityFilter('');
-    applyFilters('', 'all', '');
   };
 
   // Pagination
@@ -176,7 +172,7 @@ export default function EmpresasPage() {
 
   const hasActiveFilters = searchTerm || statusFilter !== 'all' || cityFilter;
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'ATIVA':
         return 'bg-green-100 text-green-800';
@@ -189,7 +185,7 @@ export default function EmpresasPage() {
     }
   };
 
-  const getStatusDot = (status: string) => {
+  const getStatusDot = (status: string | null) => {
     switch (status) {
       case 'ATIVA':
         return '🟢';
@@ -326,27 +322,53 @@ export default function EmpresasPage() {
         </div>
       </div>
 
-      {/* Table */}
-      {filteredCompanies.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-4">
-            {searchTerm || statusFilter !== 'all' || cityFilter
-              ? 'Nenhuma empresa encontrada com os filtros aplicados.'
-              : 'Nenhuma empresa cadastrada ainda.'}
-          </p>
-          {(searchTerm || statusFilter !== 'all' || cityFilter) && (
-            <button
-              onClick={handleClearFilters}
-              className="text-orange-600 hover:text-orange-700 font-semibold text-sm"
-            >
-              Limpar filtros
-            </button>
-          )}
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Carregando empresas...</p>
+          </div>
         </div>
-      ) : (
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <p className="text-red-700 font-medium mb-2">Erro ao carregar empresas</p>
+          <p className="text-red-600 text-sm">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
+
+      {/* Table */}
+      {!loading && !error && (
         <>
-          {/* Table */}
+          {filteredCompanies.length === 0 ? (
+            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+              <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">
+                {searchTerm || statusFilter !== 'all' || cityFilter
+                  ? 'Nenhuma empresa encontrada com os filtros aplicados.'
+                  : 'Nenhuma empresa cadastrada ainda.'}
+              </p>
+              {(searchTerm || statusFilter !== 'all' || cityFilter) && (
+                <button
+                  onClick={handleClearFilters}
+                  className="text-orange-600 hover:text-orange-700 font-semibold text-sm"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Table */}
           <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -442,6 +464,8 @@ export default function EmpresasPage() {
               </button>
             </div>
           </div>
+            </>
+          )}
         </>
       )}
     </AdminLayout>
