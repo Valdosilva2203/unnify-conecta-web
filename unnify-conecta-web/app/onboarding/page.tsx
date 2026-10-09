@@ -1,107 +1,51 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { Building2, Calculator } from 'lucide-react';
 import { OnboardingHeader } from '@/components/OnboardingHeader';
 import { OnboardingCard } from '@/components/OnboardingCard';
-import { createClient } from '@/lib/supabase/client';
+import { OnboardingPageClient } from './page-client';
 
-export default function OnboardingPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+export default async function OnboardingPage() {
+  const supabase = createClient();
 
-  const handleContinueAsEmpresa = async () => {
-    setLoading(true);
-    try {
-      const supabase = createClient();
+  // Get authenticated user
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+  // Redirect to login if not authenticated
+  if (authError || !user?.id) {
+    redirect('/login');
+  }
 
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
+  // Query profile using user_id
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('global_role, status')
+    .eq('user_id', user.id)
+    .single();
 
-      // TODO: Register onboarding_type in user profile when ready
-      // For now, just redirect to next step
+  // Log for debugging
+  console.log('Onboarding page check:', {
+    user_id: user.id,
+    user_email: user.email,
+    profile,
+    profileError,
+  });
 
-      router.push('/onboarding/empresa');
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Erro ao continuar. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Redirect admin_master to /admin
+  if (profile?.global_role === 'admin_master') {
+    console.log('Redirecting admin_master to /admin');
+    redirect('/admin');
+  }
 
-  const handleContinueAsContador = async () => {
-    setLoading(true);
-    try {
-      const supabase = createClient();
+  // Redirect admin to /admin
+  if (profile?.global_role === 'admin') {
+    console.log('Redirecting admin to /admin');
+    redirect('/admin');
+  }
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // TODO: Register onboarding_type in user profile when ready
-      // For now, just redirect to next step
-
-      router.push('/onboarding/contador');
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Erro ao continuar. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-white py-12 px-6 md:py-16">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <OnboardingHeader />
-
-        {/* Cards Grid */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
-          {/* Empresa Card */}
-          <OnboardingCard
-            icon={<Building2 className="w-6 h-6 text-orange-600" />}
-            title="Tenho uma empresa"
-            description="Quero organizar minhas finanças e trabalhar conectado ao meu contador."
-            buttonLabel="Continuar como empresa"
-            buttonOnClick={handleContinueAsEmpresa}
-            imageSrc="/images/empresario.png"
-            imageAlt="Empresário com laptop"
-            isLoading={loading}
-          />
-
-          {/* Contador Card */}
-          <OnboardingCard
-            icon={<Calculator className="w-6 h-6 text-orange-600" />}
-            title="Sou contador"
-            description="Quero gerenciar meus clientes e conectar minhas empresas ao Unnify Conecta."
-            buttonLabel="Continuar como contador"
-            buttonOnClick={handleContinueAsContador}
-            imageSrc="/images/empresario.png"
-            imageAlt="Profissional contábil"
-            isLoading={loading}
-          />
-        </div>
-
-        {/* Footer */}
-        <div className="text-center max-w-2xl mx-auto text-sm text-gray-600 space-y-2">
-          <p>
-            🔒 Proteção de dados integrada à arquitetura do Unnify Conecta.
-          </p>
-          <p>
-            Você poderá participar de outras empresas ou escritórios posteriormente conforme suas permissões.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  // Only users without a global_role or with 'user' role can see onboarding
+  return <OnboardingPageClient />;
 }
