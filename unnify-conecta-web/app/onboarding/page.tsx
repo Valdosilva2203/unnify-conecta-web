@@ -13,7 +13,7 @@ export default function OnboardingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Verify authentication
+  // Verify authentication and role
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -22,6 +22,25 @@ export default function OnboardingPage() {
 
         if (!session) {
           router.push('/login');
+          return;
+        }
+
+        // Check user role
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('global_role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (error) {
+          console.error('Profile fetch failed:', error);
+          router.push('/login');
+          return;
+        }
+
+        // Redirect Admin Master to dashboard
+        if (profile?.global_role === 'admin_master') {
+          router.push('/admin');
           return;
         }
 
