@@ -423,7 +423,7 @@ export default function EmpresasPage() {
             </p>
             <div className="flex items-center gap-2">
               <select
-                value={ITEMS_PER_PAGE}
+                defaultValue={ITEMS_PER_PAGE}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 <option value="10">10 por página</option>
