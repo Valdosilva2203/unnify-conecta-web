@@ -20,18 +20,16 @@ export default function OnboardingPage() {
         const supabase = createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
-        if (!session) {
+        if (!session?.access_token) {
           router.push('/login');
           setCheckingAuth(false);
           return;
         }
 
         // Check user role via API (uses service role to bypass RLS)
-        const { data: { session: { access_token } } } = await supabase.auth.getSession();
-
         const response = await fetch('/api/auth/check-role', {
           headers: {
-            Authorization: `Bearer ${access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
         });
 
