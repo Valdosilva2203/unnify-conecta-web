@@ -70,7 +70,7 @@ export default function AppPage() {
         const { data: profile } = await supabase
           .from('profiles')
           .select('global_role, full_name')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .single();
 
         if (profile?.global_role === 'admin_master' || profile?.global_role === 'admin') {
