@@ -44,6 +44,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         const role = profile.global_role;
 
+        // DIAGNOSTIC: Log role value for debugging
+        if (typeof window !== 'undefined') {
+          console.log(`[AUTH DEBUG] user_id: ${user.id}, global_role: "${role}"`);
+        }
+
         // Redirect based on role - admin goes to admin panel
         if (role === 'admin_master' || role === 'admin') {
           router.push('/admin');
