@@ -123,7 +123,7 @@ export default function EmpresasPage() {
       let aVal: any = a[sortField];
       let bVal: any = b[sortField];
 
-      if (sortField === 'created_at') {
+      if (sortField === 'criado_em') {
         aVal = new Date(aVal).getTime();
         bVal = new Date(bVal).getTime();
       } else {
