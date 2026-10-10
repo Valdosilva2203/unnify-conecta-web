@@ -5,15 +5,15 @@ import { Eye, Edit, MoreVertical, ArrowUpDown } from 'lucide-react';
 interface Company {
   id: string;
   cnpj: string;
-  legal_name: string;
-  trade_name: string | null;
-  phone: string | null;
-  commercial_email: string;
-  city: string;
-  state: string;
-  registration_status: string | null;
-  created_at: string;
-  created_by: string;
+  razao_social: string;
+  nome_comercial: string | null;
+  telefone: string | null;
+  email_comercial: string;
+  cidade: string;
+  estado: string;
+  status_registro: string | null;
+  criado_em: string;
+  criado_por: string;
 }
 
 interface CompaniesTableProps {
@@ -94,7 +94,7 @@ export function CompaniesTable({
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">
                 <SortHeader
                   label="Empresa"
-                  field="legal_name"
+                  field="razao_social"
                   currentField={sortField}
                   direction={sortDirection}
                   onSort={onSort}
@@ -112,7 +112,7 @@ export function CompaniesTable({
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">
                 <SortHeader
                   label="Cidade/UF"
-                  field="city"
+                  field="cidade"
                   currentField={sortField}
                   direction={sortDirection}
                   onSort={onSort}
@@ -136,11 +136,11 @@ export function CompaniesTable({
                 <td className="px-6 py-4">
                   <div>
                     <p className="font-medium text-gray-900">
-                      {company.legal_name}
+                      {company.razao_social}
                     </p>
-                    {company.trade_name && (
+                    {company.nome_comercial && (
                       <p className="text-sm text-gray-600">
-                        {company.trade_name}
+                        {company.nome_comercial}
                       </p>
                     )}
                   </div>
@@ -156,7 +156,7 @@ export function CompaniesTable({
                 {/* City/State */}
                 <td className="px-6 py-4">
                   <p className="text-sm text-gray-700">
-                    {company.city} - {company.state}
+                    {company.cidade} - {company.estado}
                   </p>
                 </td>
 

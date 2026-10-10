@@ -25,7 +25,7 @@ interface Stats {
   pending: number;
 }
 
-type SortField = 'razao_social' | 'cnpj' | 'cidade' | 'created_at';
+type SortField = 'razao_social' | 'cnpj' | 'cidade' | 'criado_em';
 type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 10;
@@ -41,7 +41,7 @@ export default function EmpresasPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [cityFilter, setCityFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortField, setSortField] = useState<SortField>('criado_em');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // Fetch companies from Supabase
