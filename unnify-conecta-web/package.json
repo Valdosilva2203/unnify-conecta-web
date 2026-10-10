@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "playwright test tests/",
+    "test:setup": "bash scripts/test-setup.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
