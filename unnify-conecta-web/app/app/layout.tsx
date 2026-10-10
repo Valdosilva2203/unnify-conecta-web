@@ -18,19 +18,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Query role from database
+        // Query role from database with small delay to ensure session is available
+        await new Promise(r => setTimeout(r, 100));
+
         const { data: profile, error } = await supabase
           .from('perfis')
-          .select('funcao_global')
+          .select('global_role')
           .eq('id_usuario', user.id)
           .single();
 
         if (error || !profile) {
-          router.push('/login');
+          // Profile not found - user not properly set up, redirect to onboarding
+          router.push('/onboarding');
           return;
         }
 
-        const role = profile.funcao_global;
+        const role = profile.global_role;
 
         // Redirect based on role
         if (role === 'admin_master' || role === 'admin') {
@@ -57,6 +60,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           return;
         }
       } catch (error) {
+        // On error, redirect to login to force re-authentication
         router.push('/login');
       }
     };

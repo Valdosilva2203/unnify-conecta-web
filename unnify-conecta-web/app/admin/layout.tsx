@@ -35,34 +35,52 @@ export default function AdminLayout({
           return;
         }
 
-        // Use API endpoint to check role (validates token on server)
-        const roleResponse = await fetch('/api/auth/check-role', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        // Use API endpoint to check role with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        if (!roleResponse.ok) {
-          setLoading(false);
-          router.push('/login');
-          return;
-        }
+        try {
+          const roleResponse = await fetch('/api/auth/check-role', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            signal: controller.signal,
+          });
 
-        const roleData = await roleResponse.json();
+          clearTimeout(timeoutId);
 
-        if (!roleData.role) {
-          setLoading(false);
-          router.push('/login');
-          return;
-        }
+          if (!roleResponse.ok) {
+            setLoading(false);
+            router.push('/login');
+            return;
+          }
 
-        if (roleData.role === 'admin_master' || roleData.role === 'admin') {
-          setAuthorized(true);
-          setLoading(false);
-        } else {
-          setLoading(false);
-          router.push('/onboarding');
+          const roleData = await roleResponse.json();
+
+          if (!roleData.role) {
+            setLoading(false);
+            router.push('/login');
+            return;
+          }
+
+          if (roleData.role === 'admin_master' || roleData.role === 'admin') {
+            setAuthorized(true);
+            setLoading(false);
+          } else {
+            setLoading(false);
+            router.push('/onboarding');
+          }
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            // Timeout - retry logic
+            setLoading(false);
+            router.push('/login');
+          } else {
+            setLoading(false);
+            router.push('/login');
+          }
         }
       } catch (error) {
         setLoading(false);

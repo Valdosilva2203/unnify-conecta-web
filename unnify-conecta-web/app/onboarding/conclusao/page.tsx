@@ -24,10 +24,10 @@ export default function OnboardingConclusivelPage() {
           return;
         }
 
-        // 2. Verificar funcao_global
+        // 2. Verificar global_role
         const { data: profile, error: profileError } = await supabase
           .from('perfis')
-          .select('funcao_global')
+          .select('global_role')
           .eq('id_usuario', user.id)
           .single();
 
@@ -37,7 +37,7 @@ export default function OnboardingConclusivelPage() {
         }
 
         // 3. Admin vai para /admin
-        if (profile.funcao_global === 'admin_master' || profile.funcao_global === 'admin') {
+        if (profile.global_role === 'admin_master' || profile.global_role === 'admin') {
           router.push('/admin');
           return;
         }

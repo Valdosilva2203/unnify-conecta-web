@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const adminClient = createClient();
     const { data: profile, error } = await adminClient
       .from('perfis')
-      .select('funcao_global')
+      .select('global_role')
       .eq('id_usuario', user.id)
       .single();
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ role: null }, { status: 200 });
     }
 
-    return NextResponse.json({ role: profile?.funcao_global || null }, { status: 200 });
+    return NextResponse.json({ role: profile?.global_role || null }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ role: null }, { status: 200 });
   }

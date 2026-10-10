@@ -60,6 +60,8 @@ export function LoginForm() {
         return;
       }
 
+      // Redirect happens asynchronously, don't reset loading
+      // The page will unmount and navigate
       router.push('/app');
     } catch (err) {
       setErrors({ submit: err instanceof Error ? err.message : 'Erro ao fazer login' });

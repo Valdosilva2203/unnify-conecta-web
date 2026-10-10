@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       .from('perfis')
       .insert({
         id_usuario: userId,
-        funcao_global: globalRole,
+        global_role: globalRole,
         email: email || null,
         nome_completo: fullName || null,
         status: 'active',

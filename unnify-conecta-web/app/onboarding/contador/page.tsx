@@ -28,7 +28,7 @@ export default function OnboardingContadorPage() {
 
         const { data: profile, error: profileError } = await supabase
           .from('perfis')
-          .select('funcao_global')
+          .select('global_role')
           .eq('id_usuario', user.id)
           .single();
 
@@ -37,7 +37,7 @@ export default function OnboardingContadorPage() {
           return;
         }
 
-        const role = profile.funcao_global;
+        const role = profile.global_role;
 
         if (role === 'admin_master' || role === 'admin') {
           router.push('/admin');
