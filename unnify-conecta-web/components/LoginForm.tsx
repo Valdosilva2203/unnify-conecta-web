@@ -70,46 +70,9 @@ export function LoginForm() {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from('perfis')
-        .select('funcao_global')
-        .eq('id_usuario', user.id)
-        .single();
-
-      const role = profile?.funcao_global;
-
-      if (role === 'admin_master' || role === 'admin') {
-        router.push('/admin');
-      } else if (role === 'user') {
-        // Check for accounting office membership (contador)
-        const { data: membership } = await supabase
-          .from('membros_escritorio')
-          .select('id')
-          .eq('id_usuario', user.id)
-          .maybeSingle();
-
-        if (membership) {
-          router.push('/contador');
-          return;
-        }
-
-        // Check for company (empresa)
-        const { data: company } = await supabase
-          .from('empresas')
-          .select('id')
-          .eq('criado_por', user.id)
-          .maybeSingle();
-
-        if (company) {
-          router.push('/app');
-          return;
-        }
-
-        // No membership or company → onboarding
-        router.push('/onboarding');
-      } else {
-        router.push('/onboarding');
-      }
+      // Login successful - redirect to app
+      // Role checking will happen in layouts (AdminLayout, AppLayout)
+      router.push('/app');
     } catch (err) {
       setErrors({ submit: err instanceof Error ? err.message : 'Erro ao fazer login' });
       setLoading(false);
