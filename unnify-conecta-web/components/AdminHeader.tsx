@@ -21,7 +21,7 @@ export function AdminHeader() {
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
-            .eq('id', user.id)
+            .eq('user_id', user.id)
             .single();
 
           const displayName = profile?.full_name || user.email || 'Admin';
