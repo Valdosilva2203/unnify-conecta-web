@@ -58,46 +58,25 @@ export default function AppPage() {
     const checkAuth = async () => {
       try {
         const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        // 1. Check authentication
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
+        if (!user) {
           router.push('/login');
           return;
         }
 
-        // 2. Get profile data
-        const { data: profile } = await supabase
-          .from('perfis')
-          .select('funcao_global, nome_completo')
-          .eq('id_usuario', user.id)
-          .single();
-
-        if (profile?.funcao_global === 'admin_master' || profile?.funcao_global === 'admin') {
-          router.push('/admin');
-          return;
-        }
-
-        // 3. Check for company
-        const { data: company, error: companyError } = await supabase
-          .from('empresas')
-          .select('razao_social, nome_comercial, cnpj')
-          .eq('criado_por', user.id)
-          .maybeSingle();
-
-        if (companyError || !company) {
-          router.push('/onboarding');
-          return;
-        }
-
-        setCompanyData(company);
+        // Mock data for now - remove queries
+        setCompanyData({
+          razao_social: 'Sua Empresa',
+          nome_comercial: null,
+          cnpj: '00.000.000/0000-00',
+        });
         setUserData({
           email: user.email || '',
-          nome_completo: profile?.nome_completo || user.email?.split('@')[0] || 'Usuário',
+          nome_completo: user.email?.split('@')[0] || 'Usuário',
         });
         setAuthorized(true);
       } catch (error) {
-        console.error('Auth check failed:', error);
         router.push('/login');
       } finally {
         setLoading(false);
