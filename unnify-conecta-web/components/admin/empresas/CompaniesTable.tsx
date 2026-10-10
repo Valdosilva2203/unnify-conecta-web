@@ -168,7 +168,7 @@ export function CompaniesTable({
                 </td>
 
                 {/* Status */}
-                <td className="px-6 py-4">{getStatusBadge(company.registration_status)}</td>
+                <td className="px-6 py-4">{getStatusBadge(company.status_registro)}</td>
 
                 {/* Actions */}
                 <td className="px-6 py-4 text-right">
