@@ -52,13 +52,13 @@ export default function AdminLayout({
 
         const roleData = await roleResponse.json();
 
-        if (roleData.status !== 'ok' || !roleData.global_role) {
+        if (roleData.status !== 'ok' || !roleData.funcao_global) {
           setLoading(false);
           router.push('/login');
           return;
         }
 
-        if (roleData.global_role === 'admin_master' || roleData.global_role === 'admin') {
+        if (roleData.funcao_global === 'admin_master' || roleData.funcao_global === 'admin') {
           setAuthorized(true);
           setLoading(false);
         } else {
