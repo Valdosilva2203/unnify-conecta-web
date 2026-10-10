@@ -62,7 +62,10 @@ export function LoginForm() {
         return;
       }
 
-      console.log('Login bem-sucedido, redirecionando...');
+      console.log('Login bem-sucedido, verificando perfil...');
+
+      // Não redirecionar aqui - deixar que o layout/page determine o destino
+      // A verificação de role será feita no servidor via /api/auth/check-role
       router.push('/app');
     } catch (err) {
       setErrors({ submit: err instanceof Error ? err.message : 'Erro ao fazer login' });

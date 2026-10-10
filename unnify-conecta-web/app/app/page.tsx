@@ -65,15 +65,29 @@ export default function AppPage() {
           return;
         }
 
-        // Mock data for now - remove queries
-        setCompanyData({
-          razao_social: 'Sua Empresa',
-          nome_comercial: null,
-          cnpj: '00.000.000/0000-00',
-        });
+        // Load real company data
+        const { data: company } = await supabase
+          .from('empresas')
+          .select('razao_social, nome_comercial, cnpj')
+          .eq('criado_por', user.id)
+          .maybeSingle();
+
+        // Load user profile
+        const { data: profile } = await supabase
+          .from('perfis')
+          .select('nome_completo')
+          .eq('id_usuario', user.id)
+          .maybeSingle();
+
+        if (!company) {
+          router.push('/onboarding');
+          return;
+        }
+
+        setCompanyData(company);
         setUserData({
           email: user.email || '',
-          nome_completo: user.email?.split('@')[0] || 'Usuário',
+          nome_completo: profile?.nome_completo || user.email?.split('@')[0] || 'Usuário',
         });
         setAuthorized(true);
       } catch (error) {

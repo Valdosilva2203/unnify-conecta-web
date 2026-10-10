@@ -39,13 +39,11 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Profile fetch error:', error.message);
       return NextResponse.json({ role: null }, { status: 200 });
     }
 
     return NextResponse.json({ role: profile?.funcao_global || null }, { status: 200 });
   } catch (error) {
-    console.error('Check role API error:', error);
     return NextResponse.json({ role: null }, { status: 200 });
   }
 }
