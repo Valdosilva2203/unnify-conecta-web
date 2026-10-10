@@ -40,10 +40,9 @@ export default function OnboardingPage() {
           return;
         }
 
-        const roleResponse = await fetch('/api/admin/check-role', {
-          method: 'POST',
+        const roleResponse = await fetch('/api/auth/check-role', {
+          method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
         });
@@ -58,14 +57,13 @@ export default function OnboardingPage() {
         const roleData = await roleResponse.json();
 
         // Redirect admin_master and admin
-        if (roleData.funcao_global === 'admin_master' || roleData.funcao_global === 'admin') {
+        if (roleData.role === 'admin_master' || roleData.role === 'admin') {
           router.replace('/admin');
           return;
         }
         // Allow others to see onboarding
         setCanRender(true);
       } catch (error) {
-        console.error('Check role error:', error);
         setCanRender(true); // Allow render on error
       } finally {
         setIsChecking(false);

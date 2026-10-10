@@ -57,7 +57,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           return;
         }
       } catch (error) {
-        console.error('Role check error');
         router.push('/login');
       }
     };
