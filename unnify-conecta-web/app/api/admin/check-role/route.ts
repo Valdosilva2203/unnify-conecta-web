@@ -1,18 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
-    const { allowed, retryAfter } = rateLimit(request, 30, 60000);
-    if (!allowed) {
-      return NextResponse.json(
-        { status: 'too_many_requests', message: 'Rate limit exceeded' },
-        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
-      );
-    }
-
     // Get auth token from Authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
