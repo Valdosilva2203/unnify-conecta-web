@@ -76,7 +76,7 @@ export default function AppPage() {
         const { data: profile } = await supabase
           .from('perfis')
           .select('nome_completo')
-          .eq('user_id', user.id)
+          .eq('id_usuario', user.id)
           .maybeSingle();
 
         if (!company) {
