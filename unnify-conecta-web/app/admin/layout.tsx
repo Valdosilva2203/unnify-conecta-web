@@ -36,10 +36,9 @@ export default function AdminLayout({
         }
 
         // Use API endpoint to check role (validates token on server)
-        const roleResponse = await fetch('/api/admin/check-role', {
-          method: 'POST',
+        const roleResponse = await fetch('/api/auth/check-role', {
+          method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
         });
@@ -52,13 +51,13 @@ export default function AdminLayout({
 
         const roleData = await roleResponse.json();
 
-        if (roleData.status !== 'ok' || !roleData.funcao_global) {
+        if (!roleData.role) {
           setLoading(false);
           router.push('/login');
           return;
         }
 
-        if (roleData.funcao_global === 'admin_master' || roleData.funcao_global === 'admin') {
+        if (roleData.role === 'admin_master' || roleData.role === 'admin') {
           setAuthorized(true);
           setLoading(false);
         } else {
