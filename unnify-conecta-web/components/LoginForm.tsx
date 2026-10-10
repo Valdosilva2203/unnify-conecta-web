@@ -71,21 +71,21 @@ export function LoginForm() {
       }
 
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('global_role')
-        .eq('user_id', user.id)
+        .from('perfis')
+        .select('funcao_global')
+        .eq('id_usuario', user.id)
         .single();
 
-      const role = profile?.global_role;
+      const role = profile?.funcao_global;
 
       if (role === 'admin_master' || role === 'admin') {
         router.push('/admin');
       } else if (role === 'user') {
         // Check for accounting office membership (contador)
         const { data: membership } = await supabase
-          .from('user_accounting_office_memberships')
+          .from('membros_escritorio')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('id_usuario', user.id)
           .maybeSingle();
 
         if (membership) {
@@ -95,9 +95,9 @@ export function LoginForm() {
 
         // Check for company (empresa)
         const { data: company } = await supabase
-          .from('companies')
+          .from('empresas')
           .select('id')
-          .eq('created_by', user.id)
+          .eq('criado_por', user.id)
           .maybeSingle();
 
         if (company) {

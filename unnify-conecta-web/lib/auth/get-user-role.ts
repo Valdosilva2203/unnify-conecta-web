@@ -10,12 +10,12 @@ export async function getUserRole(): Promise<'admin_master' | 'admin' | 'user' |
   if (!user) return null;
 
   const { data, error } = await supabase
-    .from('profiles')
-    .select('global_role')
+    .from('perfis')
+    .select('funcao_global')
     .eq('id', user.id)
     .single();
 
   if (error || !data) return null;
 
-  return data.global_role;
+  return data.funcao_global;
 }

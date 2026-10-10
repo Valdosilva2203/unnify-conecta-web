@@ -12,14 +12,14 @@ import {
 import { Button } from '@/components/ui/button';
 
 interface CompanyData {
-  legal_name: string;
-  trade_name: string | null;
+  razao_social: string;
+  nome_comercial: string | null;
   cnpj: string;
 }
 
 interface UserData {
   email: string;
-  full_name?: string;
+  nome_completo?: string;
 }
 
 const menuItems = [
@@ -68,21 +68,21 @@ export default function AppPage() {
 
         // 2. Get profile data
         const { data: profile } = await supabase
-          .from('profiles')
-          .select('global_role, full_name')
-          .eq('user_id', user.id)
+          .from('perfis')
+          .select('funcao_global, nome_completo')
+          .eq('id_usuario', user.id)
           .single();
 
-        if (profile?.global_role === 'admin_master' || profile?.global_role === 'admin') {
+        if (profile?.funcao_global === 'admin_master' || profile?.funcao_global === 'admin') {
           router.push('/admin');
           return;
         }
 
         // 3. Check for company
         const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('legal_name, trade_name, cnpj')
-          .eq('created_by', user.id)
+          .from('empresas')
+          .select('razao_social, nome_comercial, cnpj')
+          .eq('criado_por', user.id)
           .maybeSingle();
 
         if (companyError || !company) {
@@ -93,7 +93,7 @@ export default function AppPage() {
         setCompanyData(company);
         setUserData({
           email: user.email || '',
-          full_name: profile?.full_name || user.email?.split('@')[0] || 'Usuário',
+          nome_completo: profile?.nome_completo || user.email?.split('@')[0] || 'Usuário',
         });
         setAuthorized(true);
       } catch (error) {
@@ -128,8 +128,8 @@ export default function AppPage() {
     return null;
   }
 
-  const firstName = userData.full_name?.split(' ')[0] || 'Usuário';
-  const initials = (companyData.trade_name || companyData.legal_name)
+  const firstName = userData.nome_completo?.split(' ')[0] || 'Usuário';
+  const initials = (companyData.nome_comercial || companyData.razao_social)
     .split(' ')
     .slice(0, 2)
     .map((word: string) => word[0])
@@ -201,8 +201,8 @@ export default function AppPage() {
 
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">{userData.full_name}</p>
-                  <p className="text-xs text-gray-500">{companyData.trade_name || companyData.legal_name}</p>
+                  <p className="text-sm font-semibold text-gray-900">{userData.nome_completo}</p>
+                  <p className="text-xs text-gray-500">{companyData.nome_comercial || companyData.razao_social}</p>
                 </div>
                 <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                   {initials}

@@ -58,7 +58,7 @@ export default function OnboardingPage() {
         const roleData = await roleResponse.json();
 
         // Redirect admin_master and admin
-        if (roleData.global_role === 'admin_master' || roleData.global_role === 'admin') {
+        if (roleData.funcao_global === 'admin_master' || roleData.funcao_global === 'admin') {
           router.replace('/admin');
           return;
         }

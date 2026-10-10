@@ -70,7 +70,7 @@ export function SignupForm() {
         password,
         options: {
           data: {
-            full_name: fullName,
+            nome_completo: fullName,
           },
         },
       });
@@ -87,14 +87,14 @@ export function SignupForm() {
       // 3. If user was created, manually create the profile as backup
       if (authData?.user?.id) {
         const { error: profileError } = await supabase
-          .from('profiles')
+          .from('perfis')
           .upsert(
             {
-              user_id: authData.user.id,
+              id_usuario: authData.user.id,
               email,
-              full_name: fullName,
+              nome_completo: fullName,
             },
-            { onConflict: 'user_id' }
+            { onConflict: 'id_usuario' }
           );
 
         if (profileError) {

@@ -29,23 +29,23 @@ export default function ContadorPage() {
           return;
         }
 
-        // 2. Verificar global_role
+        // 2. Verificar funcao_global
         const { data: profile } = await supabase
-          .from('profiles')
-          .select('global_role')
-          .eq('user_id', user.id)
+          .from('perfis')
+          .select('funcao_global')
+          .eq('id_usuario', user.id)
           .single();
 
-        if (profile?.global_role === 'admin_master' || profile?.global_role === 'admin') {
+        if (profile?.funcao_global === 'admin_master' || profile?.funcao_global === 'admin') {
           router.push('/admin');
           return;
         }
 
         // 3. Verificar membership (contador) ou company (empresa)
         const { data: membership } = await supabase
-          .from('user_accounting_office_memberships')
-          .select('accounting_office_id')
-          .eq('user_id', user.id)
+          .from('membros_escritorio')
+          .select('id_escritorio')
+          .eq('id_usuario', user.id)
           .maybeSingle();
 
         let businessName: string | null = null;
@@ -53,24 +53,24 @@ export default function ContadorPage() {
         if (membership) {
           // 4. Obter dados do escritório (contador)
           const { data: office } = await supabase
-            .from('accounting_offices')
-            .select('trade_name, legal_name')
-            .eq('id', membership.accounting_office_id)
+            .from('escritorios_contabeis')
+            .select('nome_comercial, razao_social')
+            .eq('id', membership.id_escritorio)
             .single();
 
           if (office) {
-            businessName = office.trade_name || office.legal_name;
+            businessName = office.nome_comercial || office.razao_social;
           }
         } else {
           // 4. Obter dados da empresa (empresa)
           const { data: company } = await supabase
-            .from('companies')
-            .select('trade_name, legal_name')
-            .eq('created_by', user.id)
+            .from('empresas')
+            .select('nome_comercial, razao_social')
+            .eq('criado_por', user.id)
             .maybeSingle();
 
           if (company) {
-            businessName = company.trade_name || company.legal_name;
+            businessName = company.nome_comercial || company.razao_social;
           } else {
             router.push('/onboarding');
             return;

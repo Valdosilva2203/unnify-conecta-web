@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
     // Query profile with service role (bypasses RLS)
     const adminClient = createClient();
     const { data: profile, error } = await adminClient
-      .from('profiles')
-      .select('global_role')
-      .eq('user_id', user.id)
+      .from('perfis')
+      .select('funcao_global')
+      .eq('id_usuario', user.id)
       .single();
 
     if (error) {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ role: null }, { status: 200 });
     }
 
-    return NextResponse.json({ role: profile?.global_role || null }, { status: 200 });
+    return NextResponse.json({ role: profile?.funcao_global || null }, { status: 200 });
   } catch (error) {
     console.error('Check role API error:', error);
     return NextResponse.json({ role: null }, { status: 200 });

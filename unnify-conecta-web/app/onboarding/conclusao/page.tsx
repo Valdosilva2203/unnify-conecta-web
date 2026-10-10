@@ -24,11 +24,11 @@ export default function OnboardingConclusivelPage() {
           return;
         }
 
-        // 2. Verificar global_role
+        // 2. Verificar funcao_global
         const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('global_role')
-          .eq('user_id', user.id)
+          .from('perfis')
+          .select('funcao_global')
+          .eq('id_usuario', user.id)
           .single();
 
         if (profileError || !profile) {
@@ -37,22 +37,22 @@ export default function OnboardingConclusivelPage() {
         }
 
         // 3. Admin vai para /admin
-        if (profile.global_role === 'admin_master' || profile.global_role === 'admin') {
+        if (profile.funcao_global === 'admin_master' || profile.funcao_global === 'admin') {
           router.push('/admin');
           return;
         }
 
         // 4. Verificar se tem empresa ou escritório contábil
         const { data: membership, error: membershipError } = await supabase
-          .from('user_accounting_office_memberships')
+          .from('membros_escritorio')
           .select('id, role')
-          .eq('user_id', user.id)
+          .eq('id_usuario', user.id)
           .maybeSingle();
 
         const { data: company, error: companyError } = await supabase
-          .from('companies')
+          .from('empresas')
           .select('id')
-          .eq('created_by', user.id)
+          .eq('criado_por', user.id)
           .maybeSingle();
 
         if ((membershipError || !membership) && (companyError || !company)) {

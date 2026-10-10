@@ -8,7 +8,7 @@ export async function POST() {
     // Use rpc to execute raw SQL via a dynamic approach
     // First, let's try to just read and see if service role bypasses RLS
     const { data: test, error: testError } = await supabase
-      .from('profiles')
+      .from('perfis')
       .select('*')
       .limit(1);
 

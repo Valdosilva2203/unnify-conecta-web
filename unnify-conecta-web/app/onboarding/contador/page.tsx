@@ -27,9 +27,9 @@ export default function OnboardingContadorPage() {
         }
 
         const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('global_role')
-          .eq('user_id', user.id)
+          .from('perfis')
+          .select('funcao_global')
+          .eq('id_usuario', user.id)
           .single();
 
         if (profileError || !profile) {
@@ -37,7 +37,7 @@ export default function OnboardingContadorPage() {
           return;
         }
 
-        const role = profile.global_role;
+        const role = profile.funcao_global;
 
         if (role === 'admin_master' || role === 'admin') {
           router.push('/admin');
@@ -46,9 +46,9 @@ export default function OnboardingContadorPage() {
 
         if (role === 'user') {
           const { data: membership } = await supabase
-            .from('user_accounting_office_memberships')
+            .from('membros_escritorio')
             .select('id')
-            .eq('user_id', user.id)
+            .eq('id_usuario', user.id)
             .maybeSingle();
 
           if (membership) {

@@ -19,12 +19,12 @@ export function AdminHeader() {
         if (user) {
           // Get profile data
           const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('user_id', user.id)
+            .from('perfis')
+            .select('nome_completo')
+            .eq('id_usuario', user.id)
             .single();
 
-          const displayName = profile?.full_name || user.email || 'Admin';
+          const displayName = profile?.nome_completo || user.email || 'Admin';
           setUserName(displayName);
 
           // Generate initials from full name

@@ -8,14 +8,14 @@ import { createClient } from '@/lib/supabase/client';
 interface Company {
   id: string;
   cnpj: string;
-  legal_name: string;
-  trade_name: string | null;
-  phone: string | null;
-  commercial_email: string;
-  city: string;
-  state: string;
-  registration_status: 'ATIVA' | 'SUSPENSA' | 'PENDENTE' | null;
-  created_at: string;
+  razao_social: string;
+  nome_comercial: string | null;
+  telefone: string | null;
+  email_comercial: string;
+  cidade: string;
+  estado: string;
+  status_registro: 'ATIVA' | 'SUSPENSA' | 'PENDENTE' | null;
+  criado_em: string;
 }
 
 interface Stats {
@@ -25,7 +25,7 @@ interface Stats {
   pending: number;
 }
 
-type SortField = 'legal_name' | 'cnpj' | 'city' | 'created_at';
+type SortField = 'razao_social' | 'cnpj' | 'cidade' | 'created_at';
 type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 10;
@@ -52,7 +52,7 @@ export default function EmpresasPage() {
         const supabase = createClient();
 
         const { data, error: fetchError } = await supabase
-          .from('companies')
+          .from('empresas')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -79,16 +79,16 @@ export default function EmpresasPage() {
   // Calculate stats
   const stats: Stats = {
     total: companies.length,
-    active: companies.filter((c) => c.registration_status === 'ATIVA').length,
-    inactive: companies.filter((c) => c.registration_status === 'SUSPENSA').length,
-    pending: companies.filter((c) => c.registration_status === 'PENDENTE').length,
+    active: companies.filter((c) => c.status_registro === 'ATIVA').length,
+    inactive: companies.filter((c) => c.status_registro === 'SUSPENSA').length,
+    pending: companies.filter((c) => c.status_registro === 'PENDENTE').length,
   };
 
   // Extract unique cities for filter
-  const cities = Array.from(new Set(companies.map((c) => c.city))).sort();
+  const cities = Array.from(new Set(companies.map((c) => c.cidade))).sort();
 
   // Apply filters and search
-  const applyFilters = (search: string, status: string, city: string) => {
+  const applyFilters = (search: string, status: string, cidade: string) => {
     let result = companies;
 
     // Search
@@ -96,8 +96,8 @@ export default function EmpresasPage() {
       const term = search.toLowerCase();
       result = result.filter(
         (c) =>
-          c.legal_name.toLowerCase().includes(term) ||
-          (c.trade_name ? c.trade_name.toLowerCase().includes(term) : false) ||
+          c.razao_social.toLowerCase().includes(term) ||
+          (c.nome_comercial ? c.nome_comercial.toLowerCase().includes(term) : false) ||
           c.cnpj.toLowerCase().includes(term)
       );
     }
@@ -105,17 +105,17 @@ export default function EmpresasPage() {
     // Status filter
     if (status !== 'all') {
       if (status === 'active') {
-        result = result.filter((c) => c.registration_status === 'ATIVA');
+        result = result.filter((c) => c.status_registro === 'ATIVA');
       } else if (status === 'inactive') {
-        result = result.filter((c) => c.registration_status === 'SUSPENSA');
+        result = result.filter((c) => c.status_registro === 'SUSPENSA');
       } else if (status === 'pending') {
-        result = result.filter((c) => c.registration_status === 'PENDENTE');
+        result = result.filter((c) => c.status_registro === 'PENDENTE');
       }
     }
 
     // City filter
-    if (city) {
-      result = result.filter((c) => c.city === city);
+    if (cidade) {
+      result = result.filter((c) => c.cidade === cidade);
     }
 
     // Sort
@@ -302,9 +302,9 @@ export default function EmpresasPage() {
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="">Cidade: Todas</option>
-            {cities.map((city) => (
-              <option key={city} value={city}>
-                {city}
+            {cities.map((cidade) => (
+              <option key={cidade} value={cidade}>
+                {cidade}
               </option>
             ))}
           </select>
@@ -389,20 +389,20 @@ export default function EmpresasPage() {
                     <tr key={company.id} className="hover:bg-gray-50 transition">
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-semibold text-gray-900">{company.legal_name}</p>
-                          <p className="text-xs text-gray-500">{company.trade_name || 'N/A'}</p>
+                          <p className="font-semibold text-gray-900">{company.razao_social}</p>
+                          <p className="text-xs text-gray-500">{company.nome_comercial || 'N/A'}</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-700 text-sm">{company.cnpj}</td>
-                      <td className="px-4 py-3 text-gray-700 text-sm">{company.commercial_email}</td>
-                      <td className="px-4 py-3 text-gray-700 text-sm">{company.phone || 'N/A'}</td>
-                      <td className="px-4 py-3 text-gray-700 text-sm">{company.city}/{company.state}</td>
+                      <td className="px-4 py-3 text-gray-700 text-sm">{company.email_comercial}</td>
+                      <td className="px-4 py-3 text-gray-700 text-sm">{company.telefone || 'N/A'}</td>
+                      <td className="px-4 py-3 text-gray-700 text-sm">{company.cidade}/{company.estado}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(company.registration_status)}`}>
-                          {getStatusDot(company.registration_status)} {company.registration_status}
+                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(company.status_registro)}`}>
+                          {getStatusDot(company.status_registro)} {company.status_registro}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 text-sm">{formatDate(company.created_at)}</td>
+                      <td className="px-4 py-3 text-gray-600 text-sm">{formatDate(company.criado_em)}</td>
                       <td className="px-4 py-3 text-right">
                         <button className="text-gray-600 hover:text-gray-900 p-1 text-lg">👁</button>
                         <button className="text-gray-600 hover:text-gray-900 p-1 text-lg">✏️</button>

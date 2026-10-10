@@ -16,14 +16,14 @@ export async function POST(request: NextRequest) {
     const supabase = createClient();
 
     const { data, error } = await supabase
-      .from('profiles')
+      .from('perfis')
       .insert({
-        user_id: userId,
-        global_role: globalRole,
+        id_usuario: userId,
+        funcao_global: globalRole,
         email: email || null,
-        full_name: fullName || null,
+        nome_completo: fullName || null,
         status: 'active',
-        mfa_enabled: false,
+        autenticacao_dupla_ativada: false,
       })
       .select()
       .single();

@@ -5,11 +5,11 @@ import { CheckCircle2, Building2, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface BusinessData {
-  trade_name: string | null;
-  legal_name: string;
+  nome_comercial: string | null;
+  razao_social: string;
   cnpj: string;
-  city: string;
-  state: string;
+  cidade: string;
+  estado: string;
   type: 'office' | 'company';
 }
 
@@ -28,16 +28,16 @@ export function SuccessCard() {
 
         // Try to find accounting office (contador flow)
         const { data: membership } = await supabase
-          .from('user_accounting_office_memberships')
-          .select('accounting_office_id')
-          .eq('user_id', user.id)
+          .from('membros_escritorio')
+          .select('id_escritorio')
+          .eq('id_usuario', user.id)
           .maybeSingle();
 
         if (membership) {
           const { data: officeData, error: officeError } = await supabase
-            .from('accounting_offices')
-            .select('trade_name, legal_name, cnpj, city, state')
-            .eq('id', membership.accounting_office_id)
+            .from('escritorios_contabeis')
+            .select('nome_comercial, razao_social, cnpj, cidade, estado')
+            .eq('id', membership.id_escritorio)
             .single();
 
           if (!officeError && officeData) {
@@ -49,9 +49,9 @@ export function SuccessCard() {
 
         // Try to find company (empresa flow)
         const { data: companyData, error: companyError } = await supabase
-          .from('companies')
-          .select('trade_name, legal_name, cnpj, city, state')
-          .eq('created_by', user.id)
+          .from('empresas')
+          .select('nome_comercial, razao_social, cnpj, cidade, estado')
+          .eq('criado_por', user.id)
           .maybeSingle();
 
         if (companyError || !companyData) {
@@ -153,13 +153,13 @@ export function SuccessCard() {
           {/* Info */}
           <div className="flex-1">
             <p className="text-lg font-bold text-gray-900">
-              {business.trade_name || business.legal_name}
+              {business.nome_comercial || business.razao_social}
             </p>
             <p className="text-sm text-gray-600 mt-1">CNPJ {business.cnpj}</p>
             <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
               <MapPin className="w-4 h-4" />
               <span>
-                {business.city} - {business.state}
+                {business.cidade} - {business.estado}
               </span>
             </div>
           </div>

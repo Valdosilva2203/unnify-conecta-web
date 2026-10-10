@@ -391,9 +391,9 @@ export default function ParceirosPage() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
             >
               <option value="todas">Cidade: Todas</option>
-              {cidades.map((city) => (
-                <option key={city} value={city}>
-                  {city}
+              {cidades.map((cidade) => (
+                <option key={cidade} value={cidade}>
+                  {cidade}
                 </option>
               ))}
             </select>
