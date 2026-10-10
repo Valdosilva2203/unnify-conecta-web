@@ -28,7 +28,7 @@ export function AccountMenu({ officeInitials, officeName }: AccountMenuProps) {
         const { data: membership } = await supabase
           .from('membros_escritorio')
           .select('role')
-          .eq('id_usuario', user.id)
+          .eq('user_id', user.id)
           .maybeSingle();
 
         if (membership) {

@@ -30,7 +30,7 @@ export function SuccessCard() {
         const { data: membership } = await supabase
           .from('membros_escritorio')
           .select('id_escritorio')
-          .eq('id_usuario', user.id)
+          .eq('user_id', user.id)
           .maybeSingle();
 
         if (membership) {

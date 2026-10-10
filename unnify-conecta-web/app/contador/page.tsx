@@ -33,7 +33,7 @@ export default function ContadorPage() {
         const { data: profile } = await supabase
           .from('perfis')
           .select('global_role')
-          .eq('id_usuario', user.id)
+          .eq('user_id', user.id)
           .single();
 
         if (profile?.global_role === 'admin_master' || profile?.global_role === 'admin') {
@@ -45,7 +45,7 @@ export default function ContadorPage() {
         const { data: membership } = await supabase
           .from('membros_escritorio')
           .select('id_escritorio')
-          .eq('id_usuario', user.id)
+          .eq('user_id', user.id)
           .maybeSingle();
 
         let businessName: string | null = null;

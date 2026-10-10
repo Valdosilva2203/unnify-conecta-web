@@ -18,29 +18,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Query role from database with small delay to ensure session is available
-        await new Promise(r => setTimeout(r, 100));
-
+        // Query role from database
         const { data: profile, error } = await supabase
           .from('perfis')
           .select('global_role')
-          .eq('id_usuario', user.id)
+          .eq('user_id', user.id)
           .single();
 
-        if (error || !profile) {
-          // Profile not found - user not properly set up, redirect to onboarding
+        // Handle query errors separately from no-profile
+        if (error) {
+          // If error is "not found", profile doesn't exist yet - send to onboarding
+          if (error.code === 'PGRST116') {
+            router.push('/onboarding');
+          } else {
+            // Other errors (network, timeout, etc) - redirect to login to retry
+            router.push('/login');
+          }
+          return;
+        }
+
+        if (!profile) {
           router.push('/onboarding');
           return;
         }
 
         const role = profile.global_role;
 
-        // Redirect based on role
+        // Redirect based on role - admin goes to admin panel
         if (role === 'admin_master' || role === 'admin') {
           router.push('/admin');
           return;
         }
 
+        // Regular users with company access stay on /app
         if (role === 'user') {
           // Check if user has company access
           const { data: company } = await supabase
@@ -53,14 +63,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             router.push('/onboarding');
             return;
           }
-          // Allow access to /app for empresario
+          // Allow access to /app for users with company
         } else {
           // Unknown role - send to onboarding
           router.push('/onboarding');
           return;
         }
       } catch (error) {
-        // On error, redirect to login to force re-authentication
+        // Unexpected errors - redirect to login
         router.push('/login');
       }
     };

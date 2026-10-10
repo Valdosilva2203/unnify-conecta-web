@@ -58,29 +58,20 @@ export default function AdminLayout({
 
           const roleData = await roleResponse.json();
 
-          if (!roleData.role) {
-            setLoading(false);
-            router.push('/login');
-            return;
-          }
-
+          // Check if user has admin role
           if (roleData.role === 'admin_master' || roleData.role === 'admin') {
             setAuthorized(true);
             setLoading(false);
           } else {
+            // User is authenticated but not admin - deny access
             setLoading(false);
             router.push('/onboarding');
           }
         } catch (fetchError: any) {
           clearTimeout(timeoutId);
-          if (fetchError.name === 'AbortError') {
-            // Timeout - retry logic
-            setLoading(false);
-            router.push('/login');
-          } else {
-            setLoading(false);
-            router.push('/login');
-          }
+          // Network errors or timeout - redirect to login to retry
+          setLoading(false);
+          router.push('/login');
         }
       } catch (error) {
         setLoading(false);

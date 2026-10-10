@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('perfis')
       .insert({
-        id_usuario: userId,
+        user_id: userId,
         global_role: globalRole,
         email: email || null,
         nome_completo: fullName || null,

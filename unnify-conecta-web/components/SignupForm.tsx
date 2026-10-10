@@ -90,11 +90,11 @@ export function SignupForm() {
           .from('perfis')
           .upsert(
             {
-              id_usuario: authData.user.id,
+              user_id: authData.user.id,
               email,
               nome_completo: fullName,
             },
-            { onConflict: 'id_usuario' }
+            { onConflict: 'user_id' }
           );
 
         if (profileError) {

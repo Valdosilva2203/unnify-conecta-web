@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error } = await adminClient
       .from('perfis')
       .select('global_role')
-      .eq('id_usuario', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (error) {

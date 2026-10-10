@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const { data: profiles, error } = await serverSupabase
       .from('perfis')
       .select('global_role')
-      .eq('id_usuario', user.id);
+      .eq('user_id', user.id);
 
     const profile = profiles?.[0];
 

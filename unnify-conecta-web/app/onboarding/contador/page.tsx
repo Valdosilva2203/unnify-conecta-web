@@ -29,7 +29,7 @@ export default function OnboardingContadorPage() {
         const { data: profile, error: profileError } = await supabase
           .from('perfis')
           .select('global_role')
-          .eq('id_usuario', user.id)
+          .eq('user_id', user.id)
           .single();
 
         if (profileError || !profile) {
@@ -48,7 +48,7 @@ export default function OnboardingContadorPage() {
           const { data: membership } = await supabase
             .from('membros_escritorio')
             .select('id')
-            .eq('id_usuario', user.id)
+            .eq('user_id', user.id)
             .maybeSingle();
 
           if (membership) {

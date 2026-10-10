@@ -28,7 +28,7 @@ export default function OnboardingConclusivelPage() {
         const { data: profile, error: profileError } = await supabase
           .from('perfis')
           .select('global_role')
-          .eq('id_usuario', user.id)
+          .eq('user_id', user.id)
           .single();
 
         if (profileError || !profile) {
@@ -46,7 +46,7 @@ export default function OnboardingConclusivelPage() {
         const { data: membership, error: membershipError } = await supabase
           .from('membros_escritorio')
           .select('id, role')
-          .eq('id_usuario', user.id)
+          .eq('user_id', user.id)
           .maybeSingle();
 
         const { data: company, error: companyError } = await supabase
