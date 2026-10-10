@@ -21,8 +21,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         // Query role from database
         const { data: profile, error } = await supabase
           .from('perfis')
-          .select('global_role')
-          .eq('user_id', user.id)
+          .select('funcao_global')
+          .eq('id_usuario', user.id)
           .single();
 
         // Handle query errors separately from no-profile
@@ -42,7 +42,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        const role = profile.global_role;
+        const role = profile.funcao_global;
 
         // DIAGNOSTIC: Log role value for debugging
         if (typeof window !== 'undefined') {
