@@ -1,5 +1,7 @@
 'use client';
 
+export const instant = false;
+
 import { useState } from 'react';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminLayout } from '@/components/AdminLayout';
