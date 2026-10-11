@@ -7,25 +7,27 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  RAISE LOG 'handle_new_user: Creating profile for user_id=%, email=%', NEW.id, NEW.email;
+  RAISE LOG 'handle_new_user: Creating profile for id_usuario=%, email=%', NEW.id, NEW.email;
 
-  INSERT INTO public.profiles (id, global_role, full_name)
+  INSERT INTO public.perfis (id_usuario, funcao_global, nome_completo, email, status)
   VALUES (
     NEW.id,
     'user',
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email)
+    COALESCE(NEW.raw_user_meta_data->>'nome_completo', NEW.email),
+    NEW.email,
+    'active'
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id_usuario) DO NOTHING;
 
-  RAISE LOG 'handle_new_user: Profile created successfully for user_id=%', NEW.id;
+  RAISE LOG 'handle_new_user: Profile created successfully for id_usuario=%', NEW.id;
 
   RETURN NEW;
 
 EXCEPTION WHEN unique_violation THEN
-  RAISE LOG 'handle_new_user: Unique violation for user_id=% (expected due to ON CONFLICT)', NEW.id;
+  RAISE LOG 'handle_new_user: Unique violation for id_usuario=% (expected due to ON CONFLICT)', NEW.id;
   RETURN NEW;
 WHEN OTHERS THEN
-  RAISE LOG 'handle_new_user: ERROR for user_id=%, email=%, error=%', NEW.id, NEW.email, SQLERRM;
+  RAISE LOG 'handle_new_user: ERROR for id_usuario=%, email=%, error=%', NEW.id, NEW.email, SQLERRM;
   RAISE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';

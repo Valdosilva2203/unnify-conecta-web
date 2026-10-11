@@ -3,8 +3,8 @@
 -- Problem: Foreign key constraint was causing trigger to fail on signup
 -- Solution: Remove FK (relationship maintained via RLS policies)
 
--- Drop the problematic foreign key
-ALTER TABLE public.profiles DROP CONSTRAINT profiles_id_fkey;
+-- Drop the problematic foreign key if it exists
+ALTER TABLE public.perfis DROP CONSTRAINT IF EXISTS perfis_id_usuario_fkey;
 
 -- Update table comment to document the relationship
-COMMENT ON TABLE public.profiles IS 'User profiles table. The id field logically references auth.users(id) but the constraint was removed to allow reliable async trigger-based profile creation during signup. RLS policies enforce data isolation.';
+COMMENT ON TABLE public.perfis IS 'User profiles table. The id_usuario field logically references auth.users(id) but the constraint was removed to allow reliable async trigger-based profile creation during signup. RLS policies enforce data isolation.';

@@ -60,9 +60,8 @@ export function LoginForm() {
         return;
       }
 
-      // Redirect happens asynchronously, don't reset loading
-      // The page will unmount and navigate
-      router.push('/app');
+      // Redirect to onboarding - role check happens there
+      router.push('/onboarding');
     } catch (err) {
       setErrors({ submit: err instanceof Error ? err.message : 'Erro ao fazer login' });
       setLoading(false);

@@ -7,11 +7,11 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public'
-    AND tablename = 'profiles'
-    AND policyname = 'Service role can insert profiles'
+    AND tablename = 'perfis'
+    AND policyname = 'Service role can insert perfis'
   ) THEN
-    CREATE POLICY "Service role can insert profiles"
-      ON public.profiles
+    CREATE POLICY "Service role can insert perfis"
+      ON public.perfis
       FOR INSERT
       TO service_role
       WITH CHECK (true);

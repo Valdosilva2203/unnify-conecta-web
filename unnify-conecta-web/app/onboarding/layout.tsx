@@ -8,7 +8,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   const router = useRouter();
 
   useEffect(() => {
-    const checkRoleAndRedirect = async () => {
+    const checkRole = async () => {
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -24,23 +24,21 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
           .eq('id_usuario', user.id)
           .single();
 
-        if (!profile) {
-          return;
-        }
+        const role = profile?.funcao_global;
 
-        const role = profile.funcao_global;
-
-        // Admin master deve estar em /admin, não em /onboarding
+        // Se admin_master → vai para /admin
         if (role === 'admin_master' || role === 'admin') {
           router.push('/admin');
           return;
         }
+
+        // Se user → fica em /onboarding
       } catch (error) {
-        // Silenciosamente falha - deixa onboarding renderizar
+        // Silenciosamente falha - deixa renderizar
       }
     };
 
-    checkRoleAndRedirect();
+    checkRole();
   }, [router]);
 
   return <>{children}</>;

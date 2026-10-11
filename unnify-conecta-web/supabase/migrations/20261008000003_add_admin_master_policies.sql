@@ -1,15 +1,15 @@
 -- Add admin_master access policies for profiles, accounting_offices, and memberships
 -- Uses the existing is_admin() function for consistency
 
--- Policy for profiles: Admin master can view all profiles
-DROP POLICY IF EXISTS "Admin master view all profiles" ON public.profiles;
-CREATE POLICY "Admin master view all profiles"
-  ON public.profiles
+-- Policy for perfis: Admin master can view all perfis
+DROP POLICY IF EXISTS "Admin master view all perfis" ON public.perfis;
+CREATE POLICY "Admin master view all perfis"
+  ON public.perfis
   FOR SELECT
   TO authenticated
   USING (
     is_admin(auth.uid())
-    OR auth.uid() = id
+    OR auth.uid() = id_usuario
   );
 
 -- Policy for accounting_offices: Admin master can view all offices
@@ -56,8 +56,8 @@ CREATE POLICY "Admin master view all memberships"
   );
 
 -- Comments for audit trail
-COMMENT ON POLICY "Admin master view all profiles" ON public.profiles
-IS 'Allows admin_master and admin roles to view all user profiles. Regular users can only view their own.';
+COMMENT ON POLICY "Admin master view all perfis" ON public.perfis
+IS 'Allows admin_master and admin roles to view all user perfis. Regular users can only view their own.';
 
 COMMENT ON POLICY "Admin master view all offices" ON public.accounting_offices
 IS 'Allows admin_master and admin roles to view all accounting offices (contadores).';

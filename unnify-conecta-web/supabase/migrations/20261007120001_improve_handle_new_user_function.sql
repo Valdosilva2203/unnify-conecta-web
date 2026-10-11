@@ -7,13 +7,15 @@ CREATE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   -- Insert profile with ON CONFLICT to handle edge cases
-  INSERT INTO public.profiles (id, global_role, full_name)
+  INSERT INTO public.perfis (id_usuario, funcao_global, nome_completo, email, status)
   VALUES (
     NEW.id,
     'user',
-    COALESCE(NEW.user_metadata->>'full_name', NEW.email)
+    COALESCE(NEW.user_metadata->>'nome_completo', NEW.email),
+    NEW.email,
+    'active'
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id_usuario) DO NOTHING;
 
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
