@@ -6,7 +6,6 @@ import { Building2, Calculator } from 'lucide-react';
 import { OnboardingHeader } from '@/components/OnboardingHeader';
 import { OnboardingCard } from '@/components/OnboardingCard';
 import { createClient } from '@/lib/supabase/client';
-import { createClient } from '@/lib/supabase/client';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -20,7 +19,7 @@ export default function OnboardingPage() {
       try {
         const supabase = createClient();
 
-        // Get user session
+        // ⚠️ REGRA: Usuário NÃO autenticado → redireciona para /login
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session?.user?.id) {
@@ -64,7 +63,6 @@ export default function OnboardingPage() {
         }
 
         // Check if user already completed onboarding (has companies)
-        const supabase = createClient();
         const { count } = await supabase
           .from('usuarios_empresas')
           .select('*', { count: 'exact', head: true })
@@ -151,7 +149,7 @@ export default function OnboardingPage() {
             description="Quero gerenciar meus clientes e conectar minhas empresas ao Unnify Conecta."
             buttonLabel="Continuar como contador"
             buttonOnClick={handleContinueAsContador}
-            imageSrc="/images/empresario.png"
+            imageSrc="/images/contador.png"
             imageAlt="Profissional contábil"
             isLoading={loading}
           />

@@ -29,14 +29,33 @@ function OnboardingConclusaoContent() {
         // 2. Se tem tipo_usuario, atualizar no banco
         if (tipoUsuario && ['empresa', 'contador'].includes(tipoUsuario)) {
           try {
-            const response = await fetch('/api/auth/update-tipo-usuario', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ tipo_usuario: tipoUsuario }),
-            });
+            // Get auth token
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
 
-            if (!response.ok) {
-              console.error('Erro ao atualizar tipo_usuario');
+            if (!token) {
+              console.error('❌ Token não disponível');
+            } else {
+              const response = await fetch('/api/auth/update-tipo-usuario', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ tipo_usuario: tipoUsuario }),
+              });
+
+              const responseData = await response.json();
+
+              if (!response.ok) {
+                console.error('Erro ao atualizar tipo_usuario:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  error: responseData
+                });
+              } else {
+                console.log('✅ tipo_usuario atualizado com sucesso:', responseData);
+              }
             }
           } catch (error) {
             console.error('Erro ao chamar endpoint update-tipo-usuario:', error);

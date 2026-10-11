@@ -19,30 +19,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Token de autenticação não fornecido' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    // Verificar user com token
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-    if (!user?.id) {
+    if (authError || !user?.id) {
+      console.error('❌ Erro de autenticação:', authError);
       return NextResponse.json(
-        { error: 'Não autenticado' },
+        { error: 'Token inválido ou expirado', details: authError?.message },
         { status: 401 }
       );
     }
 
     // Update tipo_usuario in perfis table
-    const { error } = await supabase
+    console.log('🔄 Atualizando tipo_usuario para:', {
+      user_id: user.id,
+      tipo_usuario,
+    });
+
+    const { data, error } = await supabase
       .from('perfis')
       .update({
         tipo_usuario,
         atualizado_em: new Date().toISOString(),
       })
-      .eq('id_usuario', user.id);
+      .eq('id_usuario', user.id)
+      .select();
+
+    console.log('📊 Resultado da atualização:', { data, error });
 
     if (error) {
-      console.error('Erro ao atualizar tipo_usuario:', error);
+      console.error('❌ Erro ao atualizar tipo_usuario:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return NextResponse.json(
-        { error: error.message },
+        { error: error.message, code: error.code, details: error.details },
         { status: 400 }
       );
     }
