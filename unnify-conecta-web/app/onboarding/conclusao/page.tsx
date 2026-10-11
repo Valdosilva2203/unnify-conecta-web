@@ -1,16 +1,18 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { StepsIndicator } from '@/components/onboarding/StepsIndicator';
 import { SuccessCard } from '@/components/onboarding/SuccessCard';
 import { Button } from '@/components/ui/button';
 
-export default function OnboardingConclusivelPage() {
+function OnboardingConclusaoContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const tipoUsuario = searchParams.get('tipo_usuario') as 'empresa' | 'contador' | null;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -24,38 +26,30 @@ export default function OnboardingConclusivelPage() {
           return;
         }
 
-        // 2. Verificar global_role
-        const { data: profile, error: profileError } = await supabase
-          .from('perfis')
-          .select('global_role')
-          .eq('user_id', user.id)
-          .single();
+        // 2. Se tem tipo_usuario, atualizar no banco
+        if (tipoUsuario && ['empresa', 'contador'].includes(tipoUsuario)) {
+          try {
+            const response = await fetch('/api/auth/update-tipo-usuario', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tipo_usuario: tipoUsuario }),
+            });
 
-        if (profileError || !profile) {
-          router.push('/login');
-          return;
+            if (!response.ok) {
+              console.error('Erro ao atualizar tipo_usuario');
+            }
+          } catch (error) {
+            console.error('Erro ao chamar endpoint update-tipo-usuario:', error);
+          }
         }
 
-        // 3. Admin vai para /admin
-        if (profile.global_role === 'admin_master' || profile.global_role === 'admin') {
-          router.push('/admin');
-          return;
-        }
+        // 3. Verificar se tem empresas vinculadas
+        const { count } = await supabase
+          .from('usuarios_empresas')
+          .select('*', { count: 'exact', head: true })
+          .eq('id_usuario', user.id);
 
-        // 4. Verificar se tem empresa ou escritório contábil
-        const { data: membership, error: membershipError } = await supabase
-          .from('membros_escritorio')
-          .select('id, role')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        const { data: company, error: companyError } = await supabase
-          .from('empresas')
-          .select('id')
-          .eq('criado_por', user.id)
-          .maybeSingle();
-
-        if ((membershipError || !membership) && (companyError || !company)) {
+        if (!count || count === 0) {
           router.push('/onboarding');
           return;
         }
@@ -70,10 +64,10 @@ export default function OnboardingConclusivelPage() {
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, tipoUsuario]);
 
   const handleAccessPanel = () => {
-    router.push('/contador');
+    router.push('/app');
   };
 
   if (loading) {
@@ -81,7 +75,7 @@ export default function OnboardingConclusivelPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Verificando autorização...</p>
+          <p className="text-gray-600">Finalizando cadastro...</p>
         </div>
       </div>
     );
@@ -93,22 +87,19 @@ export default function OnboardingConclusivelPage() {
 
   const steps = [
     { number: 1, title: 'Etapa 1', subtitle: 'Tipo de perfil', status: 'completed' as const },
-    { number: 2, title: 'Etapa 2', subtitle: 'Dados do escritório', status: 'completed' as const },
+    { number: 2, title: 'Etapa 2', subtitle: 'Dados da empresa', status: 'completed' as const },
     { number: 3, title: 'Etapa 3', subtitle: 'Conclusão', status: 'completed' as const },
   ];
 
   return (
     <div className="min-h-screen bg-white px-6 py-8 md:py-12">
       <div className="max-w-4xl mx-auto">
-        {/* Steps Indicator - All Completed */}
         <StepsIndicator steps={steps} />
 
-        {/* Success Content */}
         <div className="mb-12">
           <SuccessCard />
         </div>
 
-        {/* CTA Button */}
         <div className="flex justify-center">
           <Button
             onClick={handleAccessPanel}
@@ -119,5 +110,13 @@ export default function OnboardingConclusivelPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingConclusaoPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><p>Carregando...</p></div>}>
+      <OnboardingConclusaoContent />
+    </Suspense>
   );
 }

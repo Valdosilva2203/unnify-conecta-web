@@ -6,89 +6,16 @@
 
 # Test info
 
-- Name: signup.test.ts >> Signup Flow >> should show validation errors for invalid data
-- Location: tests\e2e\signup.test.ts:71:7
+- Name: signup.test.ts >> Signup Flow >> should signup with valid data
+- Location: tests\e2e\signup.test.ts:20:7
 
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
-
-Locator: locator('text=Nome completo é obrigatório')
-Expected: visible
-Timeout: 5000ms
-Error: element(s) not found
-
+Error: page.fill: Page crashed
 Call log:
-  - Expect "toBeVisible" locator('text=Nome completo é obrigatório') with timeout 5000ms
-  - waiting for locator('text=Nome completo é obrigatório')
+  - waiting for locator('input[placeholder="Seu nome completo"]')
 
-```
-
-```yaml
-- img "Unnify Conecta"
-- paragraph: Organize. Entenda. Cresça.
-- heading "Comece agora a transformar o seu negócio." [level=1]
-- paragraph: Crie sua conta grátis e tenha acesso a uma plataforma completa para organizar suas finanças.
-- text: Organize suas finanças Tenha mais clareza nos números Trabalhe conectado ao seu contador Prepare sua empresa para crescer U nnify
-- navigation: Início Financeiro Documentos Obrigações Relatórios Meu contador
-- text: EE
-- heading "Olá, Empresa Exemplo 👋" [level=3]
-- paragraph: Acompanhe o resumo do seu mês
-- paragraph: Setembro/2026
-- paragraph: Receita
-- paragraph: R$ 48.750
-- text: ↑ +12,4%
-- paragraph: Despesas
-- paragraph: R$ 31.420
-- text: ↑ +4,8%
-- paragraph: Resultado
-- paragraph: R$ 17.330
-- text: ↑ +27,3%
-- paragraph: Fluxo de caixa
-- text: Jan Set
-- paragraph: Saúde da sua empresa
-- text: "78"
-- paragraph: Saudável
-- paragraph: Sua empresa está em um bom momento financeiro. Continue acompanhando.
-- text: U E
-- paragraph: Olá!
-- paragraph: Empresa Exemplo
-- paragraph: Receita
-- paragraph: R$ 48.750
-- paragraph: Despesas
-- paragraph: R$ 31.420
-- paragraph: Resultado
-- paragraph: R$ 17.330
-- link "Já possui uma conta? Entrar":
-  - /url: /login
-  - text: Já possui uma conta?
-  - button "Entrar"
-- paragraph: Crie sua conta grátis
-- heading "Vamos começar?" [level=2]
-- paragraph: Preencha seus dados para criar sua conta.
-- text: Nome completo
-- textbox "Seu nome completo"
-- text: E-mail
-- textbox "seu@email.com"
-- text: Senha
-- textbox "Crie uma senha segura"
-- button
-- paragraph: Mínimo de 8 caracteres, com letras, números e um símbolo.
-- button "Criar minha conta →"
-- text: ou
-- button "Continuar com o Google":
-  - img
-  - text: Continuar com o Google
-- paragraph:
-  - text: Ao continuar, você concorda com os nossos
-  - link "Termos de Uso":
-    - /url: "#"
-  - text: e
-  - link "Política de Privacidade":
-    - /url: "#"
-  - text: .
-- alert
 ```
 
 # Test source
@@ -122,7 +49,8 @@ Call log:
   26  |     await page.goto(`${BASE_URL}/signup`);
   27  | 
   28  |     // Fill form
-  29  |     await page.fill('input[placeholder="Seu nome completo"]', testName);
+> 29  |     await page.fill('input[placeholder="Seu nome completo"]', testName);
+      |                ^ Error: page.fill: Page crashed
   30  |     await page.fill('input[placeholder="seu@email.com"]', testEmail);
   31  |     await page.fill('input[placeholder="Crie uma senha segura"]', testPassword);
   32  | 
@@ -172,8 +100,7 @@ Call log:
   76  |     await submitButton.click();
   77  | 
   78  |     // Check for validation errors
-> 79  |     await expect(page.locator('text=Nome completo é obrigatório')).toBeVisible();
-      |                                                                    ^ Error: expect(locator).toBeVisible() failed
+  79  |     await expect(page.locator('text=Nome completo é obrigatório')).toBeVisible();
   80  |     await expect(page.locator('text=E-mail é obrigatório')).toBeVisible();
   81  |     await expect(page.locator('text=Senha é obrigatória')).toBeVisible();
   82  |   });
@@ -224,34 +151,4 @@ Call log:
   127 |     await page.fill('input[placeholder="seu@email.com"]', testEmail);
   128 |     await page.fill('input[placeholder="Crie uma senha segura"]', testPassword);
   129 | 
-  130 |     // Check network requests
-  131 |     const responses: any[] = [];
-  132 |     page.on('response', resp => {
-  133 |       if (resp.url().includes('/auth/')) {
-  134 |         responses.push({
-  135 |           url: resp.url(),
-  136 |           status: resp.status()
-  137 |         });
-  138 |       }
-  139 |     });
-  140 | 
-  141 |     const submitButton = page.locator('button:has-text("Criar minha conta")');
-  142 |     await submitButton.click();
-  143 | 
-  144 |     await page.waitForTimeout(3000);
-  145 | 
-  146 |     // Check if auth request was successful
-  147 |     const authResponses = responses.filter(r => r.url.includes('signup'));
-  148 |     if (authResponses.length > 0) {
-  149 |       const lastResponse = authResponses[authResponses.length - 1];
-  150 |       if (lastResponse.status === 200) {
-  151 |         console.log('✅ Auth signup successful (200)');
-  152 |       } else if (lastResponse.status === 500) {
-  153 |         console.log('❌ Auth signup failed with 500 error');
-  154 |         throw new Error('Database trigger issue - signup returned 500');
-  155 |       }
-  156 |     }
-  157 |   });
-  158 | });
-  159 | 
 ```

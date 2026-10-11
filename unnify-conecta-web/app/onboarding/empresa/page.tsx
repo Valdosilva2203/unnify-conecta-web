@@ -283,7 +283,8 @@ function OnboardingEmpresaContent() {
       }
 
       if (result.id) {
-        router.push('/onboarding/conclusao');
+        const tipoUsuario = tipoEmpresa === 'escritorio_contabil' ? 'contador' : 'empresa';
+        router.push(`/onboarding/conclusao?tipo_usuario=${tipoUsuario}`);
       } else {
         console.error('Invalid RPC response:', result);
         setError('Resposta inesperada do servidor');
