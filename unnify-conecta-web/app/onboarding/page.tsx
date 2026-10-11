@@ -79,7 +79,7 @@ export default function OnboardingPage() {
         // Check if user already completed onboarding (has companies)
         const { count } = await supabase
           .from('usuarios_empresas')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact' })
           .eq('id_usuario', session.user.id);
 
         if (count && count > 0) {
