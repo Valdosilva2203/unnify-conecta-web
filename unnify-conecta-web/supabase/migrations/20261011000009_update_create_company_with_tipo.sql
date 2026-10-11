@@ -45,8 +45,8 @@ BEGIN
   BEGIN
     -- Create company
     INSERT INTO public.empresas (
-      cnpj, nome_legal, nome_fantasia, telefone,
-      email_comercial, cidade, estado, tipo_empresa, criado_por
+      cnpj, razao_social, nome_comercial, telefone,
+      email_comercial, city, state, tipo_empresa, criado_por
     ) VALUES (
       p_cnpj, p_legal_name, p_trade_name, p_phone,
       p_commercial_email, p_city, p_state, p_tipo_empresa, v_user_id
