@@ -246,14 +246,12 @@ export default function OnboardingEmpresaPage() {
         }
       );
 
+      console.log('RPC Response - Data:', data, 'Error:', rpcError);
+
       if (rpcError) {
-        console.error('RPC Error:', rpcError);
-        const message = rpcError.message || 'Erro ao criar empresa';
-        if (message.includes('CNPJ') || message.includes('duplicate')) {
-          setError('CNPJ já cadastrado no sistema');
-        } else {
-          setError(message);
-        }
+        console.error('RPC Error Object:', JSON.stringify(rpcError));
+        const message = rpcError.message || JSON.stringify(rpcError) || 'Erro ao criar empresa';
+        setError(`Erro RPC: ${message}`);
         setSubmitting(false);
         return;
       }
