@@ -42,7 +42,9 @@ export async function POST(req: NextRequest) {
 
     // Create profile
     if (data?.user?.id) {
-      const { error: profileError } = await supabase
+      console.log('📝 Criando perfil para usuário:', data.user.id);
+
+      const { error: profileError, data: profileData } = await supabase
         .from('perfis')
         .upsert(
           {
@@ -56,7 +58,13 @@ export async function POST(req: NextRequest) {
         );
 
       if (profileError) {
-        console.warn('Profile creation warning:', profileError);
+        console.error('❌ Erro ao criar perfil:', {
+          error: profileError.message,
+          code: profileError.code,
+          details: profileError.details,
+        });
+      } else {
+        console.log('✅ Perfil criado com sucesso:', profileData);
       }
     }
 
