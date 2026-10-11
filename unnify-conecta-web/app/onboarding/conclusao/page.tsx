@@ -45,7 +45,7 @@ function OnboardingConclusaoContent() {
     };
 
     checkAuth();
-  }, [router, tipoUsuario]);
+  }, [router]);
 
   const handleAccessPanel = () => {
     router.push('/app');
