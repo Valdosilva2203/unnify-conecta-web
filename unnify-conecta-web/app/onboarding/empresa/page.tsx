@@ -284,7 +284,36 @@ function OnboardingEmpresaContent() {
 
       if (result.id) {
         const tipoUsuario = tipoEmpresa === 'escritorio_contabil' ? 'contador' : 'empresa';
-        router.push(`/onboarding/conclusao?tipo_usuario=${tipoUsuario}`);
+
+        // Salvar tipo_usuario imediatamente após criar empresa
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
+
+          if (token) {
+            const updateResponse = await fetch('/api/auth/update-tipo-usuario', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({ tipo_usuario: tipoUsuario }),
+            });
+
+            const updateData = await updateResponse.json();
+
+            if (updateResponse.ok) {
+              console.log('✅ tipo_usuario salvo com sucesso:', updateData);
+            } else {
+              console.error('❌ Erro ao salvar tipo_usuario:', updateData);
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar tipo_usuario:', error);
+        }
+
+        // Redirecionar para conclusão
+        router.push('/onboarding/conclusao');
       } else {
         console.error('Invalid RPC response:', result);
         setError('Resposta inesperada do servidor');

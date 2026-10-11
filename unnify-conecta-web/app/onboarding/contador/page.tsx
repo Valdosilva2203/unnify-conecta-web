@@ -273,7 +273,35 @@ function OnboardingContadorContent() {
       }
 
       if (result.id) {
-        router.push('/onboarding/conclusao?tipo_usuario=contador');
+        // Salvar tipo_usuario imediatamente após criar escritório
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
+
+          if (token) {
+            const updateResponse = await fetch('/api/auth/update-tipo-usuario', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({ tipo_usuario: 'contador' }),
+            });
+
+            const updateData = await updateResponse.json();
+
+            if (updateResponse.ok) {
+              console.log('✅ tipo_usuario salvo como contador:', updateData);
+            } else {
+              console.error('❌ Erro ao salvar tipo_usuario:', updateData);
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar tipo_usuario:', error);
+        }
+
+        // Redirecionar para conclusão
+        router.push('/onboarding/conclusao');
       } else {
         setError('Resposta inesperada do servidor');
         setSubmitting(false);

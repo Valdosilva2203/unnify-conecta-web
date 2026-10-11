@@ -9,10 +9,8 @@ import { Button } from '@/components/ui/button';
 
 function OnboardingConclusaoContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
-  const tipoUsuario = searchParams.get('tipo_usuario') as 'empresa' | 'contador' | null;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -26,43 +24,7 @@ function OnboardingConclusaoContent() {
           return;
         }
 
-        // 2. Se tem tipo_usuario, atualizar no banco
-        if (tipoUsuario && ['empresa', 'contador'].includes(tipoUsuario)) {
-          try {
-            // Get auth token
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
-
-            if (!token) {
-              console.error('❌ Token não disponível');
-            } else {
-              const response = await fetch('/api/auth/update-tipo-usuario', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ tipo_usuario: tipoUsuario }),
-              });
-
-              const responseData = await response.json();
-
-              if (!response.ok) {
-                console.error('Erro ao atualizar tipo_usuario:', {
-                  status: response.status,
-                  statusText: response.statusText,
-                  error: responseData
-                });
-              } else {
-                console.log('✅ tipo_usuario atualizado com sucesso:', responseData);
-              }
-            }
-          } catch (error) {
-            console.error('Erro ao chamar endpoint update-tipo-usuario:', error);
-          }
-        }
-
-        // 3. Verificar se tem empresas vinculadas
+        // 2. Verificar se tem empresas vinculadas
         const { count } = await supabase
           .from('usuarios_empresas')
           .select('*', { count: 'exact', head: true })
