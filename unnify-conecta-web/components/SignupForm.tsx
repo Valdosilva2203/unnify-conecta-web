@@ -69,6 +69,7 @@ export function SignupForm() {
         email,
         password,
         options: {
+          emailRedirectTo: undefined,
           data: {
             nome_completo: fullName,
           },

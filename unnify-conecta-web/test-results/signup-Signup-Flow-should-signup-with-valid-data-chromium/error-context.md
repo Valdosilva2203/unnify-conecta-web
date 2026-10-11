@@ -1,0 +1,297 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: signup.test.ts >> Signup Flow >> should signup with valid data
+- Location: tests\e2e\signup.test.ts:20:7
+
+# Error details
+
+```
+Error: Signup failed with error: Error sending confirmation email
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - img "Unnify Conecta" [ref=e5]
+      - paragraph [ref=e6]: Organize. Entenda. Cresça.
+      - heading "Comece agora a transformar o seu negócio." [level=1] [ref=e7]: Comece agoraa transformaro seu negócio.
+      - paragraph [ref=e8]: Crie sua conta grátis e tenha acesso a uma plataforma completa para organizar suas finanças.
+      - generic [ref=e9]:
+        - generic [ref=e10]: Organize suas finanças
+        - generic [ref=e15]: Tenha mais clareza nos números
+        - generic [ref=e20]: Trabalhe conectado ao seu contador
+        - generic [ref=e28]: Prepare sua empresa para crescer
+      - generic [ref=e38]:
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - generic [ref=e42]:
+              - generic [ref=e43]: U
+              - generic [ref=e44]: nnify
+            - navigation [ref=e45]:
+              - generic [ref=e46] [cursor=pointer]: Início
+              - generic [ref=e51] [cursor=pointer]: Financeiro
+              - generic [ref=e57] [cursor=pointer]: Documentos
+              - generic [ref=e63] [cursor=pointer]: Obrigações
+              - generic [ref=e69] [cursor=pointer]: Relatórios
+              - generic [ref=e74] [cursor=pointer]: Meu contador
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - generic [ref=e83]: EE
+                - generic [ref=e84]:
+                  - heading "Olá, Empresa Exemplo 👋" [level=3] [ref=e85]
+                  - paragraph [ref=e86]: Acompanhe o resumo do seu mês
+              - paragraph [ref=e88]: Setembro/2026
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - paragraph [ref=e91]: Receita
+                - generic [ref=e92]:
+                  - paragraph [ref=e93]: R$ 48.750
+                  - generic [ref=e94]: ↑ +12,4%
+              - generic [ref=e95]:
+                - paragraph [ref=e96]: Despesas
+                - generic [ref=e97]:
+                  - paragraph [ref=e98]: R$ 31.420
+                  - generic [ref=e99]: ↑ +4,8%
+              - generic [ref=e100]:
+                - paragraph [ref=e101]: Resultado
+                - generic [ref=e102]:
+                  - paragraph [ref=e103]: R$ 17.330
+                  - generic [ref=e104]: ↑ +27,3%
+            - generic [ref=e105]:
+              - paragraph [ref=e106]: Fluxo de caixa
+              - generic [ref=e117]:
+                - generic [ref=e118]: Jan
+                - generic [ref=e119]: Set
+            - generic [ref=e120]:
+              - generic [ref=e121]:
+                - paragraph [ref=e122]: Saúde da sua empresa
+                - generic [ref=e123]: "78"
+              - generic [ref=e124]:
+                - paragraph [ref=e125]: Saudável
+                - paragraph [ref=e126]: Sua empresa está em um bom momento financeiro. Continue acompanhando.
+        - generic [ref=e128]:
+          - generic [ref=e129]: U
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - generic [ref=e137]: E
+              - generic [ref=e138]:
+                - paragraph [ref=e139]: Olá!
+                - paragraph [ref=e140]: Empresa Exemplo
+            - generic [ref=e141]:
+              - generic [ref=e142]:
+                - paragraph [ref=e143]: Receita
+                - paragraph [ref=e144]: R$ 48.750
+              - generic [ref=e145]:
+                - paragraph [ref=e146]: Despesas
+                - paragraph [ref=e147]: R$ 31.420
+              - generic [ref=e148]:
+                - paragraph [ref=e149]: Resultado
+                - paragraph [ref=e150]: R$ 17.330
+    - generic [ref=e159]:
+      - link [ref=e161] [cursor=pointer]:
+        - /url: /login
+        - text: Já possui uma conta?
+        - button "Entrar" [ref=e162]
+      - generic [ref=e163]:
+        - paragraph [ref=e164]: Crie sua conta grátis
+        - heading "Vamos começar?" [level=2] [ref=e165]
+        - paragraph [ref=e166]: Preencha seus dados para criar sua conta.
+        - generic [ref=e167]:
+          - generic [ref=e168]:
+            - generic [ref=e169]: Nome completo
+            - textbox "Seu nome completo" [ref=e174]: Teste User
+          - generic [ref=e175]:
+            - generic [ref=e176]: E-mail
+            - textbox "seu@email.com" [ref=e181]: teste-1791681703913@test.com
+          - generic [ref=e182]:
+            - generic [ref=e183]: Senha
+            - generic [ref=e184]:
+              - textbox "Crie uma senha segura" [ref=e188]: TestPass123!
+              - button [ref=e189]
+            - paragraph [ref=e193]: Mínimo de 8 caracteres, com letras, números e um símbolo.
+          - paragraph [ref=e195]: Error sending confirmation email
+          - button "Criar minha conta →" [ref=e196]:
+            - text: Criar minha conta
+            - generic [ref=e197]: →
+        - generic [ref=e198]: ou
+        - button "Continuar com o Google" [ref=e203]
+        - paragraph [ref=e209]:
+          - text: Ao continuar, você concorda com os nossos
+          - link "Termos de Uso" [ref=e210] [cursor=pointer]:
+            - /url: "#"
+          - text: e
+          - link "Política de Privacidade" [ref=e211] [cursor=pointer]:
+            - /url: "#"
+          - text: .
+  - button "Open Next.js Dev Tools" [ref=e217] [cursor=pointer]
+  - alert [ref=e221]
+```
+
+# Test source
+
+```ts
+  1   | import { test, expect } from '@playwright/test';
+  2   | 
+  3   | const BASE_URL = 'http://localhost:3000';
+  4   | 
+  5   | test.describe('Signup Flow', () => {
+  6   |   test('should load signup page', async ({ page }) => {
+  7   |     await page.goto(`${BASE_URL}/signup`);
+  8   | 
+  9   |     // Check if page loaded
+  10  |     const title = await page.locator('h2:has-text("Vamos começar?")');
+  11  |     await expect(title).toBeVisible();
+  12  | 
+  13  |     // Check form elements
+  14  |     await expect(page.locator('input[placeholder="Seu nome completo"]')).toBeVisible();
+  15  |     await expect(page.locator('input[placeholder="seu@email.com"]')).toBeVisible();
+  16  |     await expect(page.locator('input[placeholder="Crie uma senha segura"]')).toBeVisible();
+  17  |     await expect(page.locator('button:has-text("Criar minha conta")')).toBeVisible();
+  18  |   });
+  19  | 
+  20  |   test('should signup with valid data', async ({ page }) => {
+  21  |     const timestamp = Date.now();
+  22  |     const testEmail = `teste-${timestamp}@test.com`;
+  23  |     const testPassword = 'TestPass123!';
+  24  |     const testName = 'Teste User';
+  25  | 
+  26  |     await page.goto(`${BASE_URL}/signup`);
+  27  | 
+  28  |     // Fill form
+  29  |     await page.fill('input[placeholder="Seu nome completo"]', testName);
+  30  |     await page.fill('input[placeholder="seu@email.com"]', testEmail);
+  31  |     await page.fill('input[placeholder="Crie uma senha segura"]', testPassword);
+  32  | 
+  33  |     // Check for validation errors
+  34  |     const passwordField = page.locator('input[placeholder="Crie uma senha segura"]');
+  35  |     await passwordField.blur();
+  36  | 
+  37  |     // Wait a bit for validation
+  38  |     await page.waitForTimeout(500);
+  39  | 
+  40  |     // Submit form
+  41  |     const submitButton = page.locator('button:has-text("Criar minha conta")');
+  42  |     await submitButton.click();
+  43  | 
+  44  |     // Wait for response
+  45  |     await page.waitForTimeout(3000);
+  46  | 
+  47  |     // Check for errors
+  48  |     const errorMessage = page.locator('text=/Database error|500|erro/i');
+  49  |     const errorVisible = await errorMessage.isVisible().catch(() => false);
+  50  | 
+  51  |     if (errorVisible) {
+  52  |       const errorText = await errorMessage.textContent();
+> 53  |       throw new Error(`Signup failed with error: ${errorText}`);
+      |             ^ Error: Signup failed with error: Error sending confirmation email
+  54  |     }
+  55  | 
+  56  |     // Check if redirected to onboarding
+  57  |     const currentUrl = page.url();
+  58  |     console.log('Current URL after signup:', currentUrl);
+  59  | 
+  60  |     if (currentUrl.includes('/onboarding') || currentUrl.includes('/app')) {
+  61  |       console.log('✅ Signup successful - redirected to onboarding/app');
+  62  |     } else {
+  63  |       // Sometimes redirect happens via JS, check for specific elements
+  64  |       const onboardingTitle = page.locator('text=/Complète seu perfil|Welcome/i');
+  65  |       if (await onboardingTitle.isVisible().catch(() => false)) {
+  66  |         console.log('✅ Signup successful - onboarding page visible');
+  67  |       }
+  68  |     }
+  69  |   });
+  70  | 
+  71  |   test('should show validation errors for invalid data', async ({ page }) => {
+  72  |     await page.goto(`${BASE_URL}/signup`);
+  73  | 
+  74  |     // Try submit empty form
+  75  |     const submitButton = page.locator('button:has-text("Criar minha conta")');
+  76  |     await submitButton.click();
+  77  | 
+  78  |     // Check for validation errors
+  79  |     await expect(page.locator('text=Nome completo é obrigatório')).toBeVisible();
+  80  |     await expect(page.locator('text=E-mail é obrigatório')).toBeVisible();
+  81  |     await expect(page.locator('text=Senha é obrigatória')).toBeVisible();
+  82  |   });
+  83  | 
+  84  |   test('should validate email format', async ({ page }) => {
+  85  |     await page.goto(`${BASE_URL}/signup`);
+  86  | 
+  87  |     // Fill with invalid email
+  88  |     await page.fill('input[placeholder="seu@email.com"]', 'invalid-email');
+  89  |     const emailField = page.locator('input[placeholder="seu@email.com"]');
+  90  |     await emailField.blur();
+  91  | 
+  92  |     await page.waitForTimeout(300);
+  93  | 
+  94  |     // Check for validation error
+  95  |     const errorMsg = page.locator('text=E-mail inválido');
+  96  |     if (await errorMsg.isVisible().catch(() => false)) {
+  97  |       console.log('✅ Email validation working');
+  98  |     }
+  99  |   });
+  100 | 
+  101 |   test('should validate password requirements', async ({ page }) => {
+  102 |     await page.goto(`${BASE_URL}/signup`);
+  103 | 
+  104 |     // Try with weak password
+  105 |     const passwordField = page.locator('input[placeholder="Crie uma senha segura"]');
+  106 | 
+  107 |     await passwordField.fill('weak');
+  108 |     await passwordField.blur();
+  109 |     await page.waitForTimeout(300);
+  110 | 
+  111 |     const errorMsg = page.locator('text=/Mínimo de 8 caracteres|Deve conter/');
+  112 |     if (await errorMsg.isVisible().catch(() => false)) {
+  113 |       console.log('✅ Password validation working');
+  114 |     }
+  115 |   });
+  116 | });
+  117 | 
+  118 | test.describe('Database Connection', () => {
+  119 |   test('should have working trigger on signup', async ({ page }) => {
+  120 |     const timestamp = Date.now();
+  121 |     const testEmail = `db-test-${timestamp}@test.com`;
+  122 |     const testPassword = 'TestPass123!';
+  123 | 
+  124 |     await page.goto(`${BASE_URL}/signup`);
+  125 | 
+  126 |     await page.fill('input[placeholder="Seu nome completo"]', 'DB Test');
+  127 |     await page.fill('input[placeholder="seu@email.com"]', testEmail);
+  128 |     await page.fill('input[placeholder="Crie uma senha segura"]', testPassword);
+  129 | 
+  130 |     // Check network requests
+  131 |     const responses: any[] = [];
+  132 |     page.on('response', resp => {
+  133 |       if (resp.url().includes('/auth/')) {
+  134 |         responses.push({
+  135 |           url: resp.url(),
+  136 |           status: resp.status()
+  137 |         });
+  138 |       }
+  139 |     });
+  140 | 
+  141 |     const submitButton = page.locator('button:has-text("Criar minha conta")');
+  142 |     await submitButton.click();
+  143 | 
+  144 |     await page.waitForTimeout(3000);
+  145 | 
+  146 |     // Check if auth request was successful
+  147 |     const authResponses = responses.filter(r => r.url.includes('signup'));
+  148 |     if (authResponses.length > 0) {
+  149 |       const lastResponse = authResponses[authResponses.length - 1];
+  150 |       if (lastResponse.status === 200) {
+  151 |         console.log('✅ Auth signup successful (200)');
+  152 |       } else if (lastResponse.status === 500) {
+  153 |         console.log('❌ Auth signup failed with 500 error');
+```
