@@ -121,27 +121,28 @@ export default function ContadorPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <AccountantSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col">
         {/* Topbar */}
         <AccountantTopbar
           officeInitials={officeData.initials}
           officeName={officeData.name}
-          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+          onMenuClick={() => setSidebarOpen(true)}
+          menuAberto={sidebarOpen}
         />
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 min-w-0">
           <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
               <p className="text-sm text-gray-600 mb-2">Bem-vindo(a) de volta,</p>
-              <div className="flex items-center justify-between">
-                <h1 className="text-3xl md:text-4xl font-black text-black">Painel do Contador</h1>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-black">Painel do Contador</h1>
                 <div className="flex items-center gap-2 text-gray-600">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -166,7 +167,7 @@ export default function ContadorPage() {
 
             {/* Metrics */}
             <div className="mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6">
                 <MetricCard icon={Users} label="Clientes" value={0} iconColor="blue" />
                 <MetricCard icon={FileText} label="Documentos" value={0} iconColor="green" />
                 <MetricCard icon={CheckSquare} label="Obrigações" value={0} iconColor="orange" />

@@ -25,7 +25,7 @@ export function BenefitsSection() {
   ];
 
   return (
-    <section id="beneficios" className="py-20 px-6 bg-gradient-to-b from-white to-gray-50">
+    <section id="beneficios" className="py-12 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-white to-gray-50 scroll-mt-20">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
@@ -39,7 +39,7 @@ export function BenefitsSection() {
         </div>
 
         {/* Benefits Grid */}
-        <div className="grid md:grid-cols-3 gap-12">
+        <div className="grid md:grid-cols-3 gap-8 md:gap-12">
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
             return (

@@ -1,33 +1,41 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const started = useRef(false);
 
   useEffect(() => {
+    // Tokens are single-use; a second run (React Strict Mode) would fail and redirect to an error
+    if (started.current) return;
+    started.current = true;
+
     const handleCallback = async () => {
       try {
         const supabase = createClient();
-        const code = new URL(window.location.href).searchParams.get('code');
+        const params = new URL(window.location.href).searchParams;
+        const code = params.get('code');
+        const tokenHash = params.get('token_hash');
 
-        if (!code) {
+        let error;
+        if (tokenHash) {
+          ({ error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'email' }));
+        } else if (code) {
+          ({ error } = await supabase.auth.exchangeCodeForSession(code));
+        } else {
           router.push('/login');
           return;
         }
 
-        // Exchange code for session
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-
         if (error) {
           console.error('Auth callback error:', error);
-          router.push('/login?error=callback_failed');
+          router.push('/login?error=link_invalido');
           return;
         }
 
-        // Email confirmed, redirect to onboarding
         router.push('/onboarding');
       } catch (error) {
         console.error('Callback error:', error);

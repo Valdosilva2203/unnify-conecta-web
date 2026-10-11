@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useCallback, useState } from 'react';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 
@@ -9,19 +9,18 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
+  const [menuAberto, setMenuAberto] = useState(false);
+  const fecharMenu = useCallback(() => setMenuAberto(false), []);
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <AdminSidebar />
+      <AdminSidebar aberto={menuAberto} aoFechar={fecharMenu} />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <AdminHeader />
+      <div className="flex-1 min-w-0 flex flex-col">
+        <AdminHeader aoAbrirMenu={() => setMenuAberto(true)} menuAberto={menuAberto} />
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-6 md:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 min-w-0">
+          <div className="px-4 py-5 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto w-full pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             {children}
           </div>
         </main>

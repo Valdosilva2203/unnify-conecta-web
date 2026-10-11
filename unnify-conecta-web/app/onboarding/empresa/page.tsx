@@ -168,6 +168,7 @@ function OnboardingEmpresaContent() {
 
     setLoadingCNPJ(true);
     setCNPJLookupMessage('');
+    setError('');
 
     try {
       const cleanCNPJ = formData.cnpj.replace(/\D/g, '');
@@ -195,8 +196,11 @@ function OnboardingEmpresaContent() {
         legalName: data.data?.legal_name || prev.legalName,
         tradeName: data.data?.trade_name || prev.tradeName,
         city: data.data?.city || prev.city,
-        state: data.data?.state || prev.state
+        state: data.data?.state || prev.state,
+        phone: data.data?.phone ? maskPhone(data.data.phone) : prev.phone,
+        email: data.data?.email || prev.email
       }));
+      setErrors({});
 
       setCNPJLookupMessage('✓ Dados carregados com sucesso');
     } catch (err) {
@@ -237,16 +241,16 @@ function OnboardingEmpresaContent() {
       const supabase = createClient();
 
       const { data, error: rpcError } = await supabase.rpc(
-        'create_company',
+        'criar_empresa',
         {
           p_cnpj: formData.cnpj,
-          p_legal_name: formData.legalName,
-          p_phone: formData.phone.replace(/\D/g, ''),
-          p_commercial_email: formData.email,
-          p_city: formData.city,
-          p_state: formData.state,
+          p_razao_social: formData.legalName,
+          p_telefone: formData.phone.replace(/\D/g, ''),
+          p_email_comercial: formData.email,
+          p_cidade: formData.city,
+          p_estado: formData.state,
           p_tipo_empresa: tipoEmpresa,
-          p_trade_name: formData.tradeName || null,
+          p_nome_comercial: formData.tradeName || null,
         }
       );
 
@@ -269,8 +273,8 @@ function OnboardingEmpresaContent() {
         return;
       }
 
-      if (!result.success) {
-        const errorMsg = result.message || 'Erro desconhecido';
+      if (!result.sucesso) {
+        const errorMsg = result.mensagem || 'Erro desconhecido';
         if (errorMsg.includes('CNPJ')) {
           setError('CNPJ já cadastrado no sistema');
         } else if (errorMsg.includes('autenticado')) {
@@ -349,16 +353,16 @@ function OnboardingEmpresaContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-white px-6 py-8 md:py-12">
+    <div className="min-h-screen bg-white px-4 sm:px-6 py-6 md:py-12 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <div className="max-w-4xl mx-auto">
         {/* Steps Indicator */}
         <StepsIndicator steps={steps} />
 
         {/* Form */}
         <div className="mb-12">
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-10 shadow-lg">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-8 md:p-10 shadow-lg">
             <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-black text-black mb-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-black mb-2">
                 Dados da empresa
               </h1>
               <p className="text-gray-600">
@@ -368,31 +372,32 @@ function OnboardingEmpresaContent() {
 
             {/* Error Alert */}
             {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+              <div role="alert" className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} noValidate className="space-y-5 sm:space-y-6">
               {/* CNPJ */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label htmlFor="emp-cnpj" className="block text-sm font-semibold text-gray-900 mb-2">
                   CNPJ *
                 </label>
-                <div className="flex gap-2">
-                  <input
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input id="emp-cnpj" autoComplete="off" inputMode="numeric"
+                    aria-invalid={Boolean(touched.cnpj && errors.cnpj)}
                     type="text"
                     value={formData.cnpj}
                     onChange={(e) => handleChange('cnpj', e.target.value)}
                     onBlur={() => handleBlur('cnpj')}
                     placeholder="XX.XXX.XXX/XXXX-XX"
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
+                    className="w-full min-w-0 sm:flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                   />
                   <button
                     type="button"
                     onClick={handleConsultarCNPJ}
                     disabled={loadingCNPJ || !formData.cnpj || !!errors.cnpj}
-                    className="px-6 py-3 bg-orange-100 text-orange-600 hover:bg-orange-200 disabled:bg-gray-100 disabled:text-gray-400 rounded-lg font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
+                    className="min-h-12 px-6 bg-orange-100 text-orange-600 hover:bg-orange-200 disabled:bg-gray-100 disabled:text-gray-400 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
                   >
                     {loadingCNPJ ? (
                       <>
@@ -408,7 +413,7 @@ function OnboardingEmpresaContent() {
                   </button>
                 </div>
                 {touched.cnpj && errors.cnpj && (
-                  <p className="text-xs text-red-600 mt-1">{errors.cnpj}</p>
+                  <p id="emp-cnpj-erro" role="alert" className="text-xs text-red-600 mt-1">{errors.cnpj}</p>
                 )}
                 {cnpjLookupMessage && (
                   <p className={`text-xs mt-1 ${cnpjLookupMessage.includes('✓') ? 'text-green-600' : 'text-yellow-600'}`}>
@@ -419,10 +424,11 @@ function OnboardingEmpresaContent() {
 
               {/* Razão Social */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label htmlFor="emp-legalName" className="block text-sm font-semibold text-gray-900 mb-2">
                   Razão social *
                 </label>
-                <input
+                <input id="emp-legalName" autoComplete="organization"
+                    aria-invalid={Boolean(touched.legalName && errors.legalName)}
                   type="text"
                   value={formData.legalName}
                   onChange={(e) => handleChange('legalName', e.target.value)}
@@ -431,16 +437,17 @@ function OnboardingEmpresaContent() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                 />
                 {touched.legalName && errors.legalName && (
-                  <p className="text-xs text-red-600 mt-1">{errors.legalName}</p>
+                  <p id="emp-legalName-erro" role="alert" className="text-xs text-red-600 mt-1">{errors.legalName}</p>
                 )}
               </div>
 
               {/* Nome Fantasia */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label htmlFor="emp-tradeName" className="block text-sm font-semibold text-gray-900 mb-2">
                   Nome fantasia
                 </label>
-                <input
+                <input id="emp-tradeName" autoComplete="off"
+                    aria-invalid={Boolean(touched.tradeName && errors.tradeName)}
                   type="text"
                   value={formData.tradeName}
                   onChange={(e) => handleChange('tradeName', e.target.value)}
@@ -451,10 +458,11 @@ function OnboardingEmpresaContent() {
 
               {/* Telefone */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label htmlFor="emp-phone" className="block text-sm font-semibold text-gray-900 mb-2">
                   Telefone/WhatsApp *
                 </label>
-                <input
+                <input id="emp-phone" autoComplete="tel" inputMode="tel"
+                    aria-invalid={Boolean(touched.phone && errors.phone)}
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
@@ -463,16 +471,17 @@ function OnboardingEmpresaContent() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                 />
                 {touched.phone && errors.phone && (
-                  <p className="text-xs text-red-600 mt-1">{errors.phone}</p>
+                  <p id="emp-phone-erro" role="alert" className="text-xs text-red-600 mt-1">{errors.phone}</p>
                 )}
               </div>
 
               {/* E-mail */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label htmlFor="emp-email" className="block text-sm font-semibold text-gray-900 mb-2">
                   E-mail comercial *
                 </label>
-                <input
+                <input id="emp-email" autoComplete="email" inputMode="email" autoCapitalize="none"
+                    aria-invalid={Boolean(touched.email && errors.email)}
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
@@ -481,17 +490,18 @@ function OnboardingEmpresaContent() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                 />
                 {touched.email && errors.email && (
-                  <p className="text-xs text-red-600 mt-1">{errors.email}</p>
+                  <p id="emp-email-erro" role="alert" className="text-xs text-red-600 mt-1">{errors.email}</p>
                 )}
               </div>
 
               {/* Cidade e UF */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="emp-city" className="block text-sm font-semibold text-gray-900 mb-2">
                     Cidade *
                   </label>
-                  <input
+                  <input id="emp-city" autoComplete="address-level2"
+                    aria-invalid={Boolean(touched.city && errors.city)}
                     type="text"
                     value={formData.city}
                     onChange={(e) => handleChange('city', e.target.value)}
@@ -500,15 +510,16 @@ function OnboardingEmpresaContent() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                   />
                   {touched.city && errors.city && (
-                    <p className="text-xs text-red-600 mt-1">{errors.city}</p>
+                    <p id="emp-city-erro" role="alert" className="text-xs text-red-600 mt-1">{errors.city}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="emp-state" className="block text-sm font-semibold text-gray-900 mb-2">
                     UF *
                   </label>
-                  <select
+                  <select id="emp-state" autoComplete="address-level1"
+                    aria-invalid={Boolean(touched.state && errors.state)}
                     value={formData.state}
                     onChange={(e) => handleChange('state', e.target.value)}
                     onBlur={() => handleBlur('state')}
@@ -522,24 +533,24 @@ function OnboardingEmpresaContent() {
                     ))}
                   </select>
                   {touched.state && errors.state && (
-                    <p className="text-xs text-red-600 mt-1">{errors.state}</p>
+                    <p id="emp-state-erro" role="alert" className="text-xs text-red-600 mt-1">{errors.state}</p>
                   )}
                 </div>
               </div>
 
               {/* Buttons */}
-              <div className="flex gap-4 justify-center md:justify-end pt-8 border-t border-gray-200">
+              <div className="flex gap-3 sm:gap-4 justify-center md:justify-end pt-6 sm:pt-8 border-t border-gray-200">
                 <Button
                   type="button"
                   onClick={() => router.push('/onboarding')}
-                  className="bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-semibold px-8 py-3 transition-all flex-1 md:flex-initial"
+                  className="bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-lg font-semibold px-4 sm:px-8 min-h-12 transition-all flex-1 md:flex-initial"
                 >
                   ← Voltar
                 </Button>
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold px-8 py-3 transition-all flex-1 md:flex-initial flex items-center justify-center gap-2"
+                  className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold px-4 sm:px-8 min-h-12 transition-all flex-1 md:flex-initial flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>

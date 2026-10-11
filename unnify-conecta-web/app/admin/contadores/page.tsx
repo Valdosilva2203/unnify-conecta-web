@@ -1,8 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AdminLayout } from '@/components/AdminLayout';
+import {
+  BarraFiltros,
+  BotaoLimparFiltros,
+  BotoesAcao,
+  CampoBusca,
+  Celula,
+  CelulaCidade,
+  CelulaContato,
+  CelulaNome,
+  Contagem,
+  EstadoTabela,
+  FiltroSelect,
+  IconeCidade,
+  Linha,
+  Paginacao,
+  ROTULO_STATUS,
+  SELO_STATUS,
+  Selo,
+  Tabela,
+  TabelaCard,
+  IconePlano,
+} from '@/components/admin/tabela';
 
 interface Contador {
   id: string;
@@ -221,53 +242,26 @@ export default function ContadoresPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  const totalPages = Math.ceil(filteredContadores.length / itemsPerPage);
 
   // Cidades únicas
   const cidades = Array.from(new Set(contadoresFicticios.map((c) => c.cidade))).sort();
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ativo':
-        return 'bg-green-100 text-green-800';
-      case 'pendente':
-        return 'bg-orange-100 text-orange-800';
-      case 'inativo':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusDot = (status: string) => {
-    switch (status) {
-      case 'ativo':
-        return '🟢';
-      case 'pendente':
-        return '🟠';
-      case 'inativo':
-        return '🔴';
-      default:
-        return '⚪';
-    }
-  };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Contadores</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Contadores</h1>
           <p className="text-gray-600 mt-2">Gerencie todos os contadores cadastrados no Unnify Conecta.</p>
         </div>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition">
+        <button className="self-start shrink-0 min-h-11 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 rounded-lg flex items-center gap-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
           <span>+</span> Novo contador
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-orange-50 rounded-lg p-4 border border-gray-200">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -319,44 +313,35 @@ export default function ContadoresPage() {
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-white rounded-lg p-4 space-y-4">
-        <div className="flex flex-col lg:flex-row gap-4 items-end">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar por nome, CPF, CNPJ, e-mail ou telefone..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-            />
-          </div>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+      <TabelaCard>
+        <BarraFiltros>
+          <CampoBusca
+            valor={searchTerm}
+            aoMudar={(v) => {
+              setSearchTerm(v);
               setCurrentPage(1);
             }}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+            placeholder="Buscar por nome, CPF, CNPJ, e-mail ou telefone..."
+          />
+          <FiltroSelect
+            valor={statusFilter}
+            aoMudar={(v) => {
+              setStatusFilter(v);
+              setCurrentPage(1);
+            }}
           >
             <option value="todos">Status: Todos</option>
             <option value="ativo">Ativo</option>
             <option value="pendente">Pendente</option>
             <option value="inativo">Inativo</option>
-          </select>
-
-          <select
-            value={cityFilter}
-            onChange={(e) => {
-              setCityFilter(e.target.value);
+          </FiltroSelect>
+          <FiltroSelect
+            icone={IconeCidade}
+            valor={cityFilter}
+            aoMudar={(v) => {
+              setCityFilter(v);
               setCurrentPage(1);
             }}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
           >
             <option value="todas">Cidade: Todas</option>
             {cidades.map((cidade) => (
@@ -364,167 +349,85 @@ export default function ContadoresPage() {
                 {cidade}
               </option>
             ))}
-          </select>
-
-          <select
-            value={planoFilter}
-            onChange={(e) => {
-              setPlanFilter(e.target.value);
+          </FiltroSelect>
+          <FiltroSelect
+            icone={IconePlano}
+            valor={planoFilter}
+            aoMudar={(v) => {
+              setPlanFilter(v);
               setCurrentPage(1);
             }}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
           >
             <option value="todos">Plano: Todos</option>
             <option value="pro">Pro</option>
             <option value="basico">Básico</option>
-          </select>
-
+          </FiltroSelect>
           {(searchTerm || statusFilter !== 'todos' || cityFilter !== 'todas' || planoFilter !== 'todos') && (
-            <button
-              onClick={() => {
+            <BotaoLimparFiltros
+              aoClicar={() => {
                 setSearchTerm('');
                 setStatusFilter('todos');
                 setCityFilter('todas');
                 setPlanFilter('todos');
                 setCurrentPage(1);
               }}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition whitespace-nowrap"
-            >
-              🗑️ Limpar filtros
-            </button>
+            />
           )}
-        </div>
-      </div>
+        </BarraFiltros>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                  <input type="checkbox" className="rounded" />
-                </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Nome</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">CPF/CNPJ</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Contato</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Cidade/UF</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Plano</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Empresas</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Cadastro</th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {paginatedContadores.map((contador) => (
-                <tr key={contador.id} className="hover:bg-gray-50 transition">
-                  <td className="px-4 py-3">
-                    <input type="checkbox" className="rounded" />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div>
-                      <p className="font-semibold text-gray-900">{contador.nome}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 font-mono text-xs">{contador.cpfCnpj}</td>
-                  <td className="px-4 py-3">
-                    <p className="text-gray-700 text-sm">📞 {contador.telefone}</p>
-                    <p className="text-xs text-gray-500">📧 {contador.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 text-sm">
-                    {contador.cidade}/{contador.uf}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                        contador.plano === 'Pro'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-purple-100 text-purple-800'
-                      }`}
-                    >
-                      {contador.plano}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 font-semibold text-center">{contador.empresas}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                        contador.status
-                      )}`}
-                    >
-                      {getStatusDot(contador.status)} {contador.status.charAt(0).toUpperCase() + contador.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 text-xs">{contador.cadastro}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button className="text-gray-600 hover:text-gray-900 p-1 text-lg">👁</button>
-                    <button className="text-gray-600 hover:text-gray-900 p-1 text-lg">✏️</button>
-                    <button className="text-gray-600 hover:text-gray-900 p-1 text-lg">⋯</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="border-t border-gray-200 px-4 py-4 flex justify-between items-center">
-          <div className="text-sm text-gray-600">
-            Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredContadores.length)} de {filteredContadores.length}
-          </div>
-
-          <div className="flex items-center gap-4">
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="px-3 py-1 border border-gray-300 rounded text-sm"
-            >
-              <option value="10">10 por página</option>
-              <option value="20">20 por página</option>
-              <option value="50">50 por página</option>
-            </select>
-
-            <div className="flex gap-2">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
-                className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-                const page = i + 1;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === page
-                        ? 'bg-orange-500 text-white'
-                        : 'border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-                className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+        <EstadoTabela vazio={filteredContadores.length === 0} mensagemVazio="Nenhum contador encontrado.">
+          <Tabela
+            colunas={[
+              { titulo: 'Contador' },
+              { titulo: 'Contato' },
+              { titulo: 'Cidade/UF' },
+              { titulo: 'Plano' },
+              { titulo: 'Empresas', alinhar: 'centro' },
+              { titulo: 'Status' },
+              { titulo: 'Cadastro' },
+              { titulo: 'Ações', alinhar: 'centro' },
+            ]}
+          >
+            {paginatedContadores.map((contador, i) => (
+              <Linha key={contador.id}>
+                <Celula>
+                  <CelulaNome
+                    nome={contador.nome}
+                    detalhes={[`CPF/CNPJ ${contador.cpfCnpj}`]}
+                    indice={(currentPage - 1) * itemsPerPage + i}
+                  />
+                </Celula>
+                <Celula>
+                  <CelulaContato telefone={contador.telefone} email={contador.email} />
+                </Celula>
+                <Celula>
+                  <CelulaCidade cidade={contador.cidade} uf={contador.uf} />
+                </Celula>
+                <Celula>
+                  <Selo tipo={contador.plano === 'Pro' ? 'info' : 'roxo'} texto={contador.plano} />
+                </Celula>
+                <Celula alinhar="centro">
+                  <Contagem valor={contador.empresas} />
+                </Celula>
+                <Celula>
+                  <Selo tipo={SELO_STATUS[contador.status]} texto={ROTULO_STATUS[contador.status]} />
+                </Celula>
+                <Celula className="whitespace-nowrap">{contador.cadastro}</Celula>
+                <Celula alinhar="centro">
+                  <BotoesAcao />
+                </Celula>
+              </Linha>
+            ))}
+          </Tabela>
+          <Paginacao
+            pagina={currentPage}
+            aoMudarPagina={setCurrentPage}
+            porPagina={itemsPerPage}
+            aoMudarPorPagina={setItemsPerPage}
+            total={filteredContadores.length}
+          />
+        </EstadoTabela>
+      </TabelaCard>
     </div>
     </AdminLayout>
   );

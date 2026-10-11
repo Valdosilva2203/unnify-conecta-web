@@ -1,15 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { Eye, EyeOff, Mail, Lock, User, MailCheck } from 'lucide-react';
 
 export function SignupForm() {
-  const router = useRouter();
+  const [emailSent, setEmailSent] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -81,27 +79,8 @@ export function SignupForm() {
         return;
       }
 
-      // 2. Log in the user
-      console.log('📝 Tentando fazer login com:', email);
-      const supabase = createClient();
-      const { error: loginError, data: loginData } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (loginError) {
-        console.error('❌ Erro ao fazer login:', loginError);
-        setErrors({ submit: `Erro ao fazer login: ${loginError.message}` });
-        setLoading(false);
-        return;
-      }
-
-      console.log('✅ Login bem-sucedido:', loginData?.user?.email);
-
-      // 3. Redirect to onboarding
-      console.log('🔄 Redirecionando para onboarding...');
       setLoading(false);
-      router.push('/onboarding');
+      setEmailSent(true);
     } catch (err) {
       setErrors({ submit: err instanceof Error ? err.message : 'Erro ao criar conta' });
       setLoading(false);
@@ -124,39 +103,63 @@ export function SignupForm() {
           />
         </div>
 
-        <Link
-          href="/login"
-          className="text-xs md:text-sm text-gray-700 hover:text-black transition-colors flex items-center gap-2 ml-auto"
-        >
-          Já possui uma conta?
-          <Button className="bg-white border border-gray-300 text-gray-900 hover:bg-gray-50 px-4 md:px-5 py-1.5 rounded-lg text-xs md:text-sm font-medium h-auto">
+        <div className="flex items-center gap-2 ml-auto text-xs md:text-sm text-gray-700">
+          <span className="hidden sm:inline">Já possui uma conta?</span>
+          <Link
+            href="/login"
+            className="inline-flex items-center min-h-11 bg-white border border-gray-300 text-gray-900 hover:bg-gray-50 px-4 md:px-5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+          >
             Entrar
-          </Button>
-        </Link>
+          </Link>
+        </div>
       </div>
 
-      {/* Form Card */}
-      <div className="bg-white rounded-2xl p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl">
+      {emailSent ? (
+        <div className="bg-white rounded-2xl p-5 sm:p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl text-center">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <MailCheck className="w-8 h-8 text-orange-600" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-black mb-3 leading-tight">Verifique seu e-mail</h1>
+          <p className="text-sm md:text-base text-gray-600 leading-snug">
+            Enviamos um link de confirmação para{' '}
+            <span className="font-semibold text-gray-900">{email}</span>.
+          </p>
+          <p className="text-sm md:text-base text-gray-600 mt-2 leading-snug">
+            Clique no link para ativar sua conta. Se não encontrar, confira a caixa de spam.
+          </p>
+          <Link
+            href="/login"
+            className="inline-flex items-center min-h-11 mt-4 px-2 text-sm text-orange-600 hover:text-orange-700 font-semibold rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+          >
+            Ir para o login
+          </Link>
+        </div>
+      ) : (
+      <div className="bg-white rounded-2xl p-5 sm:p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl">
         {/* Header */}
         <p className="text-xs font-semibold text-orange-600 mb-2 tracking-wide uppercase">
           Crie sua conta grátis
         </p>
-        <h2 className="text-4xl font-black text-black mb-3 leading-tight">Vamos começar?</h2>
+        <h1 className="text-3xl sm:text-4xl font-black text-black mb-3 leading-tight">Vamos começar?</h1>
         <p className="text-sm md:text-base text-gray-600 mb-6 leading-snug">
           Preencha seus dados para criar sua conta.
         </p>
 
         {/* Form */}
-        <form onSubmit={handleSignup} className="space-y-4 md:space-y-5">
+        <form onSubmit={handleSignup} noValidate className="space-y-4 md:space-y-5">
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label htmlFor="cad-nome" className="block text-sm font-medium text-gray-900 mb-2">
               Nome completo
             </label>
             <div className="relative">
               <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
               <input
                 type="text"
+                id="cad-nome"
+                autoComplete="name"
+                aria-invalid={Boolean(touched.fullName && errors.fullName)}
+                aria-describedby={touched.fullName && errors.fullName ? 'cad-nome-erro' : undefined}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 onBlur={() => handleBlur('fullName')}
@@ -165,19 +168,23 @@ export function SignupForm() {
               />
             </div>
             {touched.fullName && errors.fullName && (
-              <p className="text-xs text-red-600 mt-1">{errors.fullName}</p>
+              <p id="cad-nome-erro" className="text-xs text-red-600 mt-1">{errors.fullName}</p>
             )}
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label htmlFor="cad-email" className="block text-sm font-medium text-gray-900 mb-2">
               E-mail
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
               <input
                 type="email"
+                id="cad-email"
+                autoComplete="email"
+                inputMode="email" autoCapitalize="none" aria-invalid={Boolean(touched.email && errors.email)}
+                aria-describedby={touched.email && errors.email ? 'cad-email-erro' : undefined}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => handleBlur('email')}
@@ -186,19 +193,23 @@ export function SignupForm() {
               />
             </div>
             {touched.email && errors.email && (
-              <p className="text-xs text-red-600 mt-1">{errors.email}</p>
+              <p id="cad-email-erro" className="text-xs text-red-600 mt-1">{errors.email}</p>
             )}
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label htmlFor="cad-senha" className="block text-sm font-medium text-gray-900 mb-2">
               Senha
             </label>
             <div className="relative">
               <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
               <input
                 type={showPassword ? 'text' : 'password'}
+                id="cad-senha"
+                autoComplete="new-password"
+                aria-invalid={Boolean(touched.password && errors.password)}
+                aria-describedby={touched.password && errors.password ? 'cad-senha-erro' : 'cad-senha-dica'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={() => handleBlur('password')}
@@ -208,7 +219,9 @@ export function SignupForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={showPassword}
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -217,17 +230,17 @@ export function SignupForm() {
                 )}
               </button>
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p id="cad-senha-dica" className="text-xs text-gray-600 mt-1">
               Mínimo de 8 caracteres, com letras, números e um símbolo.
             </p>
             {touched.password && errors.password && (
-              <p className="text-xs text-red-600 mt-1">{errors.password}</p>
+              <p id="cad-senha-erro" className="text-xs text-red-600 mt-1">{errors.password}</p>
             )}
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-xs text-red-700">{errors.submit}</p>
             </div>
           )}
@@ -305,6 +318,7 @@ export function SignupForm() {
           .
         </p>
       </div>
+      )}
     </div>
   );
 }

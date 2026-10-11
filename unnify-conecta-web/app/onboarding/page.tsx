@@ -134,18 +134,18 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white py-12 px-6 md:py-16">
+    <div className="min-h-screen bg-white py-6 px-4 sm:px-6 md:py-16 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <div className="max-w-6xl mx-auto">
         {/* User info */}
         <div className="mb-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
           <p className="text-sm text-gray-600">
-            Logado como: <span className="font-semibold text-orange-600">{userEmail}</span>
+            Logado como: <span className="font-semibold text-orange-600 break-all">{userEmail}</span>
           </p>
         </div>
 
         <OnboardingHeader />
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+        <div className="grid md:grid-cols-2 gap-5 sm:gap-8 max-w-4xl mx-auto mb-12">
           <OnboardingCard
             icon={<Building2 className="w-6 h-6 text-orange-600" />}
             title="Tenho uma empresa"

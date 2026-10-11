@@ -12,7 +12,7 @@ export function ProductMockup() {
           {/* Screen */}
           <div className="bg-gradient-to-br from-gray-50 to-gray-100 aspect-video flex">
             {/* Sidebar */}
-            <div className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col">
+            <div className="hidden sm:flex w-40 lg:w-64 shrink-0 bg-white border-r border-gray-200 p-4 lg:p-6 flex-col">
               {/* Logo */}
               <div className="flex items-center gap-1 mb-8">
                 <span className="text-lg font-bold text-orange-600">U</span>
@@ -45,39 +45,39 @@ export function ProductMockup() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 p-8 overflow-hidden">
+            <div className="flex-1 min-w-0 p-3 sm:p-5 lg:p-8 overflow-hidden">
               {/* Header */}
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-3 lg:mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 shrink-0 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                     EE
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900">
                       Olá, Empresa Exemplo 👋
                     </h3>
-                    <p className="text-xs text-gray-500">
+                    <p className="hidden sm:block text-xs text-gray-500">
                       Acompanhe o resumo do seu mês
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="hidden sm:block text-right">
                   <p className="text-xs text-gray-500">Setembro/2026</p>
                 </div>
               </div>
 
               {/* Cards Row */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-3 gap-2 lg:gap-4 mb-4 lg:mb-6">
                 {[
                   { label: 'Receita', value: '48.750', change: '+12,4%', color: 'text-green-600' },
                   { label: 'Despesas', value: '31.420', change: '+4,8%', color: 'text-red-600' },
                   { label: 'Resultado', value: '17.330', change: '+27,3%', color: 'text-green-600' },
                 ].map((card, i) => (
-                  <div key={i} className="bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-xs text-gray-600 mb-2">{card.label}</p>
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-lg font-bold text-gray-900">R$ {card.value}</p>
-                      <span className={`text-xs font-medium ${card.color}`}>
+                  <div key={i} className="bg-white rounded-lg p-2 lg:p-4 border border-gray-200 min-w-0">
+                    <p className="text-[10px] sm:text-xs text-gray-600 mb-1 lg:mb-2">{card.label}</p>
+                    <div className="flex flex-wrap items-baseline gap-x-2">
+                      <p className="text-xs sm:text-sm lg:text-lg font-bold text-gray-900 whitespace-nowrap">R$ {card.value}</p>
+                      <span className={`hidden lg:inline text-xs font-medium ${card.color}`}>
                         ↑ {card.change}
                       </span>
                     </div>
@@ -125,7 +125,7 @@ export function ProductMockup() {
         </div>
 
         {/* Mobile Mockup (Overlaid) */}
-        <div className="absolute -bottom-12 -right-8 w-48 bg-black rounded-3xl border-8 border-black shadow-2xl overflow-hidden">
+        <div className="hidden sm:block absolute -bottom-12 right-0 lg:-right-8 w-40 lg:w-48 bg-black rounded-3xl border-8 border-black shadow-2xl overflow-hidden">
           <div className="bg-white aspect-video flex flex-col p-3">
             {/* Mobile Header */}
             <div className="flex items-center justify-between mb-2 text-xs">

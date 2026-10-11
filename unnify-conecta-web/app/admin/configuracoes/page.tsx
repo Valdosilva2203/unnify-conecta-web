@@ -66,38 +66,40 @@ export default function ConfiguracoesPage() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Configurações</h1>
             <p className="text-gray-600 mt-2">Gerencie as configurações gerais da plataforma Unnify Conecta.</p>
           </div>
         </div>
 
         {/* Container com Menu Lateral e Conteúdo */}
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {/* Menu Lateral */}
-          <div className="w-56 flex-shrink-0">
-            <nav className="space-y-2">
+          <div className="lg:w-56 lg:flex-shrink-0 min-w-0">
+            <nav aria-label="Seções de configuração" className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible -mx-1 px-1 pb-1 lg:pb-0">
               {secoes.map((secao) => (
                 <button
                   key={secao.id}
+                  type="button"
                   onClick={() => setSecaoAtiva(secao.id)}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition flex items-start gap-3 ${
+                  aria-current={secaoAtiva === secao.id ? 'page' : undefined}
+                  className={`shrink-0 lg:w-full min-h-11 text-left px-4 py-2.5 lg:py-3 rounded-lg transition flex items-center lg:items-start gap-2 lg:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
                     secaoAtiva === secao.id
-                      ? 'bg-orange-50 border-l-4 border-orange-500'
-                      : 'hover:bg-gray-50 border-l-4 border-transparent'
+                      ? 'bg-orange-50 border-b-4 lg:border-b-0 lg:border-l-4 border-orange-500'
+                      : 'bg-white lg:bg-transparent hover:bg-gray-50 border border-gray-200 lg:border-0 lg:border-l-4 lg:border-transparent'
                   }`}
                 >
-                  <span className="text-xl mt-0.5">{secao.icon}</span>
+                  <span className="text-lg lg:text-xl lg:mt-0.5" aria-hidden="true">{secao.icon}</span>
                   <div>
                     <p
-                      className={`font-semibold ${
+                      className={`font-semibold whitespace-nowrap lg:whitespace-normal ${
                         secaoAtiva === secao.id ? 'text-orange-600' : 'text-gray-700'
                       }`}
                     >
                       {secao.label}
                     </p>
-                    <p className="text-xs text-gray-500">{secao.descricao}</p>
+                    <p className="hidden lg:block text-xs text-gray-500">{secao.descricao}</p>
                   </div>
                 </button>
               ))}
@@ -105,12 +107,12 @@ export default function ConfiguracoesPage() {
           </div>
 
           {/* Conteúdo Principal */}
-          <div className="flex-1 bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex-1 min-w-0 bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
             {/* SEÇÃO GERAL */}
             {secaoAtiva === 'geral' && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Informações gerais</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Informações gerais</h2>
                   <p className="text-gray-600 mb-6">Configure as informações principais da plataforma.</p>
                 </div>
 
@@ -122,7 +124,7 @@ export default function ConfiguracoesPage() {
                       type="text"
                       value={configGeral.nomePlataforma}
                       onChange={(e) => handleInputChange('nomePlataforma', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                   <div>
@@ -131,7 +133,7 @@ export default function ConfiguracoesPage() {
                       type="text"
                       value={configGeral.nomeFantasia}
                       onChange={(e) => handleInputChange('nomeFantasia', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                   <div>
@@ -140,7 +142,7 @@ export default function ConfiguracoesPage() {
                       type="text"
                       value={configGeral.cnpj}
                       onChange={(e) => handleInputChange('cnpj', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                   <div>
@@ -149,7 +151,7 @@ export default function ConfiguracoesPage() {
                       type="email"
                       value={configGeral.emailContato}
                       onChange={(e) => handleInputChange('emailContato', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                   <div>
@@ -158,7 +160,7 @@ export default function ConfiguracoesPage() {
                       type="text"
                       value={configGeral.telefone}
                       onChange={(e) => handleInputChange('telefone', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                   <div>
@@ -167,7 +169,7 @@ export default function ConfiguracoesPage() {
                       type="text"
                       value={configGeral.site}
                       onChange={(e) => handleInputChange('site', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                 </div>
@@ -176,21 +178,21 @@ export default function ConfiguracoesPage() {
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Logo da plataforma</h3>
                   <p className="text-sm text-gray-600 mb-4">Imagem em PNG ou JPG. Tamanho máximo de 2MB.</p>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-8 flex flex-col items-center justify-center bg-gray-50">
                     <div className="relative w-32 h-32 mb-4">
                       <Image
-                        src="/brand/unnify-conecta.svg"
+                        src="/brand/unnify-logo.png"
                         alt="Unnify Conecta"
                         width={128}
                         height={128}
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <div className="flex gap-2">
-                      <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-2">
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <button type="button" className="min-h-11 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-2">
                         <span>⬆️</span> Alterar logo
                       </button>
-                      <button className="px-4 py-2 bg-white border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition flex items-center gap-2">
+                      <button type="button" className="min-h-11 px-4 py-2 bg-white border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition flex items-center gap-2">
                         <span>🗑️</span> Remover
                       </button>
                     </div>
@@ -205,7 +207,7 @@ export default function ConfiguracoesPage() {
                       value={configGeral.descricao}
                       onChange={(e) => handleInputChange('descricao', e.target.value)}
                       maxLength={500}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none h-32"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none h-32"
                     />
                     <p className="text-xs text-gray-500 mt-2 text-right">
                       {configGeral.descricao.length}/500
@@ -223,7 +225,7 @@ export default function ConfiguracoesPage() {
                         type="text"
                         value={configGeral.cep}
                         onChange={(e) => handleInputChange('cep', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                        className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -232,7 +234,7 @@ export default function ConfiguracoesPage() {
                         type="text"
                         value={configGeral.endereco}
                         onChange={(e) => handleInputChange('endereco', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                        className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                       />
                     </div>
                   </div>
@@ -244,7 +246,7 @@ export default function ConfiguracoesPage() {
                         type="text"
                         value={configGeral.bairro}
                         onChange={(e) => handleInputChange('bairro', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                        className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                       />
                     </div>
                     <div>
@@ -253,7 +255,7 @@ export default function ConfiguracoesPage() {
                         type="text"
                         value={configGeral.cidade}
                         onChange={(e) => handleInputChange('cidade', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                        className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                       />
                     </div>
                     <div>
@@ -261,7 +263,7 @@ export default function ConfiguracoesPage() {
                       <select
                         value={configGeral.estado}
                         onChange={(e) => handleInputChange('estado', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                        className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                       >
                         <option value="TO">TO</option>
                         <option value="SP">SP</option>
@@ -277,7 +279,7 @@ export default function ConfiguracoesPage() {
                     <select
                       value={configGeral.pais}
                       onChange={(e) => handleInputChange('pais', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     >
                       <option value="Brasil">Brasil</option>
                     </select>
@@ -288,7 +290,7 @@ export default function ConfiguracoesPage() {
                 <div className="border-t pt-6 flex justify-end">
                   <button
                     onClick={handleSalvarAlteracoes}
-                    className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition flex items-center gap-2"
+                    className="min-h-11 px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
                   >
                     <span>💾</span> Salvar alterações
                   </button>
@@ -340,7 +342,7 @@ export default function ConfiguracoesPage() {
                     <input
                       type="number"
                       defaultValue="20"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                   <div>
@@ -348,12 +350,12 @@ export default function ConfiguracoesPage() {
                     <input
                       type="number"
                       defaultValue="15"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Recorrência da comissão</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none">
+                    <select className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none">
                       <option>Mensal</option>
                       <option>Trimestral</option>
                       <option>Anual</option>
@@ -364,7 +366,7 @@ export default function ConfiguracoesPage() {
                     <input
                       type="number"
                       defaultValue="30"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full min-h-11 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                     />
                   </div>
                 </div>

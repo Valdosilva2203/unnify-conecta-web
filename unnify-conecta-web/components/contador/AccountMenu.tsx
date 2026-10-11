@@ -16,7 +16,7 @@ export function AccountMenu({ officeInitials, officeName }: AccountMenuProps) {
   const [isLoading, setIsLoading] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const [membershipRole, setMembershipRole] = useState<string>('member');
+  const [membershipRole, setMembershipRole] = useState<string>('membro');
 
   useEffect(() => {
     const getMembershipRole = async () => {
@@ -27,12 +27,12 @@ export function AccountMenu({ officeInitials, officeName }: AccountMenuProps) {
 
         const { data: membership } = await supabase
           .from('membros_escritorio')
-          .select('role')
-          .eq('user_id', user.id)
+          .select('funcao')
+          .eq('id_usuario', user.id)
           .maybeSingle();
 
         if (membership) {
-          setMembershipRole(membership.role);
+          setMembershipRole(membership.funcao);
         }
       } catch (error) {
         console.error('Error fetching membership:', error);
@@ -91,9 +91,9 @@ export function AccountMenu({ officeInitials, officeName }: AccountMenuProps) {
 
   const getRoleLabel = (role: string): string => {
     const roleMap: Record<string, string> = {
-      owner: 'Proprietário',
-      member: 'Membro',
-      viewer: 'Visualizador',
+      dono: 'Proprietário',
+      membro: 'Membro',
+      visualizador: 'Visualizador',
     };
     return roleMap[role] || 'Membro';
   };
@@ -134,13 +134,13 @@ export function AccountMenu({ officeInitials, officeName }: AccountMenuProps) {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={`Menu da conta ${officeName}`}
-        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors"
+        className="flex items-center gap-2 sm:gap-3 min-h-11 cursor-pointer hover:bg-gray-50 rounded-lg px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
       >
-        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+        <div className="w-9 h-9 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
           <span className="text-xs font-bold text-orange-600">{officeInitials}</span>
         </div>
         <div className="hidden sm:flex flex-col items-end">
-          <p className="text-sm font-semibold text-gray-900 line-clamp-1">{officeName}</p>
+          <p className="text-sm font-semibold text-gray-900 line-clamp-1 max-w-[200px]">{officeName}</p>
         </div>
         <ChevronDown
           className={`w-4 h-4 text-gray-600 flex-shrink-0 transition-transform duration-200 ${
@@ -152,7 +152,7 @@ export function AccountMenu({ officeInitials, officeName }: AccountMenuProps) {
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl border border-gray-200 shadow-lg z-50"
+          className="absolute top-full right-0 mt-2 w-[calc(100vw-1.5rem)] max-w-80 max-h-[calc(100dvh-5rem)] overflow-y-auto bg-white rounded-xl border border-gray-200 shadow-lg z-50"
           role="menu"
         >
           {/* Header */}
@@ -179,7 +179,7 @@ export function AccountMenu({ officeInitials, officeName }: AccountMenuProps) {
                     item.onClick();
                     setIsOpen(false);
                   }}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex gap-3 items-start group"
+                  className="w-full min-h-11 px-4 py-3 text-left hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none transition-colors flex gap-3 items-start group"
                   role="menuitem"
                 >
                   <Icon className="w-5 h-5 text-gray-400 group-hover:text-orange-600 transition-colors flex-shrink-0 mt-0.5" />

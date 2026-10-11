@@ -6,10 +6,10 @@ import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import {
   Home, FileText, DollarSign, AlertCircle, Calendar, ShoppingCart, Box,
-  Users, UserCheck, Receipt, BarChart3, Settings, LogOut, Bell, Menu, X,
+  Users, UserCheck, Receipt, BarChart3, Settings, Bell, Menu, X,
   TrendingUp, AlertOctagon, Clock
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MenuPerfilEmpresa } from '@/components/app/MenuPerfilEmpresa';
 
 interface CompanyData {
   razao_social: string;
@@ -106,11 +106,18 @@ export default function AppPage() {
     checkAuth();
   }, [router]);
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const aoTeclar = (e: KeyboardEvent) => e.key === 'Escape' && setSidebarOpen(false);
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', aoTeclar);
+    return () => {
+      document.removeEventListener('keydown', aoTeclar);
+      document.body.style.overflow = overflowAnterior;
+    };
+  }, [sidebarOpen]);
+
 
   if (loading) {
     return (
@@ -128,6 +135,38 @@ export default function AppPage() {
   }
 
   const firstName = userData.nome_completo?.split(' ')[0] || 'Usuário';
+  const menuNavegacao = (
+    <nav aria-label="Menu principal" className="flex-1 overflow-y-auto py-4">
+      {menuItems.map((item) => {
+        const Icon = item.icon;
+        const isActive = item.href === '/app';
+        const emBreve = item.href === '#';
+        return (
+          <button
+            type="button"
+            key={item.label}
+            disabled={emBreve}
+            onClick={() => {
+              setSidebarOpen(false);
+              router.push(item.href);
+            }}
+            aria-current={isActive ? 'page' : undefined}
+            className={`w-full min-h-11 flex items-center gap-3 px-6 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500 disabled:cursor-default ${
+              isActive
+                ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-600'
+                : emBreve
+                  ? 'text-gray-400'
+                  : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Icon className="w-5 h-5" aria-hidden="true" />
+            <span className="flex-1 text-left">{item.label}</span>
+            {emBreve && <span className="text-[10px] font-semibold uppercase tracking-wide">Em breve</span>}
+          </button>
+        );
+      })}
+    </nav>
+  );
   const initials = (companyData.nome_comercial || companyData.razao_social)
     .split(' ')
     .slice(0, 2)
@@ -136,96 +175,87 @@ export default function AppPage() {
     .toUpperCase();
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className={`${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 fixed md:relative z-40 w-56 h-screen bg-white border-r border-gray-200 transition-transform duration-200 flex flex-col`}>
-        {/* Logo */}
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar — desktop */}
+      <aside className="hidden lg:flex sticky top-0 h-screen w-56 shrink-0 bg-white border-r border-gray-200 flex-col">
         <div className="p-6 border-b border-gray-200">
-          <Image
-            src="/brand/unnify-logo.png"
-            alt="Unnify Conecta"
-            width={150}
-            height={50}
-            priority
-            className="h-8 w-auto"
-          />
+          <Image src="/brand/unnify-logo.png" alt="Unnify Conecta" width={150} height={50} priority className="h-8 w-auto" />
         </div>
-
-        {/* Menu Items */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.href === '/app';
-            return (
-              <button
-                key={item.label}
-                onClick={() => item.href !== '#' && router.push(item.href)}
-                className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-600'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        {menuNavegacao}
       </aside>
 
+      {/* Sidebar — celular e tablet (gaveta) */}
+      <div className={`lg:hidden fixed inset-0 z-50 ${sidebarOpen ? '' : 'pointer-events-none'}`} aria-hidden={!sidebarOpen}>
+        <div
+          className={`absolute inset-0 bg-gray-900/40 transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setSidebarOpen(false)}
+        />
+        <aside
+          id="menu-empresa"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu de navegação"
+          inert={!sidebarOpen}
+          className={`absolute inset-y-0 left-0 w-[85%] max-w-xs bg-white shadow-xl flex flex-col transition-transform duration-200 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <Image src="/brand/unnify-logo.png" alt="Unnify Conecta" width={150} height={50} className="h-8 w-auto" />
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Fechar menu"
+              className="w-11 h-11 inline-flex items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          {menuNavegacao}
+        </aside>
+      </div>
+
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        <header className="bg-white border-b border-gray-200">
-          <div className="flex items-center justify-between px-6 py-4">
-            {/* Left */}
-            <div className="flex items-center gap-4">
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 pt-[env(safe-area-inset-top)]">
+          <div className="flex items-center justify-between gap-2 px-3 sm:px-6 py-2.5">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Abrir menu"
+              aria-controls="menu-empresa"
+              aria-expanded={sidebarOpen}
+              className="lg:hidden w-11 h-11 inline-flex items-center justify-center hover:bg-gray-100 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <div className="hidden lg:block" />
+
+            <div className="flex items-center gap-1 sm:gap-3 min-w-0">
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
+                type="button"
+                aria-label="Notificações"
+                className="w-11 h-11 inline-flex items-center justify-center hover:bg-gray-100 rounded-lg relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
               >
-                {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-
-            {/* Right */}
-            <div className="flex items-center gap-4">
-              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
                 <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full" aria-hidden="true" />
               </button>
 
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">{userData.nome_completo}</p>
-                  <p className="text-xs text-gray-500">{companyData.nome_comercial || companyData.razao_social}</p>
-                </div>
-                <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                  {initials}
-                </div>
-
-                {/* Profile Menu */}
-                <button
-                  onClick={handleLogout}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
-                  title="Sair"
-                >
-                  <LogOut className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
+              <MenuPerfilEmpresa
+                nomeUsuario={userData.nome_completo || 'Usuário'}
+                email={userData.email}
+                nomeEmpresa={companyData.nome_comercial || companyData.razao_social}
+                iniciais={initials}
+              />
             </div>
           </div>
         </header>
-
         {/* Scroll Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-6 md:p-8">
+        <main className="flex-1 min-w-0">
+          <div className="px-4 py-5 sm:p-6 lg:p-8 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             {/* Greeting */}
             <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-black text-black mb-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-black mb-2">
                 Olá, {firstName}!
               </h1>
               <p className="text-gray-600">
@@ -242,7 +272,7 @@ export default function AppPage() {
             </div>
 
             {/* Financial Indicators */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 mb-8">
               {[
                 { icon: TrendingUp, title: 'Receitas', amount: 'R$ 0,00', color: 'text-green-600', bgColor: 'bg-green-50' },
                 { icon: AlertOctagon, title: 'Despesas', amount: 'R$ 0,00', color: 'text-red-600', bgColor: 'bg-red-50' },
@@ -275,7 +305,7 @@ export default function AppPage() {
               <div className="bg-white rounded-lg p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-black">Próximas obrigações</h2>
-                  <button className="text-orange-600 text-sm font-semibold hover:underline">
+                  <button className="min-h-11 px-2 -mr-2 text-orange-600 text-sm font-semibold hover:underline rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
                     Ver todas →
                   </button>
                 </div>
@@ -297,7 +327,7 @@ export default function AppPage() {
                       <button
                         key={item.label}
                         onClick={() => item.href !== '#' && router.push(item.href)}
-                        className="flex flex-col items-center justify-center p-6 hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-orange-200 transition-colors"
+                        className="flex flex-col items-center justify-center p-4 sm:p-6 min-h-24 hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-orange-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
                       >
                         <Icon className="w-8 h-8 text-orange-600 mb-3" />
                         <span className="text-xs text-center font-semibold text-gray-900">
@@ -313,7 +343,7 @@ export default function AppPage() {
               <div className="bg-white rounded-lg p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-black">Documentos recentes</h2>
-                  <button className="text-orange-600 text-sm font-semibold hover:underline">
+                  <button className="min-h-11 px-2 -mr-2 text-orange-600 text-sm font-semibold hover:underline rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
                     Ver todos →
                   </button>
                 </div>
@@ -325,7 +355,7 @@ export default function AppPage() {
             <div className="bg-white rounded-lg p-6 border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-black">Mensagens e avisos</h2>
-                <button className="text-orange-600 text-sm font-semibold hover:underline">
+                <button className="min-h-11 px-2 -mr-2 text-orange-600 text-sm font-semibold hover:underline rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
                   Ver todos →
                 </button>
               </div>
@@ -334,14 +364,6 @@ export default function AppPage() {
           </div>
         </main>
       </div>
-
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 md:hidden z-30"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 }

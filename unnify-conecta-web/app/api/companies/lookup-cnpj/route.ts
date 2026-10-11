@@ -1,12 +1,15 @@
+import type { NextRequest } from 'next/server';
+import { usuarioDaRequisicao } from '@/lib/supabase/usuario-servidor';
+import { excedeuLimite } from '@/lib/limite-taxa';
+
 interface BrasilAPIResponse {
   cnpj: string;
-  name: string;
-  trade_name: string | null;
-  active: boolean;
-  city: string;
-  state: string;
-  status: string;
-  main_activity: string | null;
+  razao_social: string;
+  nome_fantasia: string | null;
+  municipio: string;
+  uf: string;
+  ddd_telefone_1: string | null;
+  email: string | null;
 }
 
 interface LookupResponse {
@@ -16,6 +19,8 @@ interface LookupResponse {
     trade_name: string | null;
     city: string;
     state: string;
+    phone: string | null;
+    email: string | null;
   };
   error?: string;
   canFillManually?: boolean;
@@ -23,6 +28,15 @@ interface LookupResponse {
 
 const BRASIL_API_TIMEOUT = 5000; // 5 seconds
 const BRASIL_API_URL = 'https://brasilapi.com.br/api/cnpj/v1';
+
+class CNPJNotFoundError extends Error {}
+
+function titleCase(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/(^|\s)\S/g, (c) => c.toUpperCase())
+    .replace(/\s(D[aeo]s?|E)\s/g, (m) => m.toLowerCase());
+}
 
 async function fetchFromBrasilAPI(cnpj: string): Promise<BrasilAPIResponse> {
   const controller = new AbortController();
@@ -42,6 +56,10 @@ async function fetchFromBrasilAPI(cnpj: string): Promise<BrasilAPIResponse> {
 
     clearTimeout(timeout);
 
+    if (response.status === 404) {
+      throw new CNPJNotFoundError();
+    }
+
     if (!response.ok) {
       throw new Error(`BrasilAPI returned ${response.status}`);
     }
@@ -56,8 +74,21 @@ async function fetchFromBrasilAPI(cnpj: string): Promise<BrasilAPIResponse> {
   }
 }
 
-export async function POST(request: Request): Promise<Response> {
+export async function POST(request: NextRequest): Promise<Response> {
   try {
+    const usuario = await usuarioDaRequisicao(request);
+    if (!usuario) {
+      return Response.json({ success: false, error: 'Faça login para consultar o CNPJ.' } as LookupResponse, {
+        status: 401,
+      });
+    }
+    if (excedeuLimite(`cnpj:${usuario.id}`, 20, 60 * 1000)) {
+      return Response.json(
+        { success: false, error: 'Muitas consultas seguidas. Aguarde um minuto.' } as LookupResponse,
+        { status: 429 }
+      );
+    }
+
     // 1. Parse request
     const body = await request.json();
     const { cnpj } = body;
@@ -85,15 +116,24 @@ export async function POST(request: Request): Promise<Response> {
     const response: LookupResponse = {
       success: true,
       data: {
-        legal_name: apiData.name || '',
-        trade_name: apiData.trade_name || null,
-        city: apiData.city || '',
-        state: apiData.state || ''
+        legal_name: apiData.razao_social || '',
+        trade_name: apiData.nome_fantasia || null,
+        city: apiData.municipio ? titleCase(apiData.municipio) : '',
+        state: apiData.uf || '',
+        phone: apiData.ddd_telefone_1?.replace(/\D/g, '') || null,
+        email: apiData.email?.toLowerCase() || null
       }
     };
 
     return Response.json(response);
   } catch (error) {
+    if (error instanceof CNPJNotFoundError) {
+      return Response.json(
+        { success: false, error: 'CNPJ não encontrado na Receita Federal.' } as LookupResponse,
+        { status: 404 }
+      );
+    }
+
     console.error('CNPJ lookup error:', error);
 
     // Allow manual fill if API is unavailable

@@ -27,7 +27,7 @@ export function OnboardingCard({
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {/* Image Section */}
-      <div className="relative w-full h-64 bg-gray-100">
+      <div className="relative w-full h-44 sm:h-64 bg-gray-100">
         <Image
           src={imageSrc}
           alt={imageAlt}
@@ -39,27 +39,28 @@ export function OnboardingCard({
       </div>
 
       {/* Content Section */}
-      <div className="p-8">
+      <div className="p-5 sm:p-8">
         {/* Icon */}
         <div className="mb-6 w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
           {icon}
         </div>
 
         {/* Title */}
-        <h3 className="text-2xl font-black text-black mb-3">
+        <h2 className="text-xl sm:text-2xl font-black text-black mb-3">
           {title}
-        </h3>
+        </h2>
 
         {/* Description */}
-        <p className="text-base text-gray-700 mb-8 leading-relaxed">
+        <p className="text-base text-gray-700 mb-6 sm:mb-8 leading-relaxed">
           {description}
         </p>
 
         {/* Button */}
         <button
+          type="button"
           onClick={buttonOnClick}
           disabled={isLoading}
-          className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white font-bold py-3.5 px-6 rounded-lg transition-all text-base flex items-center justify-center gap-2"
+          className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white font-bold min-h-12 px-6 rounded-lg transition-all text-base flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
         >
           {isLoading ? (
             <>

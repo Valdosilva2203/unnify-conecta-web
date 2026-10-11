@@ -49,7 +49,7 @@ export function PricingSection() {
   ];
 
   return (
-    <section id="planos" className="py-20 px-6 bg-white">
+    <section id="planos" className="py-12 sm:py-20 px-4 sm:px-6 bg-white scroll-mt-20">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
@@ -111,16 +111,15 @@ export function PricingSection() {
                 </ul>
 
                 {/* CTA Button */}
-                <Link href="/signup" className="block">
-                  <Button
-                    className={`w-full py-3 rounded-lg font-semibold transition-all ${
+                <Link
+                  href="/signup"
+                  className={`w-full min-h-12 inline-flex items-center justify-center rounded-lg font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ${
                       plan.highlighted
                         ? 'bg-orange-600 hover:bg-orange-700 text-white'
                         : 'bg-white border border-gray-300 text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    Começar agora
-                  </Button>
+                  }`}
+                >
+                  Começar agora
                 </Link>
               </div>
             </div>

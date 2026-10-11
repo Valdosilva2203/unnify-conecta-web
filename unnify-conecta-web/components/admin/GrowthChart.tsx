@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { adminMockData } from '@/lib/mockData/adminMockData';
 
-const tabs = ['Empresas', 'Assinaturas', 'MRR'];
+const tabs = [
+  { rotulo: 'Empresas', chave: 'companies' },
+  { rotulo: 'Assinaturas', chave: 'subscriptions' },
+  { rotulo: 'MRR', chave: 'mrr' },
+] as const;
 
 export function GrowthChart() {
   const [activeTab, setActiveTab] = useState<'companies' | 'subscriptions' | 'mrr'>('companies');
@@ -20,7 +24,7 @@ export function GrowthChart() {
   const range = maxValue - minValue;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
@@ -28,21 +32,24 @@ export function GrowthChart() {
         </h3>
 
         {/* Tabs */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Indicador do gráfico">
           {tabs.map((tab) => {
-            const tabKey = tab.toLowerCase() as 'companies' | 'subscriptions' | 'mrr';
+            const tabKey = tab.chave;
             const isActive = activeTab === tabKey;
             return (
               <button
-                key={tab}
+                key={tab.chave}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setActiveTab(tabKey)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`min-h-11 px-4 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
                   isActive
                     ? 'bg-orange-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {tab}
+                {tab.rotulo}
               </button>
             );
           })}
@@ -50,9 +57,9 @@ export function GrowthChart() {
       </div>
 
       {/* Chart Area */}
-      <div className="h-80 flex flex-col-reverse gap-2">
+      <div className="h-56 sm:h-80 flex flex-col-reverse gap-2">
         {/* Chart */}
-        <div className="flex items-flex-end gap-2 flex-1">
+        <div className="flex items-end gap-1 sm:gap-2 flex-1">
           {currentData.map((item, index) => {
             const normalizedValue = (item.value - minValue) / (range || 1);
             const height = Math.max(normalizedValue * 100, 5);

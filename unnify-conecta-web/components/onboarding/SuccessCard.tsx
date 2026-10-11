@@ -26,39 +26,27 @@ export function SuccessCard() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Usuário não autenticado');
 
-        // Try to find accounting office (contador flow)
-        const { data: membership } = await supabase
-          .from('membros_escritorio')
-          .select('id_escritorio')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (membership) {
-          const { data: officeData, error: officeError } = await supabase
-            .from('escritorios_contabeis')
-            .select('nome_comercial, razao_social, cnpj, cidade, estado')
-            .eq('id', membership.id_escritorio)
-            .single();
-
-          if (!officeError && officeData) {
-            setBusiness({ ...officeData, type: 'office' });
-            setLoading(false);
-            return;
-          }
-        }
-
-        // Try to find company (empresa flow)
+        // Both flows store the business in "empresas"; offices have tipo_empresa = 'escritorio_contabil'
         const { data: companyData, error: companyError } = await supabase
           .from('empresas')
-          .select('nome_comercial, razao_social, cnpj, cidade, estado')
+          .select('nome_comercial, razao_social, cnpj, cidade, estado, tipo_empresa')
           .eq('criado_por', user.id)
+          .order('criado_em', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (companyError || !companyData) {
-          throw new Error('Nenhuma empresa ou escritório encontrado');
+          throw new Error(companyError?.message || 'Nenhuma empresa ou escritório encontrado');
         }
 
-        setBusiness({ ...companyData, type: 'company' });
+        setBusiness({
+          nome_comercial: companyData.nome_comercial,
+          razao_social: companyData.razao_social,
+          cnpj: companyData.cnpj,
+          cidade: companyData.cidade,
+          estado: companyData.estado,
+          type: companyData.tipo_empresa === 'escritorio_contabil' ? 'office' : 'company',
+        });
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
         setError('Não foi possível carregar as informações do seu negócio.');
@@ -74,7 +62,7 @@ export function SuccessCard() {
     return (
       <div className="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-gray-200 text-center">
         <div className="w-12 h-12 border-2 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-600">Carregando dados do seu escritório...</p>
+        <p className="text-gray-600">Carregando seus dados...</p>
       </div>
     );
   }
@@ -124,8 +112,8 @@ export function SuccessCard() {
       {/* Checklist */}
       <div className="space-y-4">
         {[
-          { title: `${businessType.charAt(0).toUpperCase() + businessType.slice(1)} cadastrad${isOffice ? 'o' : 'a'}`, desc: `As informações do seu ${businessType} foram registradas com sucesso.` },
-          { title: 'Sua conta foi definida como proprietária', desc: `Você tem acesso completo ao ambiente do ${businessType}.` },
+          { title: `${businessType.charAt(0).toUpperCase() + businessType.slice(1)} cadastrad${isOffice ? 'o' : 'a'}`, desc: `As informações ${isOffice ? 'do seu' : 'da sua'} ${businessType} foram registradas com sucesso.` },
+          { title: 'Sua conta foi definida como proprietária', desc: `Você tem acesso completo ao ambiente ${isOffice ? 'do' : 'da'} ${businessType}.` },
           { title: 'Ambiente configurado', desc: `Seu ambiente está pronto para uso no Unnify Conecta.` },
         ].map((item, idx) => (
           <div key={idx} className="flex gap-4 items-start bg-white rounded-lg p-4 border border-gray-200 hover:border-green-300 transition-colors">

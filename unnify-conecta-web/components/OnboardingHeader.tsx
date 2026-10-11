@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 export function OnboardingHeader() {
   return (
-    <div className="flex flex-col items-center mb-12">
+    <div className="flex flex-col items-center mb-8 sm:mb-12">
       {/* Logo */}
       <div className="mb-8">
         <Image
@@ -34,7 +34,7 @@ export function OnboardingHeader() {
 
       {/* Title and Subtitle */}
       <div className="text-center max-w-2xl">
-        <h1 className="text-4xl md:text-5xl font-black text-black mb-4 leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-black mb-4 leading-tight">
           Como você vai usar
           <br />
           o Unnify Conecta?

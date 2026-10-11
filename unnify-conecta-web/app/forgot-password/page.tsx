@@ -100,22 +100,22 @@ export default function ForgotPasswordPage() {
 
           <Link
             href="/login"
-            className="text-xs md:text-sm text-gray-700 hover:text-black transition-colors flex items-center gap-2 ml-auto"
+            className="text-sm text-gray-700 hover:text-black transition-colors inline-flex items-center gap-2 ml-auto min-h-11 px-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             Voltar para o login
           </Link>
         </div>
 
         {/* Success Card */}
-        <div className="bg-white rounded-2xl p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl">
+        <div className="bg-white rounded-2xl p-5 sm:p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl">
           {/* Header */}
           <p className="text-xs font-semibold text-orange-600 mb-2 tracking-wide uppercase">
             E-mail enviado!
           </p>
-          <h2 className="text-4xl font-black text-black mb-3 leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-black mb-3 leading-tight">
             Verifique sua caixa de entrada
-          </h2>
+          </h1>
 
           {/* Icon */}
           <div className="flex justify-center mb-6">
@@ -163,10 +163,11 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Back Button */}
-          <Link href="/login" className="block">
-            <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-base font-bold py-3.5 flex items-center justify-center gap-2 h-auto transition-all">
-              Voltar para o login
-            </Button>
+          <Link
+            href="/login"
+            className="w-full min-h-12 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-base font-bold flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+          >
+            Voltar para o login
           </Link>
         </div>
       </div>
@@ -191,35 +192,41 @@ export default function ForgotPasswordPage() {
 
         <Link
           href="/login"
-          className="text-xs md:text-sm text-gray-700 hover:text-black transition-colors flex items-center gap-2 ml-auto"
+          className="text-sm text-gray-700 hover:text-black transition-colors inline-flex items-center gap-2 ml-auto min-h-11 px-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           Voltar para o login
         </Link>
       </div>
 
       {/* Form Card */}
-      <div className="bg-white rounded-2xl p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl">
+      <div className="bg-white rounded-2xl p-5 sm:p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl">
         {/* Header */}
         <p className="text-xs font-semibold text-orange-600 mb-2 tracking-wide uppercase">
           Recuperar sua senha
         </p>
-        <h2 className="text-4xl font-black text-black mb-3 leading-tight">
+        <h1 className="text-3xl sm:text-4xl font-black text-black mb-3 leading-tight">
           Esqueceu sua senha?
-        </h2>
+        </h1>
         <p className="text-sm md:text-base text-gray-600 mb-6 leading-snug">
           Informe seu e-mail e enviaremos um link para você redefinir sua senha.
         </p>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 md:space-y-5">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">E-mail</label>
+            <label htmlFor="rec-email" className="block text-sm font-medium text-gray-900 mb-2">E-mail</label>
             <div className="relative">
               <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
               <input
+                id="rec-email"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                aria-invalid={Boolean(touched.email && errors.email)}
+                aria-describedby={touched.email && errors.email ? 'rec-email-erro' : undefined}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => handleBlur('email')}
@@ -228,13 +235,13 @@ export default function ForgotPasswordPage() {
               />
             </div>
             {touched.email && errors.email && (
-              <p className="text-xs text-red-600 mt-1">{errors.email}</p>
+              <p id="rec-email-erro" className="text-xs text-red-600 mt-1">{errors.email}</p>
             )}
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-xs text-red-700">{errors.submit}</p>
             </div>
           )}

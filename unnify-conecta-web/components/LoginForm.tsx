@@ -55,7 +55,12 @@ export function LoginForm() {
       });
 
       if (error) {
-        setErrors({ submit: error.message });
+        setErrors({
+          submit:
+            error.code === 'email_not_confirmed'
+              ? 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.'
+              : error.message,
+        });
         setLoading(false);
         return;
       }
@@ -84,39 +89,45 @@ export function LoginForm() {
           />
         </div>
 
-        <Link
-          href="/signup"
-          className="text-xs md:text-sm text-gray-700 hover:text-black transition-colors flex items-center gap-2 ml-auto"
-        >
-          Ainda não possui uma conta?
-          <Button className="bg-white border border-gray-300 text-gray-900 hover:bg-gray-50 px-4 md:px-5 py-1.5 rounded-lg text-xs md:text-sm font-medium h-auto">
+        <div className="flex items-center gap-2 ml-auto text-xs md:text-sm text-gray-700">
+          <span className="hidden sm:inline">Ainda não possui uma conta?</span>
+          <Link
+            href="/signup"
+            className="inline-flex items-center min-h-11 bg-white border border-gray-300 text-gray-900 hover:bg-gray-50 px-4 md:px-5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+          >
             Criar conta
-          </Button>
-        </Link>
+          </Link>
+        </div>
       </div>
 
       {/* Form Card */}
-      <div className="bg-white rounded-2xl p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl">
+      <div className="bg-white rounded-2xl p-5 sm:p-9 md:p-10 shadow-lg border border-gray-200 w-full max-w-xl">
         {/* Header */}
         <p className="text-xs font-semibold text-orange-600 mb-2 tracking-wide uppercase">
           Acesse sua conta
         </p>
-        <h2 className="text-4xl font-black text-black mb-3 leading-tight">Bem-vindo de volta</h2>
+        <h1 className="text-3xl sm:text-4xl font-black text-black mb-3 leading-tight">Bem-vindo de volta</h1>
         <p className="text-sm md:text-base text-gray-600 mb-6 leading-snug">
           Entre com seus dados para continuar.
         </p>
 
         {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-4 md:space-y-5">
+        <form onSubmit={handleLogin} noValidate className="space-y-4 md:space-y-5">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label htmlFor="login-email" className="block text-sm font-medium text-gray-900 mb-2">
               E-mail
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
               <input
+                id="login-email"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                aria-invalid={Boolean(touched.email && errors.email)}
+                aria-describedby={touched.email && errors.email ? 'login-email-erro' : undefined}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => handleBlur('email')}
@@ -125,19 +136,19 @@ export function LoginForm() {
               />
             </div>
             {touched.email && errors.email && (
-              <p className="text-xs text-red-600 mt-1">{errors.email}</p>
+              <p id="login-email-erro" className="text-xs text-red-600 mt-1">{errors.email}</p>
             )}
           </div>
 
           {/* Password with Forgot Link */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-900">
+              <label htmlFor="login-senha" className="block text-sm font-medium text-gray-900">
                 Senha
               </label>
               <Link
                 href="/forgot-password"
-                className="text-xs text-orange-600 hover:text-orange-700 font-semibold"
+                className="inline-flex items-center min-h-11 -my-3 px-1 text-xs text-orange-600 hover:text-orange-700 font-semibold rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
               >
                 Esqueceu sua senha?
               </Link>
@@ -145,7 +156,11 @@ export function LoginForm() {
             <div className="relative">
               <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
               <input
+                id="login-senha"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                aria-invalid={Boolean(touched.password && errors.password)}
+                aria-describedby={touched.password && errors.password ? 'login-senha-erro' : undefined}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={() => handleBlur('password')}
@@ -155,7 +170,9 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={showPassword}
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -165,13 +182,13 @@ export function LoginForm() {
               </button>
             </div>
             {touched.password && errors.password && (
-              <p className="text-xs text-red-600 mt-1">{errors.password}</p>
+              <p id="login-senha-erro" className="text-xs text-red-600 mt-1">{errors.password}</p>
             )}
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-xs text-red-700">{errors.submit}</p>
             </div>
           )}

@@ -11,10 +11,10 @@ export function RecentOffices() {
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold text-gray-900">Novos escritórios</h3>
         <Link
-          href="#"
-          className="text-orange-600 hover:text-orange-700 text-sm font-semibold flex items-center gap-1"
+          href="/admin/escritorios"
+          className="inline-flex items-center gap-1 min-h-11 -my-2 px-2 -mr-2 rounded-lg text-orange-600 hover:text-orange-700 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
         >
-          Ver todos <ChevronRight className="w-4 h-4" />
+          Ver todos <ChevronRight className="w-4 h-4" aria-hidden="true" />
         </Link>
       </div>
 
