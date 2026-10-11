@@ -62,50 +62,39 @@ export function SignupForm() {
     setErrors({});
 
     try {
-      const supabase = createClient();
-
-      // 1. Sign up with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: undefined,
-          data: {
-            nome_completo: fullName,
-          },
-        },
+      // 1. Sign up via our custom API endpoint
+      const signupRes = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+        }),
       });
 
-      if (authError) {
-        setErrors({ submit: authError.message });
+      const signupData = await signupRes.json();
+
+      if (!signupRes.ok) {
+        setErrors({ submit: signupData.error || 'Erro ao criar conta' });
         setLoading(false);
         return;
       }
 
-      // 2. Wait a moment for the trigger to create the profile
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // 2. Log in the user
+      const supabase = createClient();
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // 3. If user was created, manually create the profile as backup
-      if (authData?.user?.id) {
-        const { error: profileError } = await supabase
-          .from('perfis')
-          .upsert(
-            {
-              id_usuario: authData.user.id,
-              email,
-              nome_completo: fullName,
-              funcao_global: 'user',
-              status: 'active',
-            },
-            { onConflict: 'id_usuario' }
-          );
-
-        if (profileError) {
-          console.warn('Profile creation warning:', profileError.message);
-        }
+      if (loginError) {
+        setErrors({ submit: loginError.message });
+        setLoading(false);
+        return;
       }
 
-      // 4. Redirect to onboarding
+      // 3. Redirect to onboarding
       router.push('/onboarding');
     } catch (err) {
       setErrors({ submit: err instanceof Error ? err.message : 'Erro ao criar conta' });
