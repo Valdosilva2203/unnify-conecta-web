@@ -81,7 +81,7 @@ export default function AppPage() {
 
         // Se tipo_usuario é contador, redireciona para página dele
         if (profile?.tipo_usuario === 'contador') {
-          router.push('/app/contador');
+          router.push('/contador');
           return;
         }
 
