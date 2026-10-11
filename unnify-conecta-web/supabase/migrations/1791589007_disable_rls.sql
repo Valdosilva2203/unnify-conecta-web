@@ -1,1 +1,3 @@
-ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
+-- This migration was for the old 'profiles' table which no longer exists
+-- The new 'perfis' table has RLS enabled by design
+-- ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;

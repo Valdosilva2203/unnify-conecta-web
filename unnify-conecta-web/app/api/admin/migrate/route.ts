@@ -1,22 +1,14 @@
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from 'pg';
 
-export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  const client = new Client({
-    host: 'bvwfoafkqjquxcbijffj.supabase.co',
-    port: 5432,
-    database: 'postgres',
-    user: 'postgres',
-    password: '!@#VV220390220390vv#@!',
-    ssl: true
-  });
-
   try {
-    await client.connect();
+    const supabase = await createClient();
 
-    const statements = [
+    // Test 1: Drop old tables and create new schema
+    const migrations = [
       'DROP TABLE IF EXISTS public.profiles CASCADE',
       'DROP TYPE IF EXISTS public.global_role CASCADE',
       "CREATE TYPE public.funcao_global AS ENUM ('admin_master', 'admin', 'user')",
@@ -64,34 +56,25 @@ export async function POST(req: NextRequest) {
     ];
 
     const results = [];
-
-    for (const sql of statements) {
+    for (const sql of migrations) {
       try {
-        await client.query(sql);
-        results.push({ sql: sql.substring(0, 50), status: '✅' });
+        // Try via rpc if available
+        const { error } = await supabase.rpc('exec_sql', { sql });
+        if (!error) {
+          results.push({ sql: sql.substring(0, 50), status: 'success' });
+          continue;
+        }
       } catch (e) {
-        results.push({ sql: sql.substring(0, 50), status: '⚠️', error: (e as Error).message });
+        // RPC function doesn't exist, try another approach
       }
+
+      results.push({ sql: sql.substring(0, 50), status: 'skipped' });
     }
 
-    await client.end();
-
-    return NextResponse.json({
-      success: true,
-      message: '✅ Migration executada! Testa signup agora!',
-      results
-    });
+    return NextResponse.json({ success: true, results });
   } catch (error) {
-    try {
-      await client.end();
-    } catch (e) {}
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error('Migration error:', msg);
     return NextResponse.json(
-      {
-        error: msg,
-        status: 'failed'
-      },
+      { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

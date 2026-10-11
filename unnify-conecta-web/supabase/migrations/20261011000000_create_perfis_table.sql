@@ -12,7 +12,7 @@ DROP TYPE IF EXISTS public.global_role CASCADE;
 CREATE TYPE public.funcao_global AS ENUM ('admin_master', 'admin', 'user');
 
 -- Create perfis table with Portuguese naming conventions
-CREATE TABLE public.perfis (
+CREATE TABLE IF NOT EXISTS public.perfis (
   id_usuario UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT,
   nome_completo TEXT,

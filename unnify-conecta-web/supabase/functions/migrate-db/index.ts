@@ -1,20 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { Client } from 'pg';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-export const maxDuration = 60;
-
-export async function POST(req: NextRequest) {
-  const client = new Client({
-    host: 'bvwfoafkqjquxcbijffj.supabase.co',
-    port: 5432,
-    database: 'postgres',
-    user: 'postgres',
-    password: '!@#VV220390220390vv#@!',
-    ssl: true
-  });
-
+Deno.serve(async (req) => {
   try {
-    await client.connect();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     const statements = [
       'DROP TABLE IF EXISTS public.profiles CASCADE',
@@ -64,35 +55,23 @@ export async function POST(req: NextRequest) {
     ];
 
     const results = [];
-
     for (const sql of statements) {
       try {
-        await client.query(sql);
-        results.push({ sql: sql.substring(0, 50), status: '✅' });
+        const { error } = await supabase.rpc('exec', { query: sql });
+        if (error) throw error;
+        results.push({ sql: sql.substring(0, 40), status: '✅' });
       } catch (e) {
-        results.push({ sql: sql.substring(0, 50), status: '⚠️', error: (e as Error).message });
+        results.push({ sql: sql.substring(0, 40), status: '⚠️', error: (e as Error).message });
       }
     }
 
-    await client.end();
-
-    return NextResponse.json({
-      success: true,
-      message: '✅ Migration executada! Testa signup agora!',
-      results
+    return new Response(JSON.stringify({ success: true, results }), {
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    try {
-      await client.end();
-    } catch (e) {}
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error('Migration error:', msg);
-    return NextResponse.json(
-      {
-        error: msg,
-        status: 'failed'
-      },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
-}
+});
