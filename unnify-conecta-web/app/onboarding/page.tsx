@@ -6,6 +6,7 @@ import { Building2, Calculator } from 'lucide-react';
 import { OnboardingHeader } from '@/components/OnboardingHeader';
 import { OnboardingCard } from '@/components/OnboardingCard';
 import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -61,6 +62,20 @@ export default function OnboardingPage() {
           router.replace('/admin');
           return;
         }
+
+        // Check if user already completed onboarding (has companies)
+        const supabase = createClient();
+        const { count } = await supabase
+          .from('usuarios_empresas')
+          .select('*', { count: 'exact', head: true })
+          .eq('id_usuario', session.user.id);
+
+        if (count && count > 0) {
+          // User has companies, redirect to app
+          router.replace('/app');
+          return;
+        }
+
         // Allow others to see onboarding
         setCanRender(true);
       } catch (error) {
