@@ -29,14 +29,19 @@ export default function ContadorPage() {
           return;
         }
 
-        // 2. Verificar global_role
+        // 2. Verificar tipo_usuario e funcao_global
         const { data: profile } = await supabase
           .from('perfis')
-          .select('global_role')
-          .eq('user_id', user.id)
+          .select('funcao_global, tipo_usuario')
+          .eq('id_usuario', user.id)
           .single();
 
-        if (profile?.global_role === 'admin_master' || profile?.global_role === 'admin') {
+        if (profile?.tipo_usuario !== 'contador') {
+          router.push('/app');
+          return;
+        }
+
+        if (profile?.funcao_global === 'admin_master' || profile?.funcao_global === 'admin') {
           router.push('/admin');
           return;
         }
@@ -45,7 +50,7 @@ export default function ContadorPage() {
         const { data: membership } = await supabase
           .from('membros_escritorio')
           .select('id_escritorio')
-          .eq('user_id', user.id)
+          .eq('id_usuario', user.id)
           .maybeSingle();
 
         let businessName: string | null = null;
