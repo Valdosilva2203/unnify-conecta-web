@@ -2,8 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-
-export const dynamic = 'force-dynamic';
+import { Suspense } from 'react';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { StepsIndicator } from '@/components/onboarding/StepsIndicator';
@@ -69,7 +68,7 @@ function maskPhone(value: string): string {
     .replace(/(\d{5})(\d)/, '$1-$2');
 }
 
-export default function OnboardingEmpresaPage() {
+function OnboardingEmpresaContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tipoEmpresa = searchParams.get('tipo') || 'comum';
@@ -530,5 +529,13 @@ export default function OnboardingEmpresaPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingEmpresaPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><div className="text-center"><div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" /><p className="text-gray-600">Carregando...</p></div></div>}>
+      <OnboardingEmpresaContent />
+    </Suspense>
   );
 }
