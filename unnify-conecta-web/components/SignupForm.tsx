@@ -82,19 +82,25 @@ export function SignupForm() {
       }
 
       // 2. Log in the user
+      console.log('📝 Tentando fazer login com:', email);
       const supabase = createClient();
-      const { error: loginError } = await supabase.auth.signInWithPassword({
+      const { error: loginError, data: loginData } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (loginError) {
-        setErrors({ submit: loginError.message });
+        console.error('❌ Erro ao fazer login:', loginError);
+        setErrors({ submit: `Erro ao fazer login: ${loginError.message}` });
         setLoading(false);
         return;
       }
 
+      console.log('✅ Login bem-sucedido:', loginData?.user?.email);
+
       // 3. Redirect to onboarding
+      console.log('🔄 Redirecionando para onboarding...');
+      setLoading(false);
       router.push('/onboarding');
     } catch (err) {
       setErrors({ submit: err instanceof Error ? err.message : 'Erro ao criar conta' });
