@@ -281,7 +281,7 @@ export default function OnboardingEmpresaPage() {
         return;
       }
 
-      if (result.company_id) {
+      if (result.id) {
         router.push('/onboarding/conclusao');
       } else {
         console.error('Invalid RPC response:', result);
