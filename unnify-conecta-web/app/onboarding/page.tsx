@@ -62,6 +62,20 @@ export default function OnboardingPage() {
           return;
         }
 
+        // ⚠️ REGRA: Se tipo_usuario está preenchido (empresa/contador) → redireciona para dashboard
+        const { data: userData, error: userError } = await supabase
+          .from('perfis')
+          .select('tipo_usuario')
+          .eq('id_usuario', session.user.id)
+          .single();
+
+        if (!userError && userData?.tipo_usuario) {
+          // User already has a type, redirect to app dashboard
+          console.log('✅ Usuário já tem tipo_usuario:', userData.tipo_usuario);
+          router.replace('/app');
+          return;
+        }
+
         // Check if user already completed onboarding (has companies)
         const { count } = await supabase
           .from('usuarios_empresas')
@@ -74,7 +88,7 @@ export default function OnboardingPage() {
           return;
         }
 
-        // Allow others to see onboarding
+        // Allow others to see onboarding (tipo_usuario is still null)
         setCanRender(true);
       } catch (error) {
         setCanRender(true); // Allow render on error
