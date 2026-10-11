@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
@@ -69,6 +69,8 @@ function maskPhone(value: string): string {
 
 export default function OnboardingEmpresaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tipoEmpresa = searchParams.get('tipo') || 'comum';
   const processedRef = useRef(false);
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -238,11 +240,12 @@ export default function OnboardingEmpresaPage() {
         {
           p_cnpj: formData.cnpj,
           p_legal_name: formData.legalName,
-          p_trade_name: formData.tradeName || null,
           p_phone: formData.phone.replace(/\D/g, ''),
           p_commercial_email: formData.email,
           p_city: formData.city,
           p_state: formData.state,
+          p_tipo_empresa: tipoEmpresa,
+          p_trade_name: formData.tradeName || null,
         }
       );
 

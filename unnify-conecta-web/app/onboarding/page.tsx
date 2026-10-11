@@ -91,7 +91,7 @@ export default function OnboardingPage() {
   const handleContinueAsEmpresa = async () => {
     setLoading(true);
     try {
-      router.push('/onboarding/empresa');
+      router.push('/onboarding/empresa?tipo=comum');
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export default function OnboardingPage() {
   const handleContinueAsContador = async () => {
     setLoading(true);
     try {
-      router.push('/onboarding/contador');
+      router.push('/onboarding/contador?tipo=escritorio_contabil');
     } finally {
       setLoading(false);
     }
