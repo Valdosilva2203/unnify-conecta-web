@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   Home, FileText, DollarSign, AlertCircle, Calendar, ShoppingCart, Box,
   Users, UserCheck, Receipt, BarChart3, Settings, LogOut, Bell, Menu, X,
-  TrendingUp, AlertOctagon, Clock
+  TrendingUp, AlertOctagon, Clock, Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -23,30 +23,25 @@ interface UserData {
 }
 
 const menuItems = [
-  { icon: Home, label: 'Início', href: '/app' },
-  { icon: FileText, label: 'Meus documentos', href: '#' },
+  { icon: Home, label: 'Início', href: '/app/contador' },
+  { icon: Briefcase, label: 'Meus clientes', href: '#' },
+  { icon: FileText, label: 'Documentos', href: '#' },
   { icon: DollarSign, label: 'Financeiro', href: '#' },
-  { icon: AlertCircle, label: 'Obrigações', href: '#' },
-  { icon: Calendar, label: 'Agenda', href: '#' },
-  { icon: ShoppingCart, label: 'Compras', href: '#' },
-  { icon: Box, label: 'Estoque', href: '#' },
-  { icon: Users, label: 'Funcionários', href: '#' },
-  { icon: UserCheck, label: 'Clientes', href: '#' },
-  { icon: Receipt, label: 'Recibos', href: '#' },
   { icon: BarChart3, label: 'Relatórios', href: '#' },
+  { icon: AlertCircle, label: 'Obrigações', href: '#' },
+  { icon: Users, label: 'Equipe', href: '#' },
   { icon: Settings, label: 'Minha conta', href: '#' },
 ];
 
 const quickAccessItems = [
-  { icon: FileText, label: 'Meus\nDocumentos', href: '#' },
-  { icon: Receipt, label: 'Gerar\nRecibo', href: '#' },
-  { icon: UserCheck, label: 'Clientes', href: '#' },
-  { icon: Box, label: 'Estoque', href: '#' },
-  { icon: Calendar, label: 'Agenda', href: '#' },
+  { icon: Briefcase, label: 'Meus\nclientes', href: '#' },
+  { icon: FileText, label: 'Documentos', href: '#' },
+  { icon: DollarSign, label: 'Financeiro', href: '#' },
   { icon: BarChart3, label: 'Relatórios', href: '#' },
+  { icon: AlertCircle, label: 'Obrigações', href: '#' },
 ];
 
-export default function AppPage() {
+export default function ContadorPage() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,25 +60,31 @@ export default function AppPage() {
           return;
         }
 
-        // Load real company data
+        // Verificar se é contador
+        const { data: profile } = await supabase
+          .from('perfis')
+          .select('tipo_usuario')
+          .eq('id_usuario', user.id)
+          .maybeSingle();
+
+        if (profile?.tipo_usuario !== 'contador') {
+          router.push('/app');
+          return;
+        }
+
+        // Load user's accounting firm data
         const { data: company } = await supabase
           .from('empresas')
           .select('razao_social, nome_comercial, cnpj')
           .eq('criado_por', user.id)
           .maybeSingle();
 
-        // Load user profile
-        const { data: profile } = await supabase
+        // Load user profile data
+        const { data: profileData } = await supabase
           .from('perfis')
-          .select('nome_completo, tipo_usuario')
+          .select('nome_completo')
           .eq('id_usuario', user.id)
           .maybeSingle();
-
-        // Se tipo_usuario é contador, redireciona para página dele
-        if (profile?.tipo_usuario === 'contador') {
-          router.push('/app/contador');
-          return;
-        }
 
         if (!company) {
           router.push('/onboarding');
@@ -93,7 +94,7 @@ export default function AppPage() {
         setCompanyData(company);
         setUserData({
           email: user.email || '',
-          nome_completo: profile?.nome_completo || user.email?.split('@')[0] || 'Usuário',
+          nome_completo: profileData?.nome_completo || user.email?.split('@')[0] || 'Usuário',
         });
         setAuthorized(true);
       } catch (error) {
@@ -157,7 +158,7 @@ export default function AppPage() {
         <nav className="flex-1 overflow-y-auto py-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = item.href === '/app';
+            const isActive = item.href === '/app/contador';
             return (
               <button
                 key={item.label}
@@ -229,7 +230,7 @@ export default function AppPage() {
                 Olá, {firstName}!
               </h1>
               <p className="text-gray-600">
-                Aqui está um resumo da sua empresa hoje.
+                Bem-vindo ao seu dashboard de contador.
               </p>
               <p className="text-sm text-gray-500 mt-2">
                 {new Date().toLocaleDateString('pt-BR', {
@@ -241,13 +242,13 @@ export default function AppPage() {
               </p>
             </div>
 
-            {/* Financial Indicators */}
+            {/* Accounting Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {[
-                { icon: TrendingUp, title: 'Receitas', amount: 'R$ 0,00', color: 'text-green-600', bgColor: 'bg-green-50' },
-                { icon: AlertOctagon, title: 'Despesas', amount: 'R$ 0,00', color: 'text-red-600', bgColor: 'bg-red-50' },
-                { icon: Clock, title: 'A receber', amount: 'R$ 0,00', color: 'text-orange-600', bgColor: 'bg-orange-50' },
-                { icon: Receipt, title: 'A pagar', amount: 'R$ 0,00', color: 'text-blue-600', bgColor: 'bg-blue-50' },
+                { icon: Briefcase, title: 'Clientes ativos', amount: '0', color: 'text-blue-600', bgColor: 'bg-blue-50' },
+                { icon: FileText, title: 'Documentos', amount: '0', color: 'text-green-600', bgColor: 'bg-green-50' },
+                { icon: AlertCircle, title: 'Obrigações', amount: '0', color: 'text-orange-600', bgColor: 'bg-orange-50' },
+                { icon: Receipt, title: 'Demonstrações', amount: '0', color: 'text-purple-600', bgColor: 'bg-purple-50' },
               ].map((item) => {
                 const Icon = item.icon;
                 return (
@@ -262,12 +263,12 @@ export default function AppPage() {
               })}
             </div>
 
-            {/* Visão Financeira */}
+            {/* Meus Clientes */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               <div className="lg:col-span-2 bg-white rounded-lg p-6 border border-gray-200">
-                <h2 className="text-lg font-bold text-black mb-4">Visão financeira</h2>
+                <h2 className="text-lg font-bold text-black mb-4">Meus clientes</h2>
                 <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Nenhum dado financeiro disponível</p>
+                  <p className="text-gray-500">Nenhum cliente cadastrado</p>
                 </div>
               </div>
 
