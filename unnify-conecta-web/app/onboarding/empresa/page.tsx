@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
+
+export const dynamic = 'force-dynamic';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { StepsIndicator } from '@/components/onboarding/StepsIndicator';
