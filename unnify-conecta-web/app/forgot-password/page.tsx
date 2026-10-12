@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Mail, ArrowLeft } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -43,30 +42,17 @@ export default function ForgotPasswordPage() {
     setErrors({});
 
     try {
-      const supabase = createClient();
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const resposta = await fetch('/api/auth/recuperar-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
 
-      // If there's an error, show it to the user
-      if (error) {
-        // Map Supabase error messages to friendly Portuguese messages
-        const errorLower = error.message.toLowerCase();
-        let friendlyMessage = 'Erro ao enviar email de recuperação. Tente novamente em alguns minutos.';
-
-        // Handle specific errors
-        if (errorLower.includes('rate limit')) {
-          friendlyMessage =
-            'Muitas tentativas de recuperação. Aguarde alguns minutos antes de tentar novamente.';
-        } else if (errorLower.includes('invalid email')) {
-          friendlyMessage = 'E-mail inválido. Verifique e tente novamente.';
-        } else if (errorLower.includes('user not found')) {
-          friendlyMessage =
-            'Se existir uma conta com este e-mail, você receberá instruções de recuperação.';
-        }
-
-        setErrors({ submit: friendlyMessage });
+      if (!resposta.ok) {
+        const corpo = await resposta.json().catch(() => null);
+        setErrors({
+          submit: corpo?.error || 'Erro ao enviar e-mail de recuperação. Tente novamente em alguns minutos.',
+        });
         setLoading(false);
         return;
       }

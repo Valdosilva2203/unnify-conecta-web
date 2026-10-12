@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import {
   BarraFiltros,
@@ -22,413 +22,305 @@ import {
   Selo,
   Tabela,
   TabelaCard,
-  IconePlano,
 } from '@/components/admin/tabela';
+import { createClient } from '@/lib/supabase/client';
 
 interface Contador {
   id: string;
   nome: string;
-  cpfCnpj: string;
-  telefone: string;
   email: string;
+  escritorio: string | null;
+  cnpj: string | null;
+  telefone: string;
   cidade: string;
   uf: string;
-  plano: string;
-  empresas: number;
   status: 'ativo' | 'pendente' | 'inativo';
-  cadastro: string;
+  criadoEm: string;
 }
 
-const contadoresFicticios: Contador[] = [
-  {
-    id: '1',
-    nome: 'Antônio De Sousa',
-    cpfCnpj: '43.885.538/0001-33',
-    telefone: '6 3999559555',
-    email: 'suportedeepweb@gmail.com',
-    cidade: 'Augustinópolis',
-    uf: 'TO',
-    plano: 'Pro',
-    empresas: 3,
-    status: 'ativo',
-    cadastro: '08/10/2026',
-  },
-  {
-    id: '2',
-    nome: 'Maria Clara',
-    cpfCnpj: '12.345.678/0001-90',
-    telefone: '6 3991234567',
-    email: 'maria@claracontabil.com',
-    cidade: 'Araguatins',
-    uf: 'TO',
-    plano: 'Pro',
-    empresas: 5,
-    status: 'ativo',
-    cadastro: '01/10/2026',
-  },
-  {
-    id: '3',
-    nome: 'João Silva',
-    cpfCnpj: '98.765.432/0001-11',
-    telefone: '6 3992345678',
-    email: 'joao@silvacont.com.br',
-    cidade: 'Sampaio',
-    uf: 'TO',
-    plano: 'Básico',
-    empresas: 2,
-    status: 'ativo',
-    cadastro: '28/09/2026',
-  },
-  {
-    id: '4',
-    nome: 'Ana Fernandes',
-    cpfCnpj: '56.789.123/0001-44',
-    telefone: '6 3993456789',
-    email: 'ana@afcontabil.com.br',
-    cidade: 'Axixá',
-    uf: 'TO',
-    plano: 'Pro',
-    empresas: 1,
-    status: 'pendente',
-    cadastro: '25/09/2026',
-  },
-  {
-    id: '5',
-    nome: 'Ricardo Pereira',
-    cpfCnpj: '22.333.444/0001-55',
-    telefone: '6 3994567890',
-    email: 'ricardo@rpcontabil.com.br',
-    cidade: 'Imperatriz',
-    uf: 'MA',
-    plano: 'Básico',
-    empresas: 0,
-    status: 'inativo',
-    cadastro: '20/09/2026',
-  },
-  {
-    id: '6',
-    nome: 'Patricia Santos',
-    cpfCnpj: '33.444.555/0001-66',
-    telefone: '6 3995678901',
-    email: 'patricia@santoscont.com',
-    cidade: 'Palmas',
-    uf: 'TO',
-    plano: 'Pro',
-    empresas: 4,
-    status: 'ativo',
-    cadastro: '15/09/2026',
-  },
-  {
-    id: '7',
-    nome: 'Carlos Oliveira',
-    cpfCnpj: '44.555.666/0001-77',
-    telefone: '6 3996789012',
-    email: 'carlos@oliveiracont.com.br',
-    cidade: 'Gurupi',
-    uf: 'TO',
-    plano: 'Básico',
-    empresas: 2,
-    status: 'ativo',
-    cadastro: '10/09/2026',
-  },
-  {
-    id: '8',
-    nome: 'Fernanda Costa',
-    cpfCnpj: '55.666.777/0001-88',
-    telefone: '6 3997890123',
-    email: 'fernanda@costacont.com',
-    cidade: 'Araguacema',
-    uf: 'TO',
-    plano: 'Pro',
-    empresas: 6,
-    status: 'ativo',
-    cadastro: '05/09/2026',
-  },
-  {
-    id: '9',
-    nome: 'Bruno Martins',
-    cpfCnpj: '66.777.888/0001-99',
-    telefone: '6 3998901234',
-    email: 'bruno@martinscont.com.br',
-    cidade: 'Porto Nacional',
-    uf: 'TO',
-    plano: 'Básico',
-    empresas: 1,
-    status: 'ativo',
-    cadastro: '01/09/2026',
-  },
-  {
-    id: '10',
-    nome: 'Juliana Rocha',
-    cpfCnpj: '77.888.999/0001-00',
-    telefone: '6 3999012345',
-    email: 'juliana@rochacont.com',
-    cidade: 'Tocantinópolis',
-    uf: 'TO',
-    plano: 'Pro',
-    empresas: 3,
-    status: 'ativo',
-    cadastro: '28/08/2026',
-  },
-  {
-    id: '11',
-    nome: 'Roberto Alves',
-    cpfCnpj: '88.999.000/0001-11',
-    telefone: '6 3990123456',
-    email: 'roberto@alvescont.com.br',
-    cidade: 'Dianópolis',
-    uf: 'TO',
-    plano: 'Básico',
-    empresas: 2,
-    status: 'ativo',
-    cadastro: '20/08/2026',
-  },
-  {
-    id: '12',
-    nome: 'Camila Souza',
-    cpfCnpj: '99.000.111/0001-22',
-    telefone: '6 3991234567',
-    email: 'camila@souzacont.com',
-    cidade: 'Miracema',
-    uf: 'TO',
-    plano: 'Pro',
-    empresas: 4,
-    status: 'ativo',
-    cadastro: '15/08/2026',
-  },
-];
+function formatarTelefone(valor: string | null): string {
+  const d = (valor || '').replace(/\D/g, '');
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return valor || '';
+}
 
 export default function ContadoresPage() {
+  const [contadores, setContadores] = useState<Contador[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const [novosNoMes, setNovosNoMes] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [cityFilter, setCityFilter] = useState('todas');
-  const [planoFilter, setPlanFilter] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Calcular stats
-  const totalContadores = contadoresFicticios.length;
-  const ativosCount = contadoresFicticios.filter((c) => c.status === 'ativo').length;
-  const pendentesCount = contadoresFicticios.filter((c) => c.status === 'pendente').length;
-  const inativos = contadoresFicticios.filter((c) => c.status === 'inativo').length;
+  useEffect(() => {
+    const carregar = async () => {
+      try {
+        const supabase = createClient();
 
-  // Filtrar contadores
-  const filteredContadores = contadoresFicticios.filter((contador) => {
-    const searchLower = searchTerm.toLowerCase();
+        const { data: perfis, error: erroPerfis } = await supabase
+          .from('perfis')
+          .select('id_usuario, nome_completo, email, status, criado_em')
+          .eq('tipo_usuario', 'contador')
+          .order('criado_em', { ascending: false });
+        if (erroPerfis) throw erroPerfis;
+        if (!perfis || perfis.length === 0) {
+          setContadores([]);
+          return;
+        }
+
+        const agora = new Date();
+        const inicioDoMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+        setNovosNoMes(perfis.filter((p) => new Date(p.criado_em) >= inicioDoMes).length);
+
+        const { data: vinculos, error: erroVinculos } = await supabase
+          .from('usuarios_empresas')
+          .select('id_usuario, id_empresa')
+          .in(
+            'id_usuario',
+            perfis.map((p) => p.id_usuario)
+          )
+          .eq('ativo', true);
+        if (erroVinculos) throw erroVinculos;
+
+        const idsEmpresas = Array.from(new Set((vinculos || []).map((v) => v.id_empresa)));
+        const { data: escritorios, error: erroEscritorios } = idsEmpresas.length
+          ? await supabase
+              .from('empresas')
+              .select('id, razao_social, nome_comercial, cnpj, telefone, cidade, estado')
+              .in('id', idsEmpresas)
+              .eq('tipo_empresa', 'escritorio_contabil')
+          : { data: [], error: null };
+        if (erroEscritorios) throw erroEscritorios;
+
+        const escritorioPorId = new Map((escritorios || []).map((e) => [e.id, e]));
+        const escritorioDoUsuario = new Map<string, NonNullable<typeof escritorios>[number]>();
+        for (const v of vinculos || []) {
+          const esc = escritorioPorId.get(v.id_empresa);
+          if (esc && !escritorioDoUsuario.has(v.id_usuario)) escritorioDoUsuario.set(v.id_usuario, esc);
+        }
+
+        setContadores(
+          perfis.map((p) => {
+            const esc = escritorioDoUsuario.get(p.id_usuario);
+            const status: Contador['status'] =
+              p.status !== 'active' ? 'inativo' : esc ? 'ativo' : 'pendente';
+            return {
+              id: p.id_usuario,
+              nome: p.nome_completo || p.email || 'Sem nome',
+              email: p.email || '',
+              escritorio: esc ? esc.nome_comercial || esc.razao_social : null,
+              cnpj: esc?.cnpj ?? null,
+              telefone: formatarTelefone(esc?.telefone ?? null),
+              cidade: esc?.cidade || '',
+              uf: esc?.estado || '',
+              status,
+              criadoEm: p.criado_em,
+            };
+          })
+        );
+      } catch (e) {
+        console.error('Erro ao carregar contadores:', e);
+        setErro('falha');
+      } finally {
+        setCarregando(false);
+      }
+    };
+
+    carregar();
+  }, []);
+
+  const totalContadores = contadores.length;
+  const ativosCount = contadores.filter((c) => c.status === 'ativo').length;
+  const pendentesCount = contadores.filter((c) => c.status === 'pendente').length;
+  const inativos = contadores.filter((c) => c.status === 'inativo').length;
+  const percentual = (n: number) => (totalContadores > 0 ? ((n / totalContadores) * 100).toFixed(1) : '0');
+
+  const filteredContadores = contadores.filter((contador) => {
+    const busca = searchTerm.toLowerCase();
+    const digitos = searchTerm.replace(/\D/g, '');
     const matchesSearch =
-      contador.nome.toLowerCase().includes(searchLower) ||
-      contador.cpfCnpj.includes(searchTerm) ||
-      contador.email.toLowerCase().includes(searchLower) ||
-      contador.telefone.includes(searchTerm);
-
-    const matchesStatus =
-      statusFilter === 'todos' ||
-      (statusFilter === 'ativo' && contador.status === 'ativo') ||
-      (statusFilter === 'pendente' && contador.status === 'pendente') ||
-      (statusFilter === 'inativo' && contador.status === 'inativo');
-
+      contador.nome.toLowerCase().includes(busca) ||
+      contador.email.toLowerCase().includes(busca) ||
+      (contador.escritorio ?? '').toLowerCase().includes(busca) ||
+      (digitos.length > 0 &&
+        ((contador.cnpj ?? '').replace(/\D/g, '').includes(digitos) ||
+          contador.telefone.replace(/\D/g, '').includes(digitos)));
+    const matchesStatus = statusFilter === 'todos' || contador.status === statusFilter;
     const matchesCity = cityFilter === 'todas' || contador.cidade === cityFilter;
-
-    const matchesPlano =
-      planoFilter === 'todos' ||
-      (planoFilter === 'pro' && contador.plano === 'Pro') ||
-      (planoFilter === 'basico' && contador.plano === 'Básico');
-
-    return matchesSearch && matchesStatus && matchesCity && matchesPlano;
+    return matchesSearch && matchesStatus && matchesCity;
   });
 
-  // Paginar
   const paginatedContadores = filteredContadores.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Cidades únicas
-  const cidades = Array.from(new Set(contadoresFicticios.map((c) => c.cidade))).sort();
+  const cidades = Array.from(new Set(contadores.map((c) => c.cidade).filter(Boolean))).sort();
+  const hasActiveFilters = searchTerm || statusFilter !== 'todos' || cityFilter !== 'todas';
+
+  const cartoes = [
+    { rotulo: 'Total de contadores', valor: totalContadores, rodape: `${novosNoMes} ${novosNoMes === 1 ? 'cadastrado' : 'cadastrados'} este mês`, fundo: 'bg-orange-50', cor: 'text-green-600', icone: '👥' },
+    { rotulo: 'Contadores ativos', valor: ativosCount, rodape: `${percentual(ativosCount)}% do total`, fundo: 'bg-green-50', cor: 'text-green-700', icone: '✓' },
+    { rotulo: 'Contadores pendentes', valor: pendentesCount, rodape: `${percentual(pendentesCount)}% do total`, fundo: 'bg-orange-50', cor: 'text-orange-700', icone: '⏱' },
+    { rotulo: 'Contadores inativos', valor: inativos, rodape: `${percentual(inativos)}% do total`, fundo: 'bg-gray-50', cor: 'text-red-700', icone: '✕' },
+  ];
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Contadores</h1>
-          <p className="text-gray-600 mt-2">Gerencie todos os contadores cadastrados no Unnify Conecta.</p>
-        </div>
-        <button className="self-start shrink-0 min-h-11 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 rounded-lg flex items-center gap-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
-          <span>+</span> Novo contador
-        </button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-orange-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-gray-600 text-sm">Total de contadores</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{totalContadores}</p>
-              <p className="text-xs text-green-600 font-semibold mt-2">↑ +20% em relação ao mês anterior</p>
-            </div>
-            <span className="text-2xl">👥</span>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Contadores</h1>
+            <p className="text-gray-600 mt-2">Gerencie todos os contadores cadastrados no Unnify Conecta.</p>
           </div>
-        </div>
-
-        <div className="bg-green-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-gray-600 text-sm">Contadores ativos</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{ativosCount}</p>
-              <p className="text-xs text-green-700 font-semibold mt-2">
-                {totalContadores > 0 ? ((ativosCount / totalContadores) * 100).toFixed(1) : '0'}% do total
-              </p>
-            </div>
-            <span className="text-2xl">✓</span>
-          </div>
-        </div>
-
-        <div className="bg-orange-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-gray-600 text-sm">Contadores pendentes</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{pendentesCount}</p>
-              <p className="text-xs text-orange-700 font-semibold mt-2">
-                {totalContadores > 0 ? ((pendentesCount / totalContadores) * 100).toFixed(1) : '0'}% do total
-              </p>
-            </div>
-            <span className="text-2xl">⏱</span>
-          </div>
-        </div>
-
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-gray-600 text-sm">Contadores inativos</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{inativos}</p>
-              <p className="text-xs text-red-700 font-semibold mt-2">
-                {totalContadores > 0 ? ((inativos / totalContadores) * 100).toFixed(1) : '0'}% do total
-              </p>
-            </div>
-            <span className="text-2xl">✕</span>
-          </div>
-        </div>
-      </div>
-
-      <TabelaCard>
-        <BarraFiltros>
-          <CampoBusca
-            valor={searchTerm}
-            aoMudar={(v) => {
-              setSearchTerm(v);
-              setCurrentPage(1);
-            }}
-            placeholder="Buscar por nome, CPF, CNPJ, e-mail ou telefone..."
-          />
-          <FiltroSelect
-            valor={statusFilter}
-            aoMudar={(v) => {
-              setStatusFilter(v);
-              setCurrentPage(1);
-            }}
+          <button
+            type="button"
+            className="self-start shrink-0 min-h-11 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 rounded-lg flex items-center gap-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
           >
-            <option value="todos">Status: Todos</option>
-            <option value="ativo">Ativo</option>
-            <option value="pendente">Pendente</option>
-            <option value="inativo">Inativo</option>
-          </FiltroSelect>
-          <FiltroSelect
-            icone={IconeCidade}
-            valor={cityFilter}
-            aoMudar={(v) => {
-              setCityFilter(v);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="todas">Cidade: Todas</option>
-            {cidades.map((cidade) => (
-              <option key={cidade} value={cidade}>
-                {cidade}
-              </option>
-            ))}
-          </FiltroSelect>
-          <FiltroSelect
-            icone={IconePlano}
-            valor={planoFilter}
-            aoMudar={(v) => {
-              setPlanFilter(v);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="todos">Plano: Todos</option>
-            <option value="pro">Pro</option>
-            <option value="basico">Básico</option>
-          </FiltroSelect>
-          {(searchTerm || statusFilter !== 'todos' || cityFilter !== 'todas' || planoFilter !== 'todos') && (
-            <BotaoLimparFiltros
-              aoClicar={() => {
-                setSearchTerm('');
-                setStatusFilter('todos');
-                setCityFilter('todas');
-                setPlanFilter('todos');
+            <span aria-hidden="true">+</span> Novo contador
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+          {cartoes.map((c) => (
+            <div key={c.rotulo} className={`${c.fundo} rounded-lg p-4 border border-gray-200`}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-gray-600 text-sm">{c.rotulo}</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{carregando ? '—' : c.valor}</p>
+                  <p className={`text-xs ${c.cor} font-semibold mt-2 min-h-4`}>{carregando ? '' : c.rodape}</p>
+                </div>
+                <span className="text-2xl" aria-hidden="true">
+                  {c.icone}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <TabelaCard>
+          <BarraFiltros>
+            <CampoBusca
+              valor={searchTerm}
+              aoMudar={(v) => {
+                setSearchTerm(v);
                 setCurrentPage(1);
               }}
+              placeholder="Buscar por nome, escritório, CNPJ, e-mail ou telefone..."
             />
-          )}
-        </BarraFiltros>
+            <FiltroSelect
+              valor={statusFilter}
+              aoMudar={(v) => {
+                setStatusFilter(v);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="todos">Status: Todos</option>
+              <option value="ativo">Ativo</option>
+              <option value="pendente">Pendente</option>
+              <option value="inativo">Inativo</option>
+            </FiltroSelect>
+            <FiltroSelect
+              icone={IconeCidade}
+              valor={cityFilter}
+              aoMudar={(v) => {
+                setCityFilter(v);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="todas">Cidade: Todas</option>
+              {cidades.map((cidade) => (
+                <option key={cidade} value={cidade}>
+                  {cidade}
+                </option>
+              ))}
+            </FiltroSelect>
+            {hasActiveFilters && (
+              <BotaoLimparFiltros
+                aoClicar={() => {
+                  setSearchTerm('');
+                  setStatusFilter('todos');
+                  setCityFilter('todas');
+                  setCurrentPage(1);
+                }}
+              />
+            )}
+          </BarraFiltros>
 
-        <EstadoTabela vazio={filteredContadores.length === 0} mensagemVazio="Nenhum contador encontrado.">
-          <Tabela
-            colunas={[
-              { titulo: 'Contador' },
-              { titulo: 'Contato' },
-              { titulo: 'Cidade/UF' },
-              { titulo: 'Plano' },
-              { titulo: 'Empresas', alinhar: 'centro' },
-              { titulo: 'Status' },
-              { titulo: 'Cadastro' },
-              { titulo: 'Ações', alinhar: 'centro' },
-            ]}
+          <EstadoTabela
+            carregando={carregando}
+            erro={erro}
+            vazio={filteredContadores.length === 0}
+            mensagemVazio={
+              hasActiveFilters ? 'Nenhum contador encontrado com os filtros aplicados.' : 'Nenhum contador cadastrado ainda.'
+            }
           >
-            {paginatedContadores.map((contador, i) => (
-              <Linha key={contador.id}>
-                <Celula>
-                  <CelulaNome
-                    nome={contador.nome}
-                    detalhes={[`CPF/CNPJ ${contador.cpfCnpj}`]}
-                    indice={(currentPage - 1) * itemsPerPage + i}
-                  />
-                </Celula>
-                <Celula>
-                  <CelulaContato telefone={contador.telefone} email={contador.email} />
-                </Celula>
-                <Celula>
-                  <CelulaCidade cidade={contador.cidade} uf={contador.uf} />
-                </Celula>
-                <Celula>
-                  <Selo tipo={contador.plano === 'Pro' ? 'info' : 'roxo'} texto={contador.plano} />
-                </Celula>
-                <Celula alinhar="centro">
-                  <Contagem valor={contador.empresas} />
-                </Celula>
-                <Celula>
-                  <Selo tipo={SELO_STATUS[contador.status]} texto={ROTULO_STATUS[contador.status]} />
-                </Celula>
-                <Celula className="whitespace-nowrap">{contador.cadastro}</Celula>
-                <Celula alinhar="centro">
-                  <BotoesAcao />
-                </Celula>
-              </Linha>
-            ))}
-          </Tabela>
-          <Paginacao
-            pagina={currentPage}
-            aoMudarPagina={setCurrentPage}
-            porPagina={itemsPerPage}
-            aoMudarPorPagina={setItemsPerPage}
-            total={filteredContadores.length}
-          />
-        </EstadoTabela>
-      </TabelaCard>
-    </div>
+            <Tabela
+              colunas={[
+                { titulo: 'Contador' },
+                { titulo: 'Contato' },
+                { titulo: 'Cidade/UF' },
+                { titulo: 'Plano', alinhar: 'centro' },
+                { titulo: 'Empresas', alinhar: 'centro' },
+                { titulo: 'Status' },
+                { titulo: 'Cadastro' },
+                { titulo: 'Ações', alinhar: 'centro' },
+              ]}
+            >
+              {paginatedContadores.map((contador, i) => (
+                <Linha key={contador.id}>
+                  <Celula>
+                    <CelulaNome
+                      nome={contador.nome}
+                      detalhes={[
+                        contador.escritorio ?? 'Sem escritório cadastrado',
+                        contador.cnpj ? `CNPJ ${contador.cnpj}` : null,
+                      ]}
+                      indice={(currentPage - 1) * itemsPerPage + i}
+                    />
+                  </Celula>
+                  <Celula>
+                    <CelulaContato telefone={contador.telefone} email={contador.email} />
+                  </Celula>
+                  <Celula>
+                    <CelulaCidade cidade={contador.cidade} uf={contador.uf} />
+                  </Celula>
+                  <Celula alinhar="centro">
+                    <span className="text-gray-400 font-semibold" title="Planos ainda não implementados">
+                      —
+                    </span>
+                  </Celula>
+                  <Celula alinhar="centro">
+                    <span title="Vínculo com empresas clientes ainda não implementado">
+                      <Contagem valor={null} />
+                    </span>
+                  </Celula>
+                  <Celula>
+                    <Selo tipo={SELO_STATUS[contador.status]} texto={ROTULO_STATUS[contador.status]} />
+                  </Celula>
+                  <Celula className="whitespace-nowrap">
+                    {new Date(contador.criadoEm).toLocaleDateString('pt-BR')}
+                  </Celula>
+                  <Celula alinhar="centro">
+                    <BotoesAcao />
+                  </Celula>
+                </Linha>
+              ))}
+            </Tabela>
+            <Paginacao
+              pagina={currentPage}
+              aoMudarPagina={setCurrentPage}
+              porPagina={itemsPerPage}
+              aoMudarPorPagina={setItemsPerPage}
+              total={filteredContadores.length}
+            />
+          </EstadoTabela>
+        </TabelaCard>
+      </div>
     </AdminLayout>
   );
 }

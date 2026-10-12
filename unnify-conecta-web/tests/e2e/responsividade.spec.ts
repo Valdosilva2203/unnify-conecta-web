@@ -114,15 +114,22 @@ async function inspecionar(page: Page, rota: string, rotulo: string, larguraJane
             .filter((el) => {
               if (el.tagName === 'A' && el.closest('p, li, span')) return false; // link dentro de texto
               const b = el.getBoundingClientRect();
-              return b.height < 40 || b.width < 40;
+              if (b.width <= 1 && b.height <= 1) return false; // sr-only: o alvo real é o rótulo/botão visível
+              const rotulo = el.tagName === 'INPUT' ? el.closest('label') : null; // rótulo envolvente também é clicável
+              const alvo = rotulo ? rotulo.getBoundingClientRect() : b;
+              return alvo.height < 40 || alvo.width < 40;
             })
             .map((el) => {
               const b = el.getBoundingClientRect();
               return `${descrever(el)} ${Math.round(b.width)}x${Math.round(b.height)}`;
             })
         : [];
-    return { rolagem, cortados, pequenos };
+    const cabecalho = document.querySelector('table thead');
+    const tabelaComoCartao = vw >= 1440 && !!cabecalho && getComputedStyle(cabecalho).display === 'none';
+    return { rolagem, cortados, pequenos, tabelaComoCartao };
   }, larguraJanela);
+
+  if (r.tabelaComoCartao) achados.push({ rota, largura: rotulo, tipo: 'TABELA_COMO_CARTAO', detalhe: 'tabela deveria aparecer em telas largas' });
 
   if (r.rolagem > 1) achados.push({ rota, largura: rotulo, tipo: 'ROLAGEM_HORIZONTAL', detalhe: `+${r.rolagem}px` });
   for (const c of r.cortados) achados.push({ rota, largura: rotulo, tipo: 'CORTADO', detalhe: c });
@@ -190,6 +197,8 @@ test('responsividade de todas as rotas', async ({ browser }) => {
     const pEmp = await browser.newPage();
     await entrarComo(pEmp, emp.email);
     await varrerRota(pEmp, '/app');
+    await varrerRota(pEmp, '/app/meu-contador', 'h1');
+    await varrerRota(pEmp, '/app/meu-contador/buscar', 'h1');
     await varrerRota(pEmp, '/onboarding/conclusao', 'h1');
     await pEmp.close();
 
@@ -199,6 +208,8 @@ test('responsividade de todas as rotas', async ({ browser }) => {
     const pCont = await browser.newPage();
     await entrarComo(pCont, cont.email);
     await varrerRota(pCont, '/contador');
+    await varrerRota(pCont, '/contador/empresas', 'h1');
+    await varrerRota(pCont, '/contador/perfil-profissional', 'h1');
     await pCont.close();
 
     // Admin (conta real, somente leitura)
@@ -243,7 +254,7 @@ test('responsividade de todas as rotas', async ({ browser }) => {
     console.log(`${a.rota} | ${a.tipo} | ${a.detalhe} | larguras: ${Array.from(new Set(larguras)).join(',')}`);
   }
 
-  const graves = achados.filter((a) => ['ROLAGEM_HORIZONTAL', 'CORTADO', 'ERRO_CONSOLE_REDE', 'REDIRECIONOU'].includes(a.tipo));
+  const graves = achados.filter((a) => ['ROLAGEM_HORIZONTAL', 'CORTADO', 'ERRO_CONSOLE_REDE', 'REDIRECIONOU', 'TABELA_COMO_CARTAO'].includes(a.tipo));
   expect.soft(graves, 'problemas graves de layout/console').toEqual([]);
   expect.soft(achados.filter((a) => a.tipo === 'ALVO_PEQUENO'), 'alvos de toque < 40px no celular').toEqual([]);
 });

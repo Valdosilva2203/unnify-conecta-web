@@ -56,6 +56,7 @@ Reutilizar componentes compartilhados em vez de criar soluções por página:
 
 - `components/AdminLayout.tsx`, `AdminSidebar.tsx`, `AdminHeader.tsx` — casca do admin (menu em gaveta no celular).
 - `components/admin/tabela.tsx` — tabela padrão (filtros, avatar, selos, ações, paginação, cartões no celular).
+- `lib/email.ts` — envio de e-mail pelo Resend (`noreply@unnifyconecta.com.br`, domínio verificado). **Não usar o envio de e-mail do Supabase** (`resetPasswordForEmail`, `signUp` com e-mail): o SMTP dele está com remetente não verificado. Cadastro e recuperação de senha geram o link com `auth.admin.generateLink` no servidor e enviam por aqui.
 
 ## 4. Checklist obrigatória para nova página/componente
 
@@ -88,6 +89,35 @@ Use **somente** este projeto. Nomes de tabelas/colunas/índices/restrições em 
 - `auditoria`, `membros_escritorio`, `escritorios_contabeis` (estas duas ainda vazias/legadas).
 - Cadastro de empresa: RPC `criar_empresa(p_cnpj, p_razao_social, p_telefone, p_email_comercial, p_cidade, p_estado, p_tipo_empresa, p_nome_comercial)` → `(id, sucesso, mensagem)`.
 
+### Relacionamento empresas ↔ contadores (N:N) — regras permanentes
+
+- **Contador individual** = usuário com `perfis.tipo_usuario = 'contador'`. **Escritório** = `empresas.tipo_empresa = 'escritorio_contabil'`. **Membros do escritório** = `usuarios_empresas` (dono/socio/contador) ligados ao escritório. `escritorios_contabeis` e `membros_escritorio` são legado vazio — não usar.
+- **`vinculos_contabeis`** (tabela associativa): `id_empresa` (empresa comum), `id_contador` (usuário contador que recebe o acesso), `id_escritorio` (opcional, escritório pelo qual atende), `funcao` (principal | fiscal | folha_pagamento | consultoria | auxiliar), `status` (pendente | ativo | recusado | encerrado), `permissoes text[]`, `origem` (empresa | contador | escritorio), `solicitado_por`, `criado_em`, `aprovado_em/por`, `encerrado_em/por`, `motivo_encerramento`.
+- Uma empresa tem vários contadores; um contador atende várias empresas; escritório atende várias empresas e tem vários membros.
+- **Só um `principal` ativo por empresa** (índice único parcial — vale em concorrência). **Sem duplicidade** de vínculo pendente/ativo para a mesma relação (índice único parcial).
+- Vínculo via escritório **não** dá acesso aos demais membros: só o `id_contador` designado acessa. Vínculo ativo exige `id_contador`.
+- Histórico em `historico_vinculos_contabeis` (gatilho automático). **Sem exclusão física**: encerrar/recusar muda o status.
+- Escrita **somente** pelas funções `solicitar_vinculo_contabil`, `responder_vinculo_contabil`, `alterar_vinculo_contabil`, `encerrar_vinculo_contabil` (validam quem pode o quê). Leitura: RLS para as partes e admins + funções paginadas `vinculos_da_empresa`, `empresas_do_contador`, `empresas_do_escritorio`, `admin_vinculos_contabeis`.
+- Acesso do contador a dados da empresa: **sempre** via `contador_pode(id_empresa, permissao)` / vínculo ativo — nunca por nome, e-mail ou texto.
+- Testes obrigatórios: `tests/e2e/vinculos.spec.ts` (integridade, duplicidade, concorrência, autorização, isolamento).
+- Telas: empresa em `/app/meu-contador` (principal em destaque, demais vínculos, pendentes, histórico); contador em `/contador/empresas` (atendidas por mim / do escritório, busca, filtros, paginação). `membros_do_escritorio(id)` lista membros para designar quem atende.
+
+### Catálogo de contadores — regras permanentes
+
+1. Acesso **só** para empresas autenticadas e autorizadas (dono/sócio de empresa comum ativa) ou admin — `pode_ver_catalogo()`.
+2. "Exibir meu perfil no catálogo" (`publicado`) é **desativado por padrão**; publicar exige CRC, cidade e UF.
+3. Busca mostra apenas perfis publicados, ativos e elegíveis (`perfil_no_catalogo`).
+4. Públicos (com autorização): nome profissional, foto, CRC, cidade/UF, especialidades, descrição, serviços, modalidade de atendimento.
+5. E-mail/telefone comerciais **nunca** aparecem antes do vínculo **ativo**; depois, só se `compartilhar_contatos = true`.
+6. Dados pessoais, financeiros e documentos nunca entram no catálogo.
+7. Contador edita e despublica o próprio perfil (sem exclusão física). Escritório tem **perfil próprio** (`id_escritorio`), separado dos perfis dos membros.
+8. Sem avaliações por enquanto. **Nunca** criar dados fictícios para preencher o catálogo.
+
+- Tabela `perfis_profissionais` (`id_usuario` XOR `id_escritorio`, `nome_profissional`, `crc`, `cidade`, `estado`, `especialidades` (lista fixa em `lib/contabil.ts`), `servicos` ≤15, `descricao` ≤1500, `modalidades_atendimento text[]` (1–4 de: online | presencial | visita_cliente | telefone_whatsapp — o contador marca quantas quiser), `foto_caminho`, `email_comercial`, `telefone_comercial`, `compartilhar_contatos`, `publicado`). RLS: dono lê/insere/atualiza.
+- Leitura pelo catálogo **só** via `buscar_catalogo_contadores(...)` e `perfil_do_catalogo(id)` (sem contatos). Solicitação via `solicitar_vinculo_pelo_catalogo(p_id_empresa, p_id_perfil, p_funcao)`.
+- Fotos: bucket **privado** `fotos-perfis` (2MB, jpeg/png/webp), caminho `<id_perfil>/foto-<ts>`, exibidas por URL assinada (`components/contabil/FotoPerfil.tsx`).
+- Telas: `/app/meu-contador/buscar`, `/app/meu-contador/[id]`, `/contador/perfil-profissional`. Testes: `tests/e2e/catalogo.spec.ts` (segurança) e `tests/e2e/meu-contador.spec.ts` (fluxo de UI).
+
 **Migrações:** salvar em `supabase/migrations/` e aplicar via Management API dentro de `BEGIN; ... COMMIT;`.
 **Nunca rodar `supabase db push`** — as migrações 000004+ não estão registradas em `schema_migrations`.
 
@@ -106,4 +136,4 @@ Use **somente** este projeto. Nomes de tabelas/colunas/índices/restrições em 
 - Não executar operações destrutivas no banco sem autorização.
 - Mudança de política de segurança (RLS) só via migração revisada e testada.
 - Já existe: guarda de `/admin` (`components/admin/GuardaAdmin.tsx`, camada de UI — dados protegidos por RLS); limite de tentativas em `lib/limite-taxa.ts` (cadastro e consulta de CNPJ); usuário no servidor via `lib/supabase/usuario-servidor.ts`.
-- Pendente: MFA para administradores; limite de tentativas em armazenamento compartilhado (hoje em memória, aproximado em serverless); gravar trilha na tabela `auditoria`; trocar dados fictícios das páginas Contadores, Parceiros, Usuários, Assinaturas, Comissões e Auditoria por dados reais; páginas "Minha conta/Dados da empresa/Configurações" do usuário empresa.
+- Pendente: MFA para administradores; limite de tentativas em armazenamento compartilhado (hoje em memória, aproximado em serverless); gravar trilha na tabela `auditoria`; trocar dados fictícios das páginas Parceiros, Usuários, Assinaturas, Comissões e Auditoria por dados reais; páginas "Minha conta/Dados da empresa/Configurações" do usuário empresa; tela admin para consultar vínculos empresa↔contador (função `admin_vinculos_contabeis` já existe).

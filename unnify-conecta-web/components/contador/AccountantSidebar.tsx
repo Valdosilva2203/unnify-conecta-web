@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, FileText, Calendar, CheckSquare, DollarSign, BarChart3, User, Headphones, X } from 'lucide-react';
+import { Home, Users, FileText, Calendar, CheckSquare, DollarSign, BarChart3, User, Headphones, X, Building2, IdCard } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -13,6 +13,8 @@ interface SidebarProps {
 
 const menuItems = [
   { label: 'Início', icon: Home, href: '/contador' },
+  { label: 'Minhas empresas', icon: Building2, href: '/contador/empresas' },
+  { label: 'Perfil profissional', icon: IdCard, href: '/contador/perfil-profissional' },
   { label: 'Clientes', icon: Users, href: '#' },
   { label: 'Documentos', icon: FileText, href: '#' },
   { label: 'Agenda', icon: Calendar, href: '#' },
@@ -42,7 +44,7 @@ export function AccountantSidebar({ isOpen, onClose }: SidebarProps) {
       <nav aria-label="Menu principal" className="flex-1 overflow-y-auto py-4 lg:py-6 px-4 space-y-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = item.href === '/contador' ? pathname === '/contador' : pathname.startsWith(item.href);
           const isDisabled = item.href === '#';
 
           return isDisabled ? (

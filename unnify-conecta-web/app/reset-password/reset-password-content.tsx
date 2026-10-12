@@ -37,11 +37,14 @@ export default function ResetPasswordContent() {
       try {
         const type = searchParams.get('type');
         const code = searchParams.get('code');
+        const tokenHash = searchParams.get('token_hash');
 
-        if (type === 'recovery' && code) {
+        if (type === 'recovery' && (tokenHash || code)) {
           const supabase = supabaseRef.current; // Use single instance
 
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          const { error } = tokenHash
+            ? await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+            : await supabase.auth.exchangeCodeForSession(code!);
 
           if (error) {
             setTokenError('Link de recuperação inválido ou expirado. Solicite um novo link.');
@@ -105,16 +108,20 @@ export default function ResetPasswordContent() {
       });
 
       if (error) {
-        setErrors({ submit: error.message });
+        const mensagem =
+          error.code === 'same_password'
+            ? 'A nova senha precisa ser diferente da senha atual.'
+            : error.code === 'weak_password'
+              ? 'Senha muito fraca. Use letras maiúsculas, minúsculas, números e um símbolo.'
+              : 'Não foi possível atualizar a senha. Solicite um novo link e tente novamente.';
+        setErrors({ submit: mensagem });
         setLoading(false);
         return;
       }
 
       setSubmitted(true);
-    } catch (err) {
-      setErrors({
-        submit: err instanceof Error ? err.message : 'Erro ao atualizar senha',
-      });
+    } catch {
+      setErrors({ submit: 'Erro ao atualizar a senha. Verifique sua conexão e tente novamente.' });
       setLoading(false);
     }
   };

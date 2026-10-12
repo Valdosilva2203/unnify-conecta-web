@@ -20,7 +20,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-// Abaixo do breakpoint `tabela` (globals.css) as linhas viram cartões.
+// Abaixo de 85rem (1360px) as linhas viram cartões.
 
 export function TabelaCard({ children }: { children: ReactNode }) {
   return (
@@ -104,9 +104,9 @@ export interface Coluna {
 }
 
 const ALINHAMENTO = {
-  esquerda: 'tabela:text-left',
-  centro: 'tabela:text-center',
-  direita: 'tabela:text-right',
+  esquerda: 'min-[85rem]:text-left',
+  centro: 'min-[85rem]:text-center',
+  direita: 'min-[85rem]:text-right',
 };
 
 const ColunasContexto = createContext<Coluna[]>([]);
@@ -115,9 +115,9 @@ const ColunaContexto = createContext<{ coluna?: Coluna; indice: number }>({ indi
 export function Tabela({ colunas, children }: { colunas: Coluna[]; children: ReactNode }) {
   return (
     <ColunasContexto.Provider value={colunas}>
-      <div className="tabela:overflow-x-auto">
-        <table className="block tabela:table w-full text-sm">
-          <thead className="hidden tabela:table-header-group">
+      <div className="min-[85rem]:overflow-x-auto">
+        <table className="block min-[85rem]:table w-full text-sm">
+          <thead className="hidden min-[85rem]:table-header-group">
             <tr className="bg-gray-50">
               {colunas.map((coluna) => (
                 <th
@@ -132,7 +132,7 @@ export function Tabela({ colunas, children }: { colunas: Coluna[]; children: Rea
               ))}
             </tr>
           </thead>
-          <tbody className="grid gap-3 md:grid-cols-2 tabela:table-row-group tabela:divide-y tabela:divide-gray-100">
+          <tbody className="grid gap-3 md:grid-cols-2 min-[85rem]:table-row-group min-[85rem]:divide-y min-[85rem]:divide-gray-100">
             {children}
           </tbody>
         </table>
@@ -145,7 +145,7 @@ export function Linha({ children }: { children: ReactNode }) {
   const colunas = useContext(ColunasContexto);
   let indice = -1;
   return (
-    <tr className="block rounded-xl border border-gray-200 bg-white p-3 tabela:table-row tabela:rounded-none tabela:border-0 tabela:p-0 tabela:hover:bg-gray-50/60 transition-colors">
+    <tr className="block rounded-xl border border-gray-200 bg-white p-3 min-[85rem]:table-row min-[85rem]:rounded-none min-[85rem]:border-0 min-[85rem]:p-0 min-[85rem]:hover:bg-gray-50/60 transition-colors">
       {Children.map(children, (filho) => {
         indice += 1;
         return (
@@ -176,17 +176,17 @@ export function Celula({
       : 'flex items-start justify-between gap-4 py-1.5';
 
   const tabela =
-    'tabela:table-cell tabela:px-2 2xl:tabela:px-3 tabela:py-4 tabela:mt-0 tabela:mb-0 tabela:border-0 tabela:align-middle';
+    'min-[85rem]:table-cell min-[85rem]:px-2 2xl:px-3 min-[85rem]:py-4 min-[85rem]:mt-0 min-[85rem]:mb-0 min-[85rem]:border-0 min-[85rem]:align-middle';
 
   return (
     <td className={`${cartao} ${tabela} text-[13px] text-gray-800 ${ALINHAMENTO[alinhar]} ${className}`}>
       {!principal && !acoes && coluna && (
-        <span className="tabela:hidden shrink-0 pt-0.5 text-xs font-medium text-gray-500">{coluna.titulo}</span>
+        <span className="min-[85rem]:hidden shrink-0 pt-0.5 text-xs font-medium text-gray-500">{coluna.titulo}</span>
       )}
       {principal || acoes ? (
         children
       ) : (
-        <div className="min-w-0 text-right tabela:[text-align:inherit]">{children}</div>
+        <div className="min-w-0 text-right min-[85rem]:[text-align:inherit]">{children}</div>
       )}
     </td>
   );
@@ -238,7 +238,7 @@ export function CelulaNome({
   indice?: number;
 }) {
   return (
-    <div className="flex items-center gap-2.5 2xl:gap-3 tabela:min-w-[150px] 2xl:min-w-[200px]">
+    <div className="flex items-center gap-2.5 2xl:gap-3 min-[85rem]:min-w-[150px] 2xl:min-w-[200px]">
       <Avatar nome={nome} indice={indice} />
       <div className="min-w-0">
         <p className="text-sm font-bold text-gray-900 leading-snug break-words">{nome}</p>
@@ -256,7 +256,7 @@ export function CelulaContato({ telefone, email }: { telefone?: string | null; e
   return (
     <div className="space-y-1.5">
       {telefone && (
-        <p className="flex items-center justify-end tabela:justify-start gap-2 text-[13px] text-gray-800 whitespace-nowrap">
+        <p className="flex items-center justify-end min-[85rem]:justify-start gap-2 text-[13px] text-gray-800 whitespace-nowrap">
           <Phone className="w-4 h-4 shrink-0 text-orange-500 fill-orange-500" aria-hidden="true" />
           <a href={`tel:${telefone.replace(/\D/g, '')}`} className="hover:underline">
             {telefone}
@@ -264,7 +264,7 @@ export function CelulaContato({ telefone, email }: { telefone?: string | null; e
         </p>
       )}
       {email && (
-        <p className="flex items-center justify-end tabela:justify-start gap-2 text-xs text-gray-600 break-all">
+        <p className="flex items-center justify-end min-[85rem]:justify-start gap-2 text-xs text-gray-600 break-all">
           <Mail className="w-4 h-4 shrink-0 text-white fill-orange-500" aria-hidden="true" />
           <a href={`mailto:${email}`} className="hover:underline">
             {email}
@@ -278,7 +278,7 @@ export function CelulaContato({ telefone, email }: { telefone?: string | null; e
 export function CelulaCidade({ cidade, uf }: { cidade?: string | null; uf?: string | null }) {
   if (!cidade && !uf) return <span className="text-gray-400">—</span>;
   return (
-    <span className="flex items-center justify-end tabela:justify-start gap-2 text-[13px] text-gray-800">
+    <span className="flex items-center justify-end min-[85rem]:justify-start gap-2 text-[13px] text-gray-800">
       <MapPin className="w-4 h-4 shrink-0 text-gray-700 fill-gray-700 stroke-white" aria-hidden="true" />
       {[cidade, uf].filter(Boolean).join('/')}
     </span>
@@ -334,7 +334,7 @@ export function BotaoIcone({
       title={titulo}
       aria-label={titulo}
       onClick={aoClicar}
-      className="w-11 h-11 tabela:w-8 tabela:h-8 2xl:w-9 2xl:h-9 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+      className="w-11 h-11 min-[85rem]:w-8 min-[85rem]:h-8 2xl:w-9 2xl:h-9 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
     >
       <Icone className="w-4 h-4" aria-hidden="true" />
     </button>
@@ -351,7 +351,7 @@ export function BotoesAcao({
   aoMais?: () => void;
 }) {
   return (
-    <div className="flex items-center justify-end tabela:justify-center gap-2 tabela:gap-1.5 2xl:gap-2">
+    <div className="flex items-center justify-end min-[85rem]:justify-center gap-2 min-[85rem]:gap-1.5 2xl:gap-2">
       <BotaoIcone icone={Eye} titulo="Ver" aoClicar={aoVer} />
       <BotaoIcone icone={Pencil} titulo="Editar" aoClicar={aoEditar} />
       <BotaoIcone icone={MoreHorizontal} titulo="Mais ações" aoClicar={aoMais} />

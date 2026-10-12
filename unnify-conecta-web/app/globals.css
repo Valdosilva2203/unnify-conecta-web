@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
+/* O Unnify Conecta usa apenas tema claro. Sem isso, celulares em modo escuro
+   deixavam o texto dos campos branco sobre fundo branco. */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -10,14 +13,22 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Largura a partir da qual as tabelas do admin cabem como tabela; abaixo viram cartões */
-  --breakpoint-tabela: 85rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  input,
+  select,
+  textarea {
+    color: #111827;
+  }
+
+  /* Preenchimento automático (Chrome/Safari) com texto legível */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #111827;
+    caret-color: #111827;
+    transition: background-color 9999s ease-in-out 0s;
   }
 }
 
