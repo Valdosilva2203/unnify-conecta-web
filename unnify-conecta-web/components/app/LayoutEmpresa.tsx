@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Home, FileText, DollarSign, AlertCircle, Calendar, ShoppingCart, Box,
-  Users, UserCheck, Receipt, BarChart3, Settings, Bell, Menu, X, Briefcase,
+  Users, UserCheck, Receipt, BarChart3, Settings, Bell, Menu, X, Briefcase, ListChecks,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
+import { carregarPreferenciasExibicao } from '@/lib/conta';
 import { MenuPerfilEmpresa } from '@/components/app/MenuPerfilEmpresa';
 
 export interface EmpresaAtual {
@@ -34,8 +36,9 @@ export const useEmpresaAtual = () => useContext(ContextoEmpresa);
 const menuItems = [
   { icon: Home, label: 'Início', href: '/app' },
   { icon: Briefcase, label: 'Meu contador', href: '/app/meu-contador' },
+  { icon: DollarSign, label: 'Financeiro', href: '/app/financeiro' },
+  { icon: ListChecks, label: 'Tarefas', href: '/app/tarefas' },
   { icon: FileText, label: 'Meus documentos', href: '#' },
-  { icon: DollarSign, label: 'Financeiro', href: '#' },
   { icon: AlertCircle, label: 'Obrigações', href: '#' },
   { icon: Calendar, label: 'Agenda', href: '#' },
   { icon: ShoppingCart, label: 'Compras', href: '#' },
@@ -44,7 +47,7 @@ const menuItems = [
   { icon: UserCheck, label: 'Clientes', href: '#' },
   { icon: Receipt, label: 'Recibos', href: '#' },
   { icon: BarChart3, label: 'Relatórios', href: '#' },
-  { icon: Settings, label: 'Minha conta', href: '#' },
+  { icon: Settings, label: 'Minha conta', href: '/app/minha-conta' },
 ];
 
 function ListaNavegacao({ pathname }: { pathname: string | null }) {
@@ -111,6 +114,11 @@ export function LayoutEmpresa({ children }: { children: ReactNode }) {
         router.replace('/login');
         return;
       }
+      if (await precisaSegundoFator(supabase)) {
+        router.replace(ROTA_VERIFICACAO_MFA);
+        return;
+      }
+      carregarPreferenciasExibicao(supabase, user).catch(() => {});
       const { data: perfil } = await supabase
         .from('perfis')
         .select('nome_completo, tipo_usuario, funcao_global')

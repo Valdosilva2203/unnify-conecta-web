@@ -6,6 +6,7 @@ import { Building2, Calculator } from 'lucide-react';
 import { OnboardingHeader } from '@/components/OnboardingHeader';
 import { OnboardingCard } from '@/components/OnboardingCard';
 import { createClient } from '@/lib/supabase/client';
+import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -24,6 +25,11 @@ export default function OnboardingPage() {
 
         if (!session?.user?.id) {
           router.replace('/login');
+          return;
+        }
+
+        if (await precisaSegundoFator(supabase)) {
+          router.replace(ROTA_VERIFICACAO_MFA);
           return;
         }
 

@@ -48,6 +48,16 @@ body {
   }
 }
 
+/* Preferência "Reduzir animações" de Minha conta (mesmo efeito do ajuste do sistema operacional) */
+:root[data-reduzir-animacoes] *:not(.animate-spin),
+:root[data-reduzir-animacoes] *::before,
+:root[data-reduzir-animacoes] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *:not(.animate-spin),
   *::before,

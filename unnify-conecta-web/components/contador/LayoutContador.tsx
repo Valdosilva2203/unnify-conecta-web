@@ -3,6 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
+import { carregarPreferenciasExibicao } from '@/lib/conta';
 import { AccountantSidebar } from './AccountantSidebar';
 import { AccountantTopbar } from './AccountantTopbar';
 
@@ -34,6 +36,11 @@ export function LayoutContador({ children }: { children: ReactNode }) {
         router.replace('/login');
         return;
       }
+      if (await precisaSegundoFator(supabase)) {
+        router.replace(ROTA_VERIFICACAO_MFA);
+        return;
+      }
+      carregarPreferenciasExibicao(supabase, user).catch(() => {});
       const { data: perfil } = await supabase
         .from('perfis')
         .select('nome_completo, tipo_usuario, funcao_global')

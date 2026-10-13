@@ -22,7 +22,14 @@ export function Modal({
   const painelRef = useRef<HTMLDivElement>(null);
   const idTitulo = useId();
   const idDescricao = useId();
+  // Guardado em ref: quem usa o Modal costuma passar uma função nova a cada renderização,
+  // e isso não pode reiniciar o efeito abaixo (senão o foco volta ao primeiro campo a cada tecla).
+  const aoFecharRef = useRef(aoFechar);
+  useEffect(() => {
+    aoFecharRef.current = aoFechar;
+  }, [aoFechar]);
 
+  // Roda só quando o diálogo abre/fecha: foco inicial, trava de rolagem e Esc/Tab.
   useEffect(() => {
     if (!aberto) return;
     const anterior = document.activeElement as HTMLElement | null;
@@ -35,7 +42,7 @@ export function Modal({
     (focaveis()[1] ?? focaveis()[0])?.focus();
 
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') aoFechar();
+      if (e.key === 'Escape') aoFecharRef.current();
       if (e.key !== 'Tab') return;
       const lista = focaveis();
       if (!lista.length) return;
@@ -55,7 +62,7 @@ export function Modal({
       document.body.style.overflow = overflowAnterior;
       anterior?.focus();
     };
-  }, [aberto, aoFechar]);
+  }, [aberto]);
 
   if (!aberto) return null;
 

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import {
   LayoutDashboard,
   Building2,
@@ -15,10 +16,14 @@ import {
   History,
   Settings,
   X,
+  ListChecks,
+  Wallet,
 } from 'lucide-react';
 
 const menuItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
+  { label: 'Tarefas', icon: ListChecks, href: '/admin/tarefas' },
+  { label: 'Financeiro', icon: Wallet, href: '/admin/financeiro', somenteMaster: true },
   { label: 'Empresas', icon: Building2, href: '/admin/empresas' },
   { label: 'Contadores', icon: Users, href: '/admin/contadores' },
   { label: 'Escritórios', icon: FileText, href: '/admin/escritorios' },
@@ -32,11 +37,16 @@ const menuItems = [
 
 function ConteudoMenu({ aoNavegar }: { aoNavegar?: () => void }) {
   const pathname = usePathname();
+  // Financeiro da plataforma: só o Admin Master vê o item (o banco também bloqueia os demais)
+  const [master, setMaster] = useState(false);
+  useEffect(() => {
+    createClient().rpc('admin_master_ativo').then(({ data }) => setMaster(data === true));
+  }, []);
 
   return (
     <>
       <nav aria-label="Menu principal" className="flex-1 overflow-y-auto py-4 md:py-6 px-4 space-y-1">
-        {menuItems.map((item) => {
+        {menuItems.filter((item) => !item.somenteMaster || master).map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
 

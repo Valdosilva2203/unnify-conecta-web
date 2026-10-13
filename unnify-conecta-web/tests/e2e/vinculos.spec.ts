@@ -104,7 +104,9 @@ test('vínculos contábeis: integridade, duplicidade, concorrência, autorizaç�
     expect(await empresasVisiveis(C1)).not.toContain(EA); // pendente não dá acesso
     expect((await C1.cli.rpc('responder_vinculo_contabil', { p_id_vinculo: v1.data, p_aceitar: true })).error).toBeNull();
     expect(await empresasVisiveis(C1)).toContain(EA);
-    expect((await C1.cli.rpc('contador_pode', { p_id_empresa: EA, p_permissao: 'ver_financeiro' })).data).toBe(true);
+    expect((await C1.cli.rpc('contador_pode', { p_id_empresa: EA, p_permissao: 'ver_dados_cadastrais' })).data).toBe(true);
+    // Acesso financeiro nunca vem automaticamente com o vínculo (só por permissão explícita da empresa)
+    expect((await C1.cli.rpc('contador_pode', { p_id_empresa: EA, p_permissao: 'ver_financeiro' })).data).toBe(false);
 
     // Duplicidade
     const dup = await A.cli.rpc('solicitar_vinculo_contabil', { p_id_empresa: EA, p_id_contador: C1.id, p_funcao: 'fiscal' });

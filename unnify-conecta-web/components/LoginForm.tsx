@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
 
 export function LoginForm() {
   const router = useRouter();
@@ -62,6 +63,12 @@ export function LoginForm() {
               : error.message,
         });
         setLoading(false);
+        return;
+      }
+
+      // Com autenticação em duas etapas ativa, o código é pedido antes de qualquer área.
+      if (await precisaSegundoFator(supabase)) {
+        router.push(ROTA_VERIFICACAO_MFA);
         return;
       }
 

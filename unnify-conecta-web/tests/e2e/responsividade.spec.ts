@@ -40,7 +40,7 @@ function cnpjAleatorio(): string {
   return `${s.slice(0, 2)}.${s.slice(2, 5)}.${s.slice(5, 8)}/${s.slice(8, 12)}-${s.slice(12)}`;
 }
 
-async function criarUsuario(tipo: 'nenhum' | 'empresa' | 'contador') {
+async function criarUsuario(tipo: 'nenhum' | 'empresa' | 'contador' | 'admin_master') {
   const sb = admin();
   const email = `delivered+resp${tipo}${Date.now()}@resend.dev`;
   const senha = `Teste@${Date.now()}`;
@@ -51,7 +51,10 @@ async function criarUsuario(tipo: 'nenhum' | 'empresa' | 'contador') {
     user_metadata: { nome_completo: `Teste ${tipo}` },
   });
   if (error) throw error;
-  if (tipo !== 'nenhum') {
+  if (tipo === 'admin_master') {
+    // Admin temporário do teste: nunca usar contas reais (e-mails reais podem mudar).
+    await sb.from('perfis').update({ funcao_global: 'admin_master' }).eq('id_usuario', data.user.id);
+  } else if (tipo !== 'nenhum') {
     const cliente = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
       auth: { persistSession: false },
     });
@@ -73,6 +76,9 @@ async function criarUsuario(tipo: 'nenhum' | 'empresa' | 'contador') {
 }
 
 async function entrarComo(page: Page, email: string) {
+  // generateLink('magiclink') CRIA a conta se o e-mail não existir: só entrar em contas que já existem.
+  const { data: existente } = await admin().from('perfis').select('id_usuario').eq('email', email).maybeSingle();
+  if (!existente) throw new Error(`entrarComo: conta inexistente (${email}) — o teste não cria contas por login`);
   const { data, error } = await admin().auth.admin.generateLink({ type: 'magiclink', email });
   if (error) throw error;
   await page.goto(`${BASE}/auth/callback?token_hash=${data.properties.hashed_token}&type=email`);
@@ -179,6 +185,7 @@ test('responsividade de todas as rotas', async ({ browser }) => {
     // Públicas
     const publico = await browser.newPage();
     for (const rota of ['/', '/login', '/signup', '/forgot-password']) await varrerRota(publico, rota);
+    await varrerRota(publico, '/auth/confirmar-email', 'h1');
     await publico.close();
 
     // Onboarding (usuário sem empresa)
@@ -199,6 +206,8 @@ test('responsividade de todas as rotas', async ({ browser }) => {
     await varrerRota(pEmp, '/app');
     await varrerRota(pEmp, '/app/meu-contador', 'h1');
     await varrerRota(pEmp, '/app/meu-contador/buscar', 'h1');
+    await varrerRota(pEmp, '/app/minha-conta', 'h1');
+    await varrerRota(pEmp, '/app/financeiro', 'h1');
     await varrerRota(pEmp, '/onboarding/conclusao', 'h1');
     await pEmp.close();
 
@@ -210,11 +219,14 @@ test('responsividade de todas as rotas', async ({ browser }) => {
     await varrerRota(pCont, '/contador');
     await varrerRota(pCont, '/contador/empresas', 'h1');
     await varrerRota(pCont, '/contador/perfil-profissional', 'h1');
+    await varrerRota(pCont, '/contador/minha-conta', 'h1');
     await pCont.close();
 
-    // Admin (conta real, somente leitura)
+    // Admin Master temporário (não usar contas reais)
+    const adm = await criarUsuario('admin_master');
+    criados.push(adm.id);
     const pAdm = await browser.newPage();
-    await entrarComo(pAdm, 'unnifybr@gmail.com');
+    await entrarComo(pAdm, adm.email);
     for (const rota of [
       '/admin',
       '/admin/empresas',
@@ -226,6 +238,7 @@ test('responsividade de todas as rotas', async ({ browser }) => {
       '/admin/comissoes',
       '/admin/auditoria',
       '/admin/configuracoes',
+      '/admin/seguranca',
     ]) {
       await varrerRota(pAdm, rota, 'main');
     }

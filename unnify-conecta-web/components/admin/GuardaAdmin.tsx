@@ -1,8 +1,14 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
+import { carregarPreferenciasExibicao } from '@/lib/conta';
+
+// Informa às páginas quando o acesso de administrador foi confirmado (para só então buscar dados).
+const AcessoAdmin = createContext(false);
+export const useAcessoAdminConfirmado = () => useContext(AcessoAdmin);
 
 // Camada de interface: impede que não-admins vejam o painel.
 // A proteção dos dados em si é feita no banco (RLS + funções is_admin/is_admin_master).
@@ -21,6 +27,11 @@ export function GuardaAdmin({ children }: { children: ReactNode }) {
         router.replace('/login');
         return;
       }
+      if (await precisaSegundoFator(supabase)) {
+        router.replace(ROTA_VERIFICACAO_MFA);
+        return;
+      }
+      carregarPreferenciasExibicao(supabase, user).catch(() => {});
       const { data: perfil } = await supabase
         .from('perfis')
         .select('funcao_global')
@@ -48,7 +59,7 @@ export function GuardaAdmin({ children }: { children: ReactNode }) {
       )}
       {/* Mantido montado (oculto e inerte) para a validação de navegação do Next; só aparece após a verificação */}
       <div hidden={!liberado} inert={!liberado}>
-        {children}
+        <AcessoAdmin.Provider value={liberado}>{children}</AcessoAdmin.Provider>
       </div>
     </>
   );

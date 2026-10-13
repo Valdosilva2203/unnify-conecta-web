@@ -67,7 +67,7 @@ export function AdminProfileMenu({ userName, userInitials }: AdminProfileMenuPro
   const menuItems = [
     {
       icon: User,
-      label: 'Meu perfil',
+      label: 'Minha conta',
       description: 'Dados pessoais e informações da conta',
       onClick: () => router.push('/admin/perfil'),
     },

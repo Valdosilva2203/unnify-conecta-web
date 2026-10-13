@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, FileText, Calendar, CheckSquare, DollarSign, BarChart3, User, Headphones, X, Building2, IdCard } from 'lucide-react';
+import { Home, Users, FileText, Calendar, CheckSquare, DollarSign, BarChart3, User, Headphones, X, Building2, IdCard, ListChecks } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,13 +15,14 @@ const menuItems = [
   { label: 'Início', icon: Home, href: '/contador' },
   { label: 'Minhas empresas', icon: Building2, href: '/contador/empresas' },
   { label: 'Perfil profissional', icon: IdCard, href: '/contador/perfil-profissional' },
+  { label: 'Tarefas', icon: ListChecks, href: '/contador/tarefas' },
   { label: 'Clientes', icon: Users, href: '#' },
   { label: 'Documentos', icon: FileText, href: '#' },
   { label: 'Agenda', icon: Calendar, href: '#' },
   { label: 'Obrigações', icon: CheckSquare, href: '#' },
   { label: 'Financeiro', icon: DollarSign, href: '#' },
   { label: 'Relatórios', icon: BarChart3, href: '#' },
-  { label: 'Minha conta', icon: User, href: '#' },
+  { label: 'Minha conta', icon: User, href: '/contador/minha-conta' },
 ];
 
 export function AccountantSidebar({ isOpen, onClose }: SidebarProps) {

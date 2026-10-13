@@ -12,8 +12,8 @@ interface MenuPerfilEmpresaProps {
   iniciais: string;
 }
 
-const opcoes = [
-  { icone: User, rotulo: 'Minha conta', descricao: 'Seus dados pessoais e senha' },
+const opcoes: { icone: typeof User; rotulo: string; descricao: string; href?: string }[] = [
+  { icone: User, rotulo: 'Minha conta', descricao: 'E-mail de acesso e segurança', href: '/app/minha-conta' },
   { icone: Building2, rotulo: 'Dados da empresa', descricao: 'Informações cadastrais da empresa' },
   { icone: Settings, rotulo: 'Configurações', descricao: 'Preferências e notificações' },
 ];
@@ -112,6 +112,28 @@ export function MenuPerfilEmpresa({ nomeUsuario, email, nomeEmpresa, iniciais }:
           <div className="py-2">
             {opcoes.map((opcao, i) => {
               const Icone = opcao.icone;
+              if (opcao.href) {
+                const destino = opcao.href;
+                return (
+                  <button
+                    key={opcao.rotulo}
+                    ref={i === 0 ? primeiroItemRef : undefined}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setAberto(false);
+                      router.push(destino);
+                    }}
+                    className="w-full min-h-11 px-4 py-3 text-left flex gap-3 items-start hover:bg-orange-50 focus-visible:bg-orange-50 focus-visible:outline-none transition-colors"
+                  >
+                    <Icone className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" aria-hidden="true" />
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-sm font-medium text-gray-900">{opcao.rotulo}</span>
+                      <span className="block text-xs text-gray-600">{opcao.descricao}</span>
+                    </span>
+                  </button>
+                );
+              }
               return (
                 <button
                   key={opcao.rotulo}
