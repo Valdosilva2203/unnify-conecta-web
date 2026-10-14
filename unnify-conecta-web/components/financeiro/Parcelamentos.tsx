@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, CalendarClock, CheckCircle2, ChevronRight, Download, FileText, Landmark, Paperclip, Plus, RotateCcw, Tag, Trash2, Wallet, XCircle, Clock } from 'lucide-react';
+import { AlertCircle, CalendarClock, CheckCircle2, ChevronRight, Download, FileText, Landmark, Paperclip, Pencil, Plus, RotateCcw, Tag, Trash2, Wallet, XCircle, Clock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import { ARQUIVOS_COMPROVANTE, TAMANHO_MAXIMO_COMPROVANTE, formatarData, formatarMoeda, hojeBrasil, type Categoria, type ContaFinanceira, type Lancamento } from '@/lib/financeiro';
@@ -11,6 +11,7 @@ import { Modal, classeBotaoPerigo, classeBotaoSecundario } from '@/components/ui
 import { IconeCategoria } from './IconeCategoria';
 import { ModalBaixa, type LancamentoParaBaixa } from './ModalBaixa';
 import { FormContrato } from './FormContrato';
+import { ModalEditarContrato } from './ModalEditarContrato';
 import { Indicador } from './Indicador';
 
 interface ResumoParcelamentos {
@@ -204,7 +205,7 @@ export function Parcelamentos({ idEmpresa, categorias, contas, versao, aoAlterar
 
         <div ref={detalheRef} className="min-w-0 scroll-mt-20">
           {contrato ? (
-            <DetalheContrato contrato={contrato} idEmpresa={idEmpresa} contas={contas} hoje={hoje} versao={versao} aoAlterar={aoAlterar} aoIrParaContas={aoIrParaContas} />
+            <DetalheContrato contrato={contrato} idEmpresa={idEmpresa} categorias={categorias} contas={contas} hoje={hoje} versao={versao} aoAlterar={aoAlterar} aoIrParaContas={aoIrParaContas} />
           ) : (
             !carregando && contratos.length > 0 && <p className="text-sm text-gray-500">Selecione um contrato para ver os detalhes.</p>
           )}
@@ -219,8 +220,8 @@ export function Parcelamentos({ idEmpresa, categorias, contas, versao, aoAlterar
 
 type AbaDetalhe = 'resumo' | 'parcelas' | 'informacoes' | 'anexos';
 
-function DetalheContrato({ contrato: c, idEmpresa, contas, hoje, versao, aoAlterar, aoIrParaContas }: {
-  contrato: ContratoResumo; idEmpresa: string; contas: ContaFinanceira[]; hoje: string; versao: number; aoAlterar: (m: string) => void; aoIrParaContas: () => void;
+function DetalheContrato({ contrato: c, idEmpresa, categorias, contas, hoje, versao, aoAlterar, aoIrParaContas }: {
+  contrato: ContratoResumo; idEmpresa: string; categorias: Categoria[]; contas: ContaFinanceira[]; hoje: string; versao: number; aoAlterar: (m: string) => void; aoIrParaContas: () => void;
 }) {
   const [aba, setAba] = useState<AbaDetalhe>('resumo');
   const [parcelas, setParcelas] = useState<Lancamento[]>([]);
@@ -230,6 +231,7 @@ function DetalheContrato({ contrato: c, idEmpresa, contas, hoje, versao, aoAlter
   const [estornando, setEstornando] = useState<Lancamento | null>(null);
   const [cancelando, setCancelando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
+  const [editando, setEditando] = useState(false);
   const [motivo, setMotivo] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -320,7 +322,14 @@ function DetalheContrato({ contrato: c, idEmpresa, contas, hoje, versao, aoAlter
           <h3 className="text-lg font-bold text-gray-900 break-words">{c.nome}</h3>
           <p className="text-sm text-gray-500">{c.contraparte ?? TIPOS_CONTRATO[c.tipo]}</p>
         </div>
-        <Selo tipo={SELO_SITUACAO_CONTRATO[c.situacao]} texto={ROTULO_SITUACAO_CONTRATO[c.situacao]} />
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <Selo tipo={SELO_SITUACAO_CONTRATO[c.situacao]} texto={ROTULO_SITUACAO_CONTRATO[c.situacao]} />
+          {!c.cancelado_em && (
+            <button type="button" onClick={() => setEditando(true)} className="min-h-11 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-orange-600 hover:bg-orange-50">
+              <Pencil className="w-4 h-4" aria-hidden="true" />Editar
+            </button>
+          )}
+        </div>
       </div>
 
       <nav aria-label="Seções do contrato" className="flex border-b border-gray-200 overflow-x-auto">
@@ -386,7 +395,7 @@ function DetalheContrato({ contrato: c, idEmpresa, contas, hoje, versao, aoAlter
           {c.cancelado_em && <p className="text-gray-700">Cancelado em {new Date(c.cancelado_em).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}: {c.motivo_cancelamento}</p>}
           {historico.length > 0 && (
             <ul className="text-xs text-gray-500 space-y-1">
-              {historico.map((h, i) => <li key={i}>{{ criado: 'Contrato criado', cancelado: 'Contrato cancelado', excluido: 'Contrato excluído', anexo_adicionado: 'Anexo adicionado', anexo_removido: 'Anexo removido' }[h.acao] ?? h.acao} · {new Date(h.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</li>)}
+              {historico.map((h, i) => <li key={i}>{{ criado: 'Contrato criado', editado: 'Contrato editado', cancelado: 'Contrato cancelado', excluido: 'Contrato excluído', anexo_adicionado: 'Anexo adicionado', anexo_removido: 'Anexo removido' }[h.acao] ?? h.acao} · {new Date(h.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</li>)}
             </ul>
           )}
           {!c.cancelado_em && (
@@ -418,6 +427,9 @@ function DetalheContrato({ contrato: c, idEmpresa, contas, hoje, versao, aoAlter
       )}
 
       {erro && !cancelando && !excluindo && !estornando && <p role="alert" className="text-sm text-red-700">{erro}</p>}
+
+      <ModalEditarContrato contrato={c} aberto={editando} aoFechar={() => setEditando(false)} categorias={categorias} contas={contas}
+        aoSalvar={(m) => { setEditando(false); aoAlterar(m); }} />
 
       <ModalBaixa lancamento={pagando} idEmpresa={idEmpresa} contas={contas} aoFechar={() => setPagando(null)}
         aoConcluir={(m) => { setPagando(null); aoAlterar(m); }} aoIrParaContas={aoIrParaContas} />
