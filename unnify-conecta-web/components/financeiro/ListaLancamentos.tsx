@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import {
   ROTULO_SITUACAO, SELO_SITUACAO, fimDoMes, formatarData, formatarMoeda, hojeBrasil,
-  valorParaMascara,
+  rotuloNatureza, valorParaMascara,
   type Categoria, type ContaFinanceira, type Lancamento, type TipoLancamento,
 } from '@/lib/financeiro';
 import {
@@ -29,18 +29,19 @@ interface Props {
   aoIrParaContas: () => void;
   aoEditar: (l: Lancamento) => void;
   aoAlterar: (mensagem: string) => void;
+  categoriaInicial?: string; // vindo de outro módulo (ex.: Saúde Empresarial): abre filtrado, sem limitar ao mês
 }
 
 type Acao = { tipo: 'baixa' | 'estorno' | 'cancelar' | 'excluir'; lancamento: Lancamento } | null;
 
-export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas, versao, aoIrParaContas, aoEditar, aoAlterar }: Props) {
+export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas, versao, aoIrParaContas, aoEditar, aoAlterar, categoriaInicial }: Props) {
   const tipoFixo: TipoLancamento | null = modo === 'pagar' ? 'despesa' : modo === 'receber' ? 'receita' : null;
   const [busca, setBusca] = useState('');
   const [buscaAplicada, setBuscaAplicada] = useState('');
   const [tipo, setTipo] = useState('');
-  const [categoria, setCategoria] = useState('');
+  const [categoria, setCategoria] = useState(categoriaInicial ?? '');
   const [situacao, setSituacao] = useState(modo === 'todos' ? '' : 'abertas');
-  const [doPeriodo, setDoPeriodo] = useState(modo === 'todos' ? 'sim' : 'nao');
+  const [doPeriodo, setDoPeriodo] = useState(modo === 'todos' && !categoriaInicial ? 'sim' : 'nao');
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
   const [itens, setItens] = useState<Lancamento[]>([]);
@@ -241,6 +242,11 @@ export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas,
                         </span>
                       )}
                     </p>
+                    {l.natureza_financeira && l.natureza_financeira !== 'operacional' && (
+                      <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700" data-testid={`natureza-${l.descricao}`}>
+                        {rotuloNatureza(l.tipo, l.natureza_financeira)}
+                      </span>
+                    )}
                   </div>
                 </Celula>
                 <Celula>{modo === 'todos' ? l.categoria_nome : l.contraparte || '—'}</Celula>

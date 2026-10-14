@@ -36,11 +36,30 @@ export interface Lancamento {
   // Parcela de contrato (Parcelamentos)
   id_contrato: string | null;
   numero_parcela: number | null;
-  natureza_financeira: 'operacional' | 'financiamento';
+  natureza_financeira: NaturezaFinanceira;
   valor_juros: number | null;
   contrato_nome: string | null;
   contrato_qtd_parcelas: number | null;
 }
+
+// Classificação (migration 000031). Só "operacional" entra em receitas/despesas do mês; as demais aparecem à parte.
+export type NaturezaFinanceira = 'operacional' | 'financiamento' | 'pro_labore' | 'distribuicao_lucros' | 'aporte_socio';
+export const NATUREZAS: Record<TipoLancamento, { valor: NaturezaFinanceira; rotulo: string; ajuda: string; contraparte: string }[]> = {
+  receita: [
+    { valor: 'operacional', rotulo: 'Receita operacional', ajuda: 'Vendas e serviços: entram no faturamento.', contraparte: 'Cliente' },
+    { valor: 'aporte_socio', rotulo: 'Aporte de sócio', ajuda: 'Dinheiro colocado pelos sócios. Não é faturamento.', contraparte: 'Sócio que aportou' },
+    { valor: 'financiamento', rotulo: 'Entrada de empréstimo ou financiamento', ajuda: 'Dinheiro recebido do banco. Não é faturamento.', contraparte: 'Instituição financeira' },
+  ],
+  despesa: [
+    { valor: 'operacional', rotulo: 'Despesa operacional', ajuda: 'Custos e despesas do dia a dia da empresa.', contraparte: 'Fornecedor' },
+    { valor: 'pro_labore', rotulo: 'Pró-labore', ajuda: 'Remuneração dos sócios administradores. Aparece separada das despesas.', contraparte: 'Sócio' },
+    { valor: 'distribuicao_lucros', rotulo: 'Distribuição de lucros', ajuda: 'Lucro repassado aos sócios. Não é despesa operacional.', contraparte: 'Sócio beneficiário' },
+    { valor: 'financiamento', rotulo: 'Pagamento de empréstimo ou financiamento', ajuda: 'Amortização de dívida. Para separar juros, cadastre em Parcelamentos.', contraparte: 'Instituição financeira' },
+  ],
+};
+export const NATUREZA_EXIGE_SOCIO: NaturezaFinanceira[] = ['pro_labore', 'distribuicao_lucros', 'aporte_socio'];
+export const rotuloNatureza = (tipo: TipoLancamento, natureza: NaturezaFinanceira | null | undefined) =>
+  NATUREZAS[tipo].find((n) => n.valor === natureza)?.rotulo ?? 'Operacional';
 
 export const ROTULO_SITUACAO: Record<Situacao, { receita: string; despesa: string }> = {
   pendente: { receita: 'A receber', despesa: 'A pagar' },

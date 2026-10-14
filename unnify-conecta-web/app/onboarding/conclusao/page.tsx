@@ -11,6 +11,15 @@ function OnboardingConclusaoContent() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resultadoConvite, setResultadoConvite] = useState<{ ok: boolean; texto: string } | null>(null);
+
+  // Resultado do convite respondido no onboarding (E4.1)
+  useEffect(() => {
+    try {
+      const r = sessionStorage.getItem('unnify:resultado-convite');
+      if (r) { setResultadoConvite(JSON.parse(r)); sessionStorage.removeItem('unnify:resultado-convite'); }
+    } catch { /* sem armazenamento */ }
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -80,6 +89,13 @@ function OnboardingConclusaoContent() {
         <div className="mb-12">
           <SuccessCard />
         </div>
+
+        {resultadoConvite && (
+          <p role="status" data-testid="resultado-convite"
+            className={`mb-8 max-w-xl mx-auto rounded-xl border px-4 py-3 text-sm text-center ${resultadoConvite.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+            {resultadoConvite.texto}
+          </p>
+        )}
 
         <div className="flex justify-center">
           <Button

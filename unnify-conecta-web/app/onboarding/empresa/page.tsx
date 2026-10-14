@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/client';
 import { StepsIndicator } from '@/components/onboarding/StepsIndicator';
 import { Button } from '@/components/ui/button';
 import { SearchIcon } from 'lucide-react';
+import { CartaoConviteOnboarding, responderConviteOnboarding, useConvitePendente, type DecisaoConvite } from '@/components/convites/ConviteOnboarding';
+import type { Permissao } from '@/lib/contabil';
 
 const BRAZILIAN_STATES = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -92,6 +94,16 @@ function OnboardingEmpresaContent() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [loadingCNPJ, setLoadingCNPJ] = useState(false);
   const [cnpjLookupMessage, setCNPJLookupMessage] = useState('');
+  // E4.1 — convite de contador (cenário B): aceite explícito; vínculo só é criado após o cadastro da empresa
+  const convite = useConvitePendente('contador_para_empresa');
+  const [decisaoConvite, setDecisaoConvite] = useState<DecisaoConvite>(null);
+  const [permissoesConvite, setPermissoesConvite] = useState<Permissao[]>([]);
+  const [erroConvite, setErroConvite] = useState('');
+  useEffect(() => {
+    if (!convite) return;
+    setPermissoesConvite(convite.dados.permissoes as Permissao[]);
+    if (convite.dados.cnpj_convidado) setFormData((f) => (f.cnpj ? f : { ...f, cnpj: maskCNPJ(convite.dados.cnpj_convidado!) }));
+  }, [convite]);
 
   useEffect(() => {
     if (processedRef.current) return;
@@ -153,6 +165,9 @@ function OnboardingEmpresaContent() {
     }
 
     setErrors(newErrors);
+    setErroConvite('');
+    if (convite && !decisaoConvite) { setErroConvite('Escolha se deseja aceitar o vínculo com o contador.'); return false; }
+    if (convite && decisaoConvite === 'aceitar' && permissoesConvite.length === 0) { setErroConvite('Selecione ao menos uma permissão.'); return false; }
     return Object.keys(newErrors).length === 0;
   };
 
@@ -287,36 +302,9 @@ function OnboardingEmpresaContent() {
       }
 
       if (result.id) {
-        const tipoUsuario = tipoEmpresa === 'escritorio_contabil' ? 'contador' : 'empresa';
-
-        // Salvar tipo_usuario imediatamente após criar empresa
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          const token = session?.access_token;
-
-          if (token) {
-            const updateResponse = await fetch('/api/auth/update-tipo-usuario', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              body: JSON.stringify({ tipo_usuario: tipoUsuario }),
-            });
-
-            const updateData = await updateResponse.json();
-
-            if (updateResponse.ok) {
-              console.log('✅ tipo_usuario salvo com sucesso:', updateData);
-            } else {
-              console.error('❌ Erro ao salvar tipo_usuario:', updateData);
-            }
-          }
-        } catch (error) {
-          console.error('Erro ao atualizar tipo_usuario:', error);
-        }
-
-        // Redirecionar para conclusão
+        // O tipo de usuário (empresa/contador) é definido pelo próprio criar_empresa, no banco, na mesma transação
+        // Convite aceito/recusado expressamente: o banco valida e-mail, CNPJ e permissões antes de criar o vínculo
+        if (convite) await responderConviteOnboarding(convite.token, decisaoConvite, result.id, permissoesConvite);
         router.push('/onboarding/conclusao');
       } else {
         console.error('Invalid RPC response:', result);
@@ -537,6 +525,11 @@ function OnboardingEmpresaContent() {
                   )}
                 </div>
               </div>
+
+              {convite && (
+                <CartaoConviteOnboarding dados={convite.dados} decisao={decisaoConvite} aoDecidir={setDecisaoConvite}
+                  permissoes={permissoesConvite} aoMudarPermissoes={setPermissoesConvite} erro={erroConvite} />
+              )}
 
               {/* Buttons */}
               <div className="flex gap-3 sm:gap-4 justify-center md:justify-end pt-6 sm:pt-8 border-t border-gray-200">

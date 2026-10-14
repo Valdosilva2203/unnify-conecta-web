@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -17,17 +17,58 @@ const menuItems = [
   { label: 'Perfil profissional', icon: IdCard, href: '/contador/perfil-profissional' },
   { label: 'Tarefas', icon: ListChecks, href: '/contador/tarefas' },
   { label: 'Clientes', icon: Users, href: '#' },
-  { label: 'Documentos', icon: FileText, href: '#' },
+  { label: 'Documentos', icon: FileText, href: '/contador/documentos' },
   { label: 'Agenda', icon: Calendar, href: '#' },
-  { label: 'Obrigações', icon: CheckSquare, href: '#' },
+  { label: 'Obrigações', icon: CheckSquare, href: '/contador/obrigacoes' },
   { label: 'Financeiro', icon: DollarSign, href: '#' },
   { label: 'Relatórios', icon: BarChart3, href: '#' },
   { label: 'Minha conta', icon: User, href: '/contador/minha-conta' },
 ];
 
-export function AccountantSidebar({ isOpen, onClose }: SidebarProps) {
-  const pathname = usePathname();
+// usePathname suspende em rotas com parâmetro dinâmico (cacheComponents): fica dentro de <Suspense>.
+function ListaMenuComRota({ onClose }: { onClose: () => void }) {
+  return <ListaMenu pathname={usePathname()} onClose={onClose} />;
+}
 
+function ListaMenu({ pathname, onClose }: { pathname: string; onClose: () => void }) {
+  return (
+    <nav aria-label="Menu principal" className="flex-1 overflow-y-auto py-4 lg:py-6 px-4 space-y-1">
+      {menuItems.map((item) => {
+        const Icon = item.icon;
+        const isActive = item.href === '/contador' ? pathname === '/contador' : pathname.startsWith(item.href);
+        const isDisabled = item.href === '#';
+
+        return isDisabled ? (
+          <div
+            key={item.label}
+            aria-disabled="true"
+            className="flex items-center justify-between gap-3 px-4 min-h-11 rounded-lg text-gray-400 cursor-default"
+          >
+            <span className="flex items-center gap-3">
+              <Icon className="w-5 h-5" aria-hidden="true" />
+              <span className="text-sm font-medium">{item.label}</span>
+            </span>
+          </div>
+        ) : (
+          <Link
+            key={item.label}
+            href={item.href}
+            onClick={onClose}
+            aria-current={isActive ? 'page' : undefined}
+            className={`flex items-center gap-3 px-4 min-h-11 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+              isActive ? 'bg-orange-50 text-orange-600' : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Icon className="w-5 h-5" aria-hidden="true" />
+            <span className="text-sm font-medium">{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function AccountantSidebar({ isOpen, onClose }: SidebarProps) {
   useEffect(() => {
     if (!isOpen) return;
     const aoTeclar = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -42,40 +83,9 @@ export function AccountantSidebar({ isOpen, onClose }: SidebarProps) {
 
   const conteudo = (
     <>
-      <nav aria-label="Menu principal" className="flex-1 overflow-y-auto py-4 lg:py-6 px-4 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = item.href === '/contador' ? pathname === '/contador' : pathname.startsWith(item.href);
-          const isDisabled = item.href === '#';
-
-          return isDisabled ? (
-            <div
-              key={item.label}
-              aria-disabled="true"
-              className="flex items-center justify-between gap-3 px-4 min-h-11 rounded-lg text-gray-400 cursor-default"
-            >
-              <span className="flex items-center gap-3">
-                <Icon className="w-5 h-5" aria-hidden="true" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide">Em breve</span>
-            </div>
-          ) : (
-            <Link
-              key={item.label}
-              href={item.href}
-              onClick={onClose}
-              aria-current={isActive ? 'page' : undefined}
-              className={`flex items-center gap-3 px-4 min-h-11 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
-                isActive ? 'bg-orange-50 text-orange-600' : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Icon className="w-5 h-5" aria-hidden="true" />
-              <span className="text-sm font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <Suspense fallback={<ListaMenu pathname="" onClose={onClose} />}>
+        <ListaMenuComRota onClose={onClose} />
+      </Suspense>
 
       <div className="p-4 border-t border-gray-200 space-y-4">
         <div className="bg-orange-50 rounded-lg p-4 text-center">

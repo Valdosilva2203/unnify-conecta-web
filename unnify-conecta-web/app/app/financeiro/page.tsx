@@ -36,6 +36,7 @@ export default function FinanceiroPage() {
   const [versao, setVersao] = useState(0);
   const [aviso, setAviso] = useState<string | null>(null);
   const [menuNovo, setMenuNovo] = useState(false);
+  const [categoriaInicial, setCategoriaInicial] = useState<string | undefined>(undefined);
   const [form, setForm] = useState<{ tipo: TipoLancamento; lancamento: Lancamento | null } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -44,10 +45,12 @@ export default function FinanceiroPage() {
     setPeriodo(inicioDoMes(hojeBrasil()));
   }, []);
 
-  // A aba acompanha o #endereço (links diretos e voltar/avançar)
+  // A aba acompanha o #endereço (links diretos e voltar/avançar). ?categoria= abre a lista já filtrada (Saúde Empresarial).
   useEffect(() => {
     const sincronizar = () => {
       const h = window.location.hash.slice(1);
+      const cat = new URLSearchParams(window.location.search).get('categoria');
+      if (cat && /^[0-9a-f-]{36}$/i.test(cat)) setCategoriaInicial(cat);
       if (ehAba(h)) setAba(h);
     };
     sincronizar();
@@ -191,8 +194,9 @@ export default function FinanceiroPage() {
       {aba === 'visao' && <VisaoGeral idEmpresa={empresa.id} periodo={periodo} versao={versao} aoIrPara={irPara} aoNovo={() => setMenuNovo(true)} />}
       {(aba === 'lancamentos' || aba === 'pagar' || aba === 'receber') && (
         <ListaLancamentos
-          key={aba}
+          key={`${aba}-${categoriaInicial ?? ''}`}
           modo={aba === 'lancamentos' ? 'todos' : aba}
+          categoriaInicial={aba === 'lancamentos' ? categoriaInicial : undefined}
           idEmpresa={empresa.id}
           periodo={periodo}
           categorias={categorias}

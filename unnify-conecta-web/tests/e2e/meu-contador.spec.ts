@@ -148,6 +148,9 @@ test('fluxo Meu contador: perfil → catálogo → solicitação → aceite → 
 
     // 5. Empresa vê o principal em destaque com contatos e ajusta permissões
     await e.page.reload();
+    // E4: o card do escritório fica no topo; a gestão do vínculo (principal, contatos, permissões) fica na aba Permissões
+    await expect(e.page.getByRole('region', { name: 'Seu escritório contábil' })).toContainText('Vínculo ativo');
+    await e.page.getByRole('navigation', { name: 'Relacionamento com o contador' }).getByRole('button', { name: 'Permissões', exact: true }).click();
     await expect(e.page.getByRole('heading', { name: 'Contador principal' })).toBeVisible();
     await expect(e.page.getByRole('link', { name: EMAIL_CONTATO })).toBeVisible();
     await e.page.getByRole('button', { name: 'Gerenciar' }).click();

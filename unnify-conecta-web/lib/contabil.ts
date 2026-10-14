@@ -1,5 +1,6 @@
 // Rótulos e listas do domínio contábil. Os valores espelham as restrições do banco
 // (vinculos_contabeis e perfis_profissionais) — alterar os dois juntos.
+import { MENSAGEM_RECURSO_AUSENTE, recursoAusente } from './erros-banco';
 
 export const ESPECIALIDADES = [
   'MEI',
@@ -40,7 +41,7 @@ export const PERMISSOES = {
   ver_dados_cadastrais: 'Ver dados cadastrais',
   ver_documentos: 'Ver documentos',
   enviar_documentos: 'Enviar documentos',
-  ver_financeiro: 'Ver financeiro',
+  ver_financeiro: 'Ver financeiro e saúde empresarial',
   gerenciar_obrigacoes: 'Gerenciar obrigações',
   ver_folha: 'Ver folha de pagamento',
   ver_comprovantes_financeiros: 'Ver comprovantes financeiros',
@@ -69,6 +70,12 @@ export function formatarTelefone(valor: string | null | undefined): string {
   return valor || '';
 }
 
+export function formatarCnpj(valor: string | null | undefined): string {
+  const d = (valor || '').replace(/\D/g, '');
+  if (d.length !== 14) return valor || '';
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
 export function iniciaisDe(nome: string): string {
   return nome
     .replace(/[^\p{L}\s]/gu, ' ')
@@ -82,6 +89,8 @@ export function iniciaisDe(nome: string): string {
 
 // Traduz erros das funções do banco sem expor detalhes internos.
 export function mensagemDeErro(erro: { message?: string; code?: string } | null | undefined, padrao: string): string {
+  // Função/tabela ainda inexistente neste banco (migration pendente): explica em vez de dar erro genérico
+  if (recursoAusente(erro)) return MENSAGEM_RECURSO_AUSENTE;
   const texto = erro?.message ?? '';
   // Mensagens das nossas funções já vêm em português e sem detalhes internos.
   if (/[áéíóúãõç]/i.test(texto) && texto.length < 200 && !/violates|duplicate key|relation /i.test(texto)) return texto;

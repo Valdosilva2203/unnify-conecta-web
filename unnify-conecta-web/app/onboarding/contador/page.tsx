@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 import { StepsIndicator } from '@/components/onboarding/StepsIndicator';
 import { Button } from '@/components/ui/button';
 import { SearchIcon } from 'lucide-react';
+import { CartaoConviteOnboarding, responderConviteOnboarding, useConvitePendente, type DecisaoConvite } from '@/components/convites/ConviteOnboarding';
+import type { Permissao } from '@/lib/contabil';
 
 const BRAZILIAN_STATES = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -87,6 +89,10 @@ function OnboardingContadorContent() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [loadingCNPJ, setLoadingCNPJ] = useState(false);
   const [cnpjLookupMessage, setCNPJLookupMessage] = useState('');
+  // E4.1 — convite de empresa (cenário D): aceite explícito; permissões já autorizadas pela empresa (não podem ser ampliadas)
+  const convite = useConvitePendente('empresa_para_contador');
+  const [decisaoConvite, setDecisaoConvite] = useState<DecisaoConvite>(null);
+  const [erroConvite, setErroConvite] = useState('');
 
   useEffect(() => {
     if (processedRef.current) return;
@@ -148,6 +154,8 @@ function OnboardingContadorContent() {
     }
 
     setErrors(newErrors);
+    setErroConvite('');
+    if (convite && !decisaoConvite) { setErroConvite('Escolha se deseja aceitar o vínculo com a empresa.'); return false; }
     return Object.keys(newErrors).length === 0;
   };
 
@@ -277,34 +285,8 @@ function OnboardingContadorContent() {
       }
 
       if (result.id) {
-        // Salvar tipo_usuario imediatamente após criar escritório
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          const token = session?.access_token;
-
-          if (token) {
-            const updateResponse = await fetch('/api/auth/update-tipo-usuario', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              body: JSON.stringify({ tipo_usuario: 'contador' }),
-            });
-
-            const updateData = await updateResponse.json();
-
-            if (updateResponse.ok) {
-              console.log('✅ tipo_usuario salvo como contador:', updateData);
-            } else {
-              console.error('❌ Erro ao salvar tipo_usuario:', updateData);
-            }
-          }
-        } catch (error) {
-          console.error('Erro ao atualizar tipo_usuario:', error);
-        }
-
-        // Redirecionar para conclusão
+        // O tipo de usuário (contador) é definido pelo próprio criar_empresa, no banco, na mesma transação
+        if (convite) await responderConviteOnboarding(convite.token, decisaoConvite, null, null);
         router.push('/onboarding/conclusao');
       } else {
         setError('Resposta inesperada do servidor');
@@ -514,6 +496,11 @@ function OnboardingContadorContent() {
                   )}
                 </div>
               </div>
+
+              {convite && (
+                <CartaoConviteOnboarding dados={convite.dados} decisao={decisaoConvite} aoDecidir={setDecisaoConvite}
+                  permissoes={convite.dados.permissoes as Permissao[]} aoMudarPermissoes={() => {}} erro={erroConvite} />
+              )}
 
               <div className="flex gap-3 sm:gap-4 justify-center md:justify-end pt-6 sm:pt-8 border-t border-gray-200">
                 <Button

@@ -18,6 +18,15 @@ interface Resumo {
   despesas_mes_anterior: number;
   pagamentos_financiamentos_mes: number;
   juros_financiamentos_mes: number;
+  // Migration 000031 (classificação financeira); ausentes antes dela
+  pro_labore_mes?: number;
+  distribuicoes_lucros_mes?: number;
+  aportes_socios_mes?: number;
+  entradas_financiamentos_mes?: number;
+  amortizacao_financiamentos_mes?: number;
+  transferencias_mes?: number;
+  entradas_caixa_mes?: number;
+  saidas_caixa_mes?: number;
   saldo_acumulado: number;
   qtd_contas: number;
   a_pagar_30_valor: number;
@@ -92,14 +101,52 @@ function GraficoBarras({ serie }: { serie: Resumo['serie'] }) {
   );
 }
 
-function ListaResumo({ titulo, itens, aoVerTodas, vazio }: { titulo: string; itens: Lancamento[]; aoVerTodas: () => void; vazio: string }) {
+// Movimentações que NÃO são receita/despesa operacional: aparecem separadas para não distorcer faturamento e despesas.
+function OutrasMovimentacoes({ resumo }: { resumo: Resumo }) {
+  const v = (n: number | undefined) => Number(n ?? 0);
+  const linhas: { rotulo: string; valor: number; sinal: '+' | '−' | ''; ajuda: string; id: string }[] = [
+    { id: 'pro-labore', rotulo: 'Pró-labore', valor: v(resumo.pro_labore_mes), sinal: '−', ajuda: 'Remuneração dos sócios administradores' },
+    { id: 'distribuicoes', rotulo: 'Distribuição de lucros', valor: v(resumo.distribuicoes_lucros_mes), sinal: '−', ajuda: 'Lucro repassado aos sócios' },
+    { id: 'aportes', rotulo: 'Aportes de sócios', valor: v(resumo.aportes_socios_mes), sinal: '+', ajuda: 'Dinheiro colocado pelos sócios' },
+    { id: 'entradas-emprestimos', rotulo: 'Empréstimos recebidos', valor: v(resumo.entradas_financiamentos_mes), sinal: '+', ajuda: 'Principal recebido de bancos' },
+    { id: 'amortizacao', rotulo: 'Amortização de empréstimos', valor: v(resumo.amortizacao_financiamentos_mes), sinal: '−', ajuda: 'Principal devolvido' },
+    { id: 'juros', rotulo: 'Juros e encargos', valor: v(resumo.juros_financiamentos_mes), sinal: '−', ajuda: 'Informados nas parcelas dos contratos' },
+    { id: 'transferencias', rotulo: 'Transferências entre contas', valor: v(resumo.transferencias_mes), sinal: '', ajuda: 'Não alteram o total da empresa' },
+  ];
+  return (
+    <section aria-label="Outras movimentações do mês" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 min-w-0">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+        <h2 className="font-bold text-gray-900">Outras movimentações do mês</h2>
+        <p className="text-xs text-gray-500">
+          Caixa do mês: entradas {formatarMoeda(resumo.entradas_caixa_mes)} · saídas {formatarMoeda(resumo.saidas_caixa_mes)}
+        </p>
+      </div>
+      <p className="text-xs text-gray-500 mb-3">Não entram em “Receitas do mês” nem em “Despesas do mês”, que mostram só o operacional.</p>
+      <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2 xl:grid-cols-4">
+        {linhas.map((l) => (
+          <li key={l.id} className="flex items-start justify-between gap-3 border-b border-gray-100 pb-2 min-w-0" data-testid={`outras-${l.id}`}>
+            <span className="min-w-0">
+              <span className="block text-sm text-gray-800">{l.rotulo}</span>
+              <span className="block text-xs text-gray-500">{l.ajuda}</span>
+            </span>
+            <span className={`text-sm font-semibold whitespace-nowrap ${l.valor === 0 ? 'text-gray-400' : l.sinal === '+' ? 'text-green-700' : l.sinal === '−' ? 'text-red-700' : 'text-gray-800'}`}>
+              {l.valor > 0 && l.sinal ? `${l.sinal} ` : ''}{formatarMoeda(l.valor)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ListaResumo({ titulo, itens, aoVerTodas, vazio }: { titulo: string; itens: Lancamento[]; aoVerTodas?: () => void; vazio: string }) {
   return (
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 min-w-0">
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-bold text-gray-900">{titulo}</h2>
-        <button type="button" onClick={aoVerTodas} className="min-h-11 inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:text-orange-700">
+        {aoVerTodas && <button type="button" onClick={aoVerTodas} className="min-h-11 inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:text-orange-700">
           Ver todas <ChevronRight className="w-4 h-4" aria-hidden="true" />
-        </button>
+        </button>}
       </div>
       {itens.length === 0 ? (
         <p className="text-sm text-gray-500 py-6 text-center">{vazio}</p>
@@ -121,7 +168,8 @@ function ListaResumo({ titulo, itens, aoVerTodas, vazio }: { titulo: string; ite
   );
 }
 
-export function VisaoGeral({ idEmpresa, periodo, versao, aoIrPara, aoNovo }: { idEmpresa: string; periodo: string; versao: number; aoIrPara: (aba: 'pagar' | 'receber') => void; aoNovo: () => void }) {
+// Sem aoIrPara/aoNovo = somente leitura (ex.: contador com "Ver financeiro" no espaço da empresa)
+export function VisaoGeral({ idEmpresa, periodo, versao, aoIrPara, aoNovo }: { idEmpresa: string; periodo: string; versao: number; aoIrPara?: (aba: 'pagar' | 'receber') => void; aoNovo?: () => void }) {
   const [resumo, setResumo] = useState<Resumo | null>(null);
   const [pagar, setPagar] = useState<Lancamento[]>([]);
   const [receber, setReceber] = useState<Lancamento[]>([]);
@@ -164,9 +212,9 @@ export function VisaoGeral({ idEmpresa, periodo, versao, aoIrPara, aoNovo }: { i
         <div className="bg-white rounded-2xl border border-dashed border-orange-300 p-6 text-center">
           <p className="font-semibold text-gray-900">Comece registrando suas receitas e despesas</p>
           <p className="text-sm text-gray-600 mt-1">Os indicadores e gráficos aparecem aqui assim que houver lançamentos.</p>
-          <button type="button" onClick={aoNovo} className="mt-4 min-h-11 px-5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold">
+          {aoNovo && <button type="button" onClick={aoNovo} className="mt-4 min-h-11 px-5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold">
             + Novo lançamento
-          </button>
+          </button>}
         </div>
       )}
 
@@ -200,6 +248,8 @@ export function VisaoGeral({ idEmpresa, periodo, versao, aoIrPara, aoNovo }: { i
         </Cartao>
       </div>
 
+      {resumo.pro_labore_mes !== undefined && <OutrasMovimentacoes resumo={resumo} />}
+
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -219,8 +269,8 @@ export function VisaoGeral({ idEmpresa, periodo, versao, aoIrPara, aoNovo }: { i
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <ListaResumo titulo="Contas a pagar" itens={pagar} aoVerTodas={() => aoIrPara('pagar')} vazio="Nenhuma conta a pagar em aberto." />
-        <ListaResumo titulo="Contas a receber" itens={receber} aoVerTodas={() => aoIrPara('receber')} vazio="Nenhuma conta a receber em aberto." />
+        <ListaResumo titulo="Contas a pagar" itens={pagar} aoVerTodas={aoIrPara && (() => aoIrPara('pagar'))} vazio="Nenhuma conta a pagar em aberto." />
+        <ListaResumo titulo="Contas a receber" itens={receber} aoVerTodas={aoIrPara && (() => aoIrPara('receber'))} vazio="Nenhuma conta a receber em aberto." />
       </div>
     </div>
   );

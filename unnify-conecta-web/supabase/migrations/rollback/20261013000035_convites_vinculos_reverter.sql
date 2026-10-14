@@ -1,0 +1,30 @@
+-- Reverte a E4.1 (convites, notificações, fila de e-mails, consulta por CNPJ). Vínculos criados continuam válidos
+-- (são linhas comuns de vinculos_contabeis); convites, notificações e fila são removidos.
+DROP TRIGGER IF EXISTS notificar_mudanca_vinculo ON public.vinculos_contabeis;
+DROP FUNCTION IF EXISTS public.aceitar_convite_vinculo(text, boolean, uuid, text[]);
+DROP FUNCTION IF EXISTS public.dados_convite(text);
+DROP FUNCTION IF EXISTS public.convites_enviados(uuid);
+DROP FUNCTION IF EXISTS public.cancelar_convite(uuid);
+DROP FUNCTION IF EXISTS public.reenviar_convite(uuid, text);
+DROP FUNCTION IF EXISTS public.registrar_envio_convite(uuid, boolean);
+DROP FUNCTION IF EXISTS public.pode_gerir_convite(public.convites_vinculos);
+DROP FUNCTION IF EXISTS public.criar_convite_vinculo(text, text, text, text, text, text, uuid, text, text[]);
+DROP FUNCTION IF EXISTS public.hash_convite(text);
+DROP TABLE IF EXISTS public.convites_vinculos;
+DROP FUNCTION IF EXISTS public.aceitar_vinculo_contabil(uuid, text, text[]);
+DROP FUNCTION IF EXISTS public.solicitar_vinculo_por_cnpj(text, text);
+DROP FUNCTION IF EXISTS public.consultar_empresa_por_cnpj(text);
+DROP TABLE IF EXISTS public.consultas_cnpj;
+DROP FUNCTION IF EXISTS public.notificar_mudanca_vinculo();
+DROP FUNCTION IF EXISTS public.notificar_usuario(uuid, text, text, text, text, boolean);
+DROP FUNCTION IF EXISTS public.concluir_email(uuid, boolean, text);
+DROP FUNCTION IF EXISTS public.reservar_emails_pendentes(integer);
+DROP TABLE IF EXISTS public.fila_emails;
+DROP FUNCTION IF EXISTS public.marcar_notificacoes_lidas(uuid[]);
+DROP TABLE IF EXISTS public.notificacoes;
+DROP FUNCTION IF EXISTS public.gestores_da_empresa(uuid);
+DROP FUNCTION IF EXISTS public.nome_da_empresa(uuid);
+DROP FUNCTION IF EXISTS public.escritorio_do_contador(uuid);
+DROP FUNCTION IF EXISTS public.e_contador_ativo();
+DROP INDEX IF EXISTS public.idx_empresas_cnpj_digitos;
+DROP FUNCTION IF EXISTS public.cnpj_valido(text);

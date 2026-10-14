@@ -5,8 +5,8 @@ import { Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import {
-  ARQUIVOS_COMPROVANTE, TAMANHO_MAXIMO_COMPROVANTE, hojeBrasil, mascaraMoeda, paraDecimal, valorParaMascara,
-  type Categoria, type ContaFinanceira, type Lancamento, type TipoLancamento,
+  ARQUIVOS_COMPROVANTE, NATUREZAS, NATUREZA_EXIGE_SOCIO, TAMANHO_MAXIMO_COMPROVANTE, hojeBrasil, mascaraMoeda, paraDecimal, valorParaMascara,
+  type Categoria, type ContaFinanceira, type Lancamento, type NaturezaFinanceira, type TipoLancamento,
 } from '@/lib/financeiro';
 import { Modal, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { SeletorConta } from './SeletorConta';
@@ -56,6 +56,7 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
   const [pagamento, setPagamento] = useState('');
   const [idConta, setIdConta] = useState('');
   const [contraparte, setContraparte] = useState('');
+  const [natureza, setNatureza] = useState<NaturezaFinanceira>('operacional');
   const [observacoes, setObservacoes] = useState('');
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -75,6 +76,7 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
     setPagamento(lancamento?.data_pagamento ?? hoje);
     setIdConta(contas.find((c) => c.principal && !c.arquivada_em)?.id ?? '');
     setContraparte(lancamento?.contraparte ?? '');
+    setNatureza(lancamento?.natureza_financeira ?? 'operacional');
     setObservacoes(lancamento?.observacoes ?? '');
     setArquivo(null);
     setErro(null);
@@ -83,6 +85,10 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
 
   const opcoes = categorias.filter((c) => c.tipo === tipo && (c.ativa || c.id === lancamento?.id_categoria));
   const receita = tipo === 'receita';
+  const classificacao = NATUREZAS[tipo].find((n) => n.valor === natureza) ?? NATUREZAS[tipo][0];
+  const exigeSocio = NATUREZA_EXIGE_SOCIO.includes(natureza);
+  // Parcela de contrato: classificação definida em Parcelamentos
+  const classificacaoTravada = !!lancamento?.id_contrato;
 
   const salvar = async (e: FormEvent) => {
     e.preventDefault();
@@ -92,6 +98,7 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
     if (descricao.trim().length < 2) return setErro('Informe a descrição.');
     if (!decimal) return setErro('Informe um valor maior que zero.');
     if (!idCategoria) return setErro('Escolha a categoria.');
+    if (exigeSocio && contraparte.trim().length < 2) return setErro(`Informe o ${classificacao.contraparte.toLowerCase()}.`);
     if (!competencia) return setErro('Informe a data de competência.');
     if (!jaPago && !vencimento) return setErro('Informe o vencimento.');
     if (jaPago && !pagamento) return setErro(`Informe a data do ${receita ? 'recebimento' : 'pagamento'}.`);
@@ -114,10 +121,13 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
       p_contraparte: contraparte.trim() || null,
       p_observacoes: observacoes.trim() || null,
       p_id_conta_financeira: jaPago && !editando ? idConta : null,
+      // Só envia a classificação quando ela importa: operacional é o padrão do banco e, na edição, sem ela a atual é mantida
+      ...(natureza !== 'operacional' || (editando && natureza !== lancamento?.natureza_financeira) ? { p_natureza: natureza } : {}),
     });
     if (error) {
       travado.current = false;
       setSalvando(false);
+      if (error.code === 'PGRST202') return setErro('A classificação financeira será liberada após a próxima atualização do sistema. Use "Despesa/Receita operacional" por enquanto.');
       return setErro(mensagemDeErro(error, 'Não foi possível salvar o lançamento.'));
     }
     let aviso = '';
@@ -158,6 +168,7 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
                 onClick={() => {
                   setTipo(t);
                   setIdCategoria('');
+                  setNatureza('operacional');
                 }}
                 className={`min-h-10 rounded-md text-sm font-semibold ${tipo === t ? (t === 'receita' ? 'bg-white text-green-700 shadow-sm' : 'bg-white text-red-700 shadow-sm') : 'text-gray-600'}`}
               >
@@ -166,6 +177,18 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
             ))}
           </div>
         )}
+        <div>
+          <label htmlFor="lanc-natureza" className={rotulo}>
+            Classificação
+          </label>
+          <select id="lanc-natureza" className={`${campo} disabled:bg-gray-50 disabled:text-gray-500`} value={natureza} disabled={classificacaoTravada}
+            onChange={(e) => setNatureza(e.target.value as NaturezaFinanceira)}>
+            {NATUREZAS[tipo].map((n) => <option key={n.valor} value={n.valor}>{n.rotulo}</option>)}
+          </select>
+          <p className="mt-1 text-xs text-gray-500" data-testid="ajuda-natureza">
+            {classificacaoTravada ? 'Parcela de contrato: a classificação é definida em Parcelamentos.' : classificacao.ajuda}
+          </p>
+        </div>
         <div>
           <label htmlFor="lanc-descricao" className={rotulo}>
             Descrição
@@ -205,7 +228,8 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
         </div>
         <div>
           <label htmlFor="lanc-contraparte" className={rotulo}>
-            {receita ? 'Cliente' : 'Fornecedor'} <span className="font-normal text-gray-500">(opcional)</span>
+            {classificacao.contraparte}{' '}
+            {exigeSocio ? <span className="text-red-600">*</span> : <span className="font-normal text-gray-500">(opcional)</span>}
           </label>
           <input id="lanc-contraparte" className={campo} maxLength={120} value={contraparte} onChange={(e) => setContraparte(e.target.value)} />
         </div>

@@ -9,6 +9,7 @@ import { useEmpresaAtual } from '@/components/app/LayoutEmpresa';
 import { FotoPerfil } from '@/components/contabil/FotoPerfil';
 import { Modal, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { FUNCOES, descreverModalidades, mensagemDeErro, type Funcao } from '@/lib/contabil';
+import { dispararNotificacoes } from '@/lib/convites';
 
 interface Perfil {
   id: string;
@@ -73,6 +74,7 @@ function PerfilContador() {
     }
     setSolicitando(false);
     setEnviado(true);
+    dispararNotificacoes(); // contador recebe aviso no sistema (gatilho) e por e-mail (fila)
   };
 
   if (!empresa) return null;

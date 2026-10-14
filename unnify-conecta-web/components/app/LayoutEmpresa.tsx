@@ -1,13 +1,14 @@
 'use client';
 
-import { Suspense, createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Suspense, createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Home, FileText, DollarSign, AlertCircle, Calendar, ShoppingCart, Box,
-  Users, UserCheck, Receipt, BarChart3, Settings, Bell, Menu, X, Briefcase, ListChecks,
+  Users, UserCheck, Receipt, BarChart3, Settings, Menu, X, Briefcase, ListChecks, HeartPulse,
 } from 'lucide-react';
+import { SinoNotificacoes } from '@/components/notificacoes/SinoNotificacoes';
 import { createClient } from '@/lib/supabase/client';
 import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
 import { carregarPreferenciasExibicao } from '@/lib/conta';
@@ -26,20 +27,64 @@ export interface UsuarioAtual {
   nome: string;
 }
 
-const ContextoEmpresa = createContext<{ empresa: EmpresaAtual | null; usuario: UsuarioAtual | null }>({
+interface ContextoEmpresaValor {
+  empresa: EmpresaAtual | null;
+  usuario: UsuarioAtual | null;
+  empresas: EmpresaAtual[]; // empresas em que o usuário é dono/sócio ativo (lidas sob RLS)
+  trocarEmpresa: (id: string) => void;
+  recarregarEmpresas: () => Promise<void>;
+}
+
+const ContextoEmpresa = createContext<ContextoEmpresaValor>({
   empresa: null,
   usuario: null,
+  empresas: [],
+  trocarEmpresa: () => {},
+  recarregarEmpresas: async () => {},
 });
 
 export const useEmpresaAtual = () => useContext(ContextoEmpresa);
+
+// Preferência de exibição por usuário (não é controle de acesso: a empresa escolhida precisa estar na lista lida sob RLS,
+// e cada consulta/função valida a permissão no banco)
+const chaveEmpresaEscolhida = (idUsuario: string) => `unnify:empresa:${idUsuario}`;
+function lerEscolha(idUsuario: string): string | null {
+  try {
+    return window.localStorage.getItem(chaveEmpresaEscolhida(idUsuario));
+  } catch {
+    return null;
+  }
+}
+function gravarEscolha(idUsuario: string, idEmpresa: string) {
+  try {
+    window.localStorage.setItem(chaveEmpresaEscolhida(idUsuario), idEmpresa);
+  } catch {
+    /* sem armazenamento: segue com a empresa atual */
+  }
+}
+
+async function buscarEmpresasDoUsuario(idUsuario: string): Promise<EmpresaAtual[]> {
+  const { data } = await createClient()
+    .from('usuarios_empresas')
+    .select('empresas!inner(id, razao_social, nome_comercial, cnpj, tipo_empresa)')
+    .eq('id_usuario', idUsuario)
+    .eq('ativo', true)
+    .in('tipo_vinculacao', ['dono', 'socio'])
+    .eq('empresas.tipo_empresa', 'comum');
+  const lista = (data ?? []).map((v) => (v as unknown as { empresas: EmpresaAtual & { tipo_empresa: string } }).empresas);
+  return lista
+    .map(({ id, razao_social, nome_comercial, cnpj }) => ({ id, razao_social, nome_comercial, cnpj }))
+    .sort((a, b) => (a.nome_comercial || a.razao_social).localeCompare(b.nome_comercial || b.razao_social, 'pt-BR'));
+}
 
 const menuItems = [
   { icon: Home, label: 'Início', href: '/app' },
   { icon: Briefcase, label: 'Meu contador', href: '/app/meu-contador' },
   { icon: DollarSign, label: 'Financeiro', href: '/app/financeiro' },
   { icon: ListChecks, label: 'Tarefas', href: '/app/tarefas' },
-  { icon: FileText, label: 'Meus documentos', href: '#' },
-  { icon: AlertCircle, label: 'Obrigações', href: '#' },
+  { icon: FileText, label: 'Meus documentos', href: '/app/documentos' },
+  { icon: AlertCircle, label: 'Obrigações', href: '/app/obrigacoes' },
+  { icon: HeartPulse, label: 'Saúde Empresarial', href: '/app/saude-empresarial' },
   { icon: Calendar, label: 'Agenda', href: '#' },
   { icon: ShoppingCart, label: 'Compras', href: '#' },
   { icon: Box, label: 'Estoque', href: '#' },
@@ -65,7 +110,6 @@ function ListaNavegacao({ pathname }: { pathname: string | null }) {
             >
               <Icon className="w-5 h-5" aria-hidden="true" />
               <span className="flex-1">{item.label}</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide">Em breve</span>
             </div>
           );
         }
@@ -100,6 +144,7 @@ function NavegacaoComRota({ aoNavegar }: { aoNavegar: () => void }) {
 export function LayoutEmpresa({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [empresa, setEmpresa] = useState<EmpresaAtual | null>(null);
+  const [empresas, setEmpresas] = useState<EmpresaAtual[]>([]);
   const [usuario, setUsuario] = useState<UsuarioAtual | null>(null);
   const [menuAberto, setMenuAberto] = useState(false);
 
@@ -132,20 +177,15 @@ export function LayoutEmpresa({ children }: { children: ReactNode }) {
         router.replace('/contador');
         return;
       }
-      const { data: dadosEmpresa } = await supabase
-        .from('empresas')
-        .select('id, razao_social, nome_comercial, cnpj')
-        .eq('criado_por', user.id)
-        .eq('tipo_empresa', 'comum')
-        .order('criado_em')
-        .limit(1)
-        .maybeSingle();
-      if (!dadosEmpresa) {
+      const lista = await buscarEmpresasDoUsuario(user.id);
+      if (lista.length === 0) {
         router.replace('/onboarding');
         return;
       }
       if (!ativo) return;
-      setEmpresa(dadosEmpresa);
+      const escolhida = lerEscolha(user.id);
+      setEmpresas(lista);
+      setEmpresa(lista.find((e) => e.id === escolhida) ?? lista[0]);
       setUsuario({
         id: user.id,
         email: user.email || '',
@@ -169,6 +209,29 @@ export function LayoutEmpresa({ children }: { children: ReactNode }) {
     };
   }, [menuAberto]);
 
+  // Só troca para uma empresa da lista lida sob RLS; o banco valida o acesso em cada consulta
+  const trocarEmpresa = useCallback(
+    (id: string) => {
+      const alvo = empresas.find((e) => e.id === id);
+      if (!alvo || !usuario) return;
+      gravarEscolha(usuario.id, id);
+      setEmpresa(alvo);
+    },
+    [empresas, usuario]
+  );
+
+  // Após editar o cadastro: relê a lista; se perdeu o acesso à empresa atual, cai na primeira disponível
+  const recarregarEmpresas = useCallback(async () => {
+    if (!usuario) return;
+    const lista = await buscarEmpresasDoUsuario(usuario.id);
+    if (lista.length === 0) {
+      router.replace('/onboarding');
+      return;
+    }
+    setEmpresas(lista);
+    setEmpresa((atual) => lista.find((e) => e.id === atual?.id) ?? lista[0]);
+  }, [usuario, router]);
+
   const nomeEmpresa = empresa ? empresa.nome_comercial || empresa.razao_social : '';
   const iniciais = nomeEmpresa
     .split(' ')
@@ -185,7 +248,7 @@ export function LayoutEmpresa({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ContextoEmpresa.Provider value={{ empresa, usuario }}>
+    <ContextoEmpresa.Provider value={{ empresa, usuario, empresas, trocarEmpresa, recarregarEmpresas }}>
       <div className="flex min-h-screen bg-gray-50">
         <aside className="hidden lg:flex sticky top-0 h-screen w-56 shrink-0 bg-white border-r border-gray-200 flex-col">
           <div className="p-6 border-b border-gray-200">
@@ -242,13 +305,7 @@ export function LayoutEmpresa({ children }: { children: ReactNode }) {
               <div className="hidden lg:block" />
 
               <div className="flex items-center gap-1 sm:gap-3 min-w-0">
-                <button
-                  type="button"
-                  aria-label="Notificações"
-                  className="w-11 h-11 inline-flex items-center justify-center hover:bg-gray-100 rounded-lg relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
-                >
-                  <Bell className="w-5 h-5 text-gray-600" />
-                </button>
+                <SinoNotificacoes />
                 {empresa && usuario && (
                   <MenuPerfilEmpresa
                     nomeUsuario={usuario.nome}

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, MapPin, Monitor, Briefcase, Layers } from 'lucide-react';
+import { ChevronLeft, MapPin, Monitor, Briefcase, Layers, Send } from 'lucide-react';
+import { ModalConvidarContador } from '@/components/convites/ModalConvidarContador';
 import { createClient } from '@/lib/supabase/client';
 import { useEmpresaAtual } from '@/components/app/LayoutEmpresa';
 import { FotoPerfil } from '@/components/contabil/FotoPerfil';
@@ -40,6 +41,7 @@ export default function BuscarContadorPage() {
   const [carregandoMais, setCarregandoMais] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const requisicao = useRef(0);
+  const [convidando, setConvidando] = useState(false);
 
   const buscar = useCallback(
     async (deslocamento: number) => {
@@ -208,6 +210,18 @@ export default function BuscarContadorPage() {
           ))}
         </ul>
       )}
+
+      {!carregando && (
+        <section aria-label="Convidar meu contador" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+          <span className="w-12 h-12 shrink-0 rounded-full bg-orange-50 text-orange-600 inline-flex items-center justify-center"><Send className="w-5 h-5" aria-hidden="true" /></span>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-bold text-gray-900">Não encontrou seu contador?</h2>
+            <p className="text-sm text-gray-600">Convide seu contador ou escritório contábil para fazer parte do Unnify Conecta.</p>
+          </div>
+          <button type="button" className={classeBotaoPrimario} onClick={() => setConvidando(true)}>Convidar meu contador</button>
+        </section>
+      )}
+      <ModalConvidarContador aberto={convidando} aoFechar={() => setConvidando(false)} idEmpresa={empresa.id} />
 
       {!carregando && resultados.length < total && (
         <div className="flex justify-center">

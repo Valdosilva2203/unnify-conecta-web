@@ -7,6 +7,7 @@ import { OnboardingHeader } from '@/components/OnboardingHeader';
 import { OnboardingCard } from '@/components/OnboardingCard';
 import { createClient } from '@/lib/supabase/client';
 import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
+import { lerTokenConvite, type DadosConvite } from '@/lib/convites';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -14,6 +15,17 @@ export default function OnboardingPage() {
   const [isChecking, setIsChecking] = useState(true);
   const [canRender, setCanRender] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [convite, setConvite] = useState<DadosConvite | null>(null);
+
+  // Convite guardado neste navegador (link do e-mail → cadastro → aqui)
+  useEffect(() => {
+    const token = lerTokenConvite();
+    if (!token) return;
+    createClient().rpc('dados_convite', { p_token: token }).then(({ data }) => {
+      const d = (data as DadosConvite[] | null)?.[0];
+      if (d?.situacao === 'pendente') setConvite(d);
+    });
+  }, []);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -148,6 +160,13 @@ export default function OnboardingPage() {
             Logado como: <span className="font-semibold text-orange-600 break-all">{userEmail}</span>
           </p>
         </div>
+
+        {convite && (
+          <p role="status" className="mb-8 max-w-3xl mx-auto rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-gray-800" data-testid="aviso-convite-onboarding">
+            Você recebeu um convite de <strong>{convite.remetente ?? 'um parceiro'}</strong>. Escolha <strong>{convite.sentido === 'contador_para_empresa' ? '“Tenho uma empresa”' : '“Sou contador”'}</strong> para
+            concluir o cadastro e responder ao convite.
+          </p>
+        )}
 
         <OnboardingHeader />
 

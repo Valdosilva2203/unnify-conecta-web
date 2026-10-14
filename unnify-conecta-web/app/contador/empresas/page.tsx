@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, X as IconeX, LogOut } from 'lucide-react';
+import { Check, X as IconeX, LogOut, Plus } from 'lucide-react';
+import { ModalVincularEmpresa } from '@/components/convites/ModalVincularEmpresa';
+import { ListaConvites } from '@/components/convites/ListaConvites';
+import { dispararNotificacoes } from '@/lib/convites';
 import { createClient } from '@/lib/supabase/client';
 import { useContadorAtual } from '@/components/contador/LayoutContador';
 import {
@@ -64,6 +67,8 @@ export default function EmpresasDoContadorPage() {
   const [membroEscolhido, setMembroEscolhido] = useState('');
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const requisicao = useRef(0);
+  const [vinculando, setVinculando] = useState(false);
+  const [versaoConvites, setVersaoConvites] = useState(0);
 
   const carregar = useCallback(async () => {
     if (!contador) return;
@@ -108,6 +113,7 @@ export default function EmpresasDoContadorPage() {
     setAviso(sucesso);
     setEncerrando(null);
     setDesignando(null);
+    dispararNotificacoes();
     carregar();
   };
 
@@ -129,10 +135,16 @@ export default function EmpresasDoContadorPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Minhas empresas</h1>
-        <p className="text-gray-600 mt-1">Empresas que você atende e solicitações de vínculo recebidas.</p>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Minhas empresas</h1>
+          <p className="text-gray-600 mt-1">Empresas vinculadas, solicitações enviadas e recebidas.</p>
+        </div>
+        <button type="button" className={classeBotaoPrimario} onClick={() => setVinculando(true)}>
+          <Plus className="w-4 h-4" aria-hidden="true" />Vincular empresa
+        </button>
       </div>
+      <ModalVincularEmpresa aberto={vinculando} aoFechar={() => setVinculando(false)} aoConcluir={() => { carregar(); setVersaoConvites((v) => v + 1); }} />
 
       {contador.escritorio && (
         <div role="tablist" aria-label="Visualização" className="inline-flex p-1 rounded-xl bg-gray-100 gap-1">
@@ -283,6 +295,8 @@ export default function EmpresasDoContadorPage() {
           <Paginacao pagina={pagina} aoMudarPagina={setPagina} porPagina={porPagina} aoMudarPorPagina={setPorPagina} total={total} />
         </EstadoTabela>
       </TabelaCard>
+
+      <ListaConvites versao={versaoConvites} />
 
       <Modal
         aberto={!!encerrando}

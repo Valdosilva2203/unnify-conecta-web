@@ -1,7 +1,8 @@
 'use client';
 
-import { Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { AccountMenu } from './AccountMenu';
+import { SinoNotificacoes } from '@/components/notificacoes/SinoNotificacoes';
 
 interface TopbarProps {
   officeInitials: string;
@@ -28,14 +29,7 @@ export function AccountantTopbar({ officeInitials, officeName, onMenuClick, menu
         <div className="hidden lg:block" />
 
         <div className="flex items-center gap-1 sm:gap-3">
-          <button
-            type="button"
-            className="w-11 h-11 inline-flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
-            aria-label="Notificações"
-          >
-            <Bell className="w-5 h-5 text-gray-600" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-orange-600 rounded-full" aria-hidden="true" />
-          </button>
+          <SinoNotificacoes />
 
           <AccountMenu officeInitials={officeInitials} officeName={officeName} />
         </div>
