@@ -1,0 +1,27 @@
+-- Reverte Funcionários. Lançamentos já criados no Financeiro permanecem (como lançamentos comuns, sem vínculo com a folha).
+DROP FUNCTION IF EXISTS public.historico_funcionario(uuid);
+DROP FUNCTION IF EXISTS public.evolucao_folha(uuid, integer);
+DROP FUNCTION IF EXISTS public.resumo_folha(uuid, date);
+DROP FUNCTION IF EXISTS public.registrar_pagamento_folha(uuid, numeric, date, uuid);
+DROP FUNCTION IF EXISTS public.remover_ajuste_folha(uuid);
+DROP FUNCTION IF EXISTS public.adicionar_ajuste_folha(uuid, text, text, numeric);
+DROP FUNCTION IF EXISTS public.reativar_funcionario(uuid);
+DROP FUNCTION IF EXISTS public.desligar_funcionario(uuid, date);
+DROP FUNCTION IF EXISTS public.salvar_funcionario(uuid, uuid, text, text, date, text, numeric, integer, boolean, text, date);
+DROP FUNCTION IF EXISTS public.gerar_folha(uuid, date);
+DROP FUNCTION IF EXISTS public.gerar_folha_funcionario(uuid, date);
+DROP FUNCTION IF EXISTS public.recalcular_folha(uuid);
+DROP FUNCTION IF EXISTS public.totais_folha(uuid);
+DROP FUNCTION IF EXISTS public.salario_vigente(uuid, date);
+DROP FUNCTION IF EXISTS public.vencimento_folha(integer, boolean, date);
+DROP FUNCTION IF EXISTS public.categoria_folha(uuid);
+DROP TRIGGER IF EXISTS proteger_lancamento_folha ON public.lancamentos_financeiros;
+DROP FUNCTION IF EXISTS public.proteger_lancamento_folha();
+DROP INDEX IF EXISTS public.idx_lancamentos_folha;
+ALTER TABLE public.lancamentos_financeiros DROP COLUMN IF EXISTS id_folha;
+DROP TABLE IF EXISTS public.ajustes_folha;
+DROP TABLE IF EXISTS public.folhas_competencia;
+DROP TABLE IF EXISTS public.historico_salarios;
+DROP TABLE IF EXISTS public.funcionarios;
+DROP FUNCTION IF EXISTS public.pode_gerenciar_folha(uuid);
+DROP FUNCTION IF EXISTS public.pode_ver_folha(uuid);

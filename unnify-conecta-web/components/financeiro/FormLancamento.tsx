@@ -58,6 +58,10 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
   const [contraparte, setContraparte] = useState('');
   const [natureza, setNatureza] = useState<NaturezaFinanceira>('operacional');
   const [observacoes, setObservacoes] = useState('');
+  // Clientes (opcional, só receitas): vínculo por referência; o banco garante mesma empresa e tipo receita
+  const [clientes, setClientes] = useState<{ id: string; nome: string }[] | null>(null);
+  const [idCliente, setIdCliente] = useState('');
+  const [idClienteOriginal, setIdClienteOriginal] = useState('');
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -80,6 +84,14 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
     setObservacoes(lancamento?.observacoes ?? '');
     setArquivo(null);
     setErro(null);
+    setIdCliente(''); setIdClienteOriginal('');
+    const supabase = createClient();
+    supabase.from('clientes').select('id, nome, nome_fantasia, status').eq('id_empresa', idEmpresa).neq('status', 'inativo').order('nome').limit(500)
+      .then(({ data, error }) => setClientes(error ? null : (data ?? []).map((c) => ({ id: c.id as string, nome: (c.nome_fantasia as string) || (c.nome as string) }))));
+    if (lancamento?.id) {
+      supabase.from('lancamentos_financeiros').select('id_cliente').eq('id', lancamento.id).maybeSingle()
+        .then(({ data }) => { const v = (data?.id_cliente as string | null) ?? ''; setIdCliente(v); setIdClienteOriginal(v); });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reinicia só ao abrir
   }, [aberto, lancamento, tipoInicial]);
 
@@ -131,9 +143,13 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
       return setErro(mensagemDeErro(error, 'Não foi possível salvar o lançamento.'));
     }
     let aviso = '';
+    if (receita && id && idCliente !== idClienteOriginal) {
+      const vinc = await createClient().rpc('vincular_cliente_lancamento', { p_id_lancamento: id, p_id_cliente: idCliente || null });
+      if (vinc.error) aviso += ` Atenção: o lançamento foi salvo, mas o cliente não foi vinculado (${mensagemDeErro(vinc.error, 'tente novamente')}).`;
+    }
     if (arquivo && id) {
       const falha = await enviarComprovante(idEmpresa, id as string, arquivo);
-      if (falha) aviso = ` Atenção: ${falha}`;
+      if (falha) aviso += ` Atenção: ${falha}`;
     }
     travado.current = false;
     setSalvando(false);
@@ -233,6 +249,19 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
           </label>
           <input id="lanc-contraparte" className={campo} maxLength={120} value={contraparte} onChange={(e) => setContraparte(e.target.value)} />
         </div>
+        {receita && clientes && clientes.length > 0 && (
+          <div>
+            <label htmlFor="lanc-cliente" className={rotulo}>Cliente cadastrado <span className="font-normal text-gray-500">(opcional — vincula a receita ao cliente)</span></label>
+            <select id="lanc-cliente" className={campo} value={idCliente} onChange={(e) => {
+              setIdCliente(e.target.value);
+              const escolhido = clientes.find((c) => c.id === e.target.value);
+              if (escolhido && !contraparte.trim()) setContraparte(escolhido.nome);
+            }}>
+              <option value="">Sem cliente</option>
+              {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="lanc-competencia" className={rotulo}>

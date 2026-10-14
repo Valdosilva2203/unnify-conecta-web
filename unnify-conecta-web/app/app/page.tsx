@@ -139,6 +139,10 @@ export default function PainelEmpresaPage() {
   const [hoje, setHoje] = useState('');
   const [dataExtenso, setDataExtenso] = useState('');
   const [versao, setVersao] = useState(0);
+  // Valor em aberto já VENCIDO (o resumo do banco só traz a quantidade). null = carregando ou indisponível: não vira zero
+  const [vencidas, setVencidas] = useState<{ receita: number; despesa: number } | null>(null);
+  // Receitas operacionais AINDA NÃO RECEBIDAS (pendentes/vencidas): total e por mês de competência. Mostradas separadas do recebido.
+  const [emAberto, setEmAberto] = useState<{ total: number; porMes: Record<string, number> } | null>(null);
   const [resumo, setResumo] = useState<Estado<Resumo>>(carregando);
   const [aPagar, setAPagar] = useState<Estado<Conta[]>>(carregando);
   const [aReceber, setAReceber] = useState<Estado<Conta[]>>(carregando);
@@ -180,6 +184,21 @@ export default function PainelEmpresaPage() {
     setAPagar(carregando);
     setAReceber(carregando);
     setDados(carregando);
+    setVencidas(null);
+    setEmAberto(null);
+    supabase.from('lancamentos_financeiros_situacao').select('valor, data_competencia').eq('id_empresa', empresa.id).eq('tipo', 'receita')
+      .eq('natureza_financeira', 'operacional').in('situacao', ['pendente', 'vencido']).then(({ data, error }) => {
+        if (!ativo || error) return;
+        const porMes: Record<string, number> = {};
+        let total = 0;
+        for (const l of data ?? []) { const v = Number(l.valor); total += v; const m = `${String(l.data_competencia).slice(0, 7)}-01`; porMes[m] = (porMes[m] ?? 0) + v; }
+        setEmAberto({ total, porMes });
+      });
+    supabase.from('lancamentos_financeiros_situacao').select('tipo, valor').eq('id_empresa', empresa.id).eq('situacao', 'vencido').then(({ data, error }) => {
+      if (!ativo || error) return;
+      const soma = (t: string) => (data ?? []).filter((l) => l.tipo === t).reduce((acc, l) => acc + Number(l.valor), 0);
+      setVencidas({ receita: soma('receita'), despesa: soma('despesa') });
+    });
     supabase.rpc('resumo_financeiro', { p_id_empresa: empresa.id, p_mes: inicioDoMes(hoje) }).then(({ data, error }) => {
       if (ativo) setResumo(error || !data ? falha(error, 'Não foi possível carregar os indicadores financeiros.') : { carregando: false, dados: data as Resumo });
     });
@@ -207,8 +226,9 @@ export default function PainelEmpresaPage() {
   const primeiroNome = usuario.nome.split(' ')[0] || 'Usuário';
   const r = !resumo.carregando && 'dados' in resumo ? resumo.dados : null;
   const totalMovimentado = r ? Number(r.receitas_mes) + Number(r.despesas_mes) : 0;
-  const serie = r ? serieOperacional(r) : [];
-  const temSerie = serie.some((s) => Number(s.receitas) > 0 || Number(s.despesas) > 0);
+  const serie = r ? serieOperacional(r).map((s) => ({ ...s, previstas: emAberto?.porMes[s.mes] ?? 0 })) : [];
+  const temSerie = serie.some((s) => Number(s.receitas) > 0 || Number(s.despesas) > 0 || Number(s.previstas) > 0);
+  const totalAberto = emAberto?.total ?? 0;
   const operacionalSeparado = r?.serie?.[0]?.receitas_operacionais !== undefined;
   const foraDaComposicao = r ? [
     ['pró-labore', r.pro_labore_mes], ['distribuição de lucros', r.distribuicoes_lucros_mes], ['aportes de sócios', r.aportes_socios_mes],
@@ -267,6 +287,11 @@ export default function PainelEmpresaPage() {
         {cardResumo((r) => (
           <Indicador key="rec" titulo="Receitas do mês" valor={formatarMoeda(r.receitas_mes)} icone={TrendingUp} cor="bg-green-100 text-green-600">
             <Variacao atual={r.receitas_mes} anterior={r.receitas_mes_anterior} positivoBom />
+            {totalAberto > 0 && (
+              <p className="text-xs font-semibold text-orange-700" data-testid="receitas-em-aberto">
+                + {formatarMoeda(totalAberto)} a receber{r.a_receber_vencidas_qtd > 0 ? ` · ${plural(r.a_receber_vencidas_qtd, 'vencida', 'vencidas')}` : ''}
+              </p>
+            )}
           </Indicador>
         ), 'Receitas do mês', TrendingUp, 'bg-green-100 text-green-600')}
         {cardResumo((r) => (
@@ -278,16 +303,18 @@ export default function PainelEmpresaPage() {
           r.a_receber_30_valor === undefined ? (
             <Indicador key="arec" titulo="A receber" valor="Indisponível" icone={Clock} cor="bg-orange-100 text-orange-600" destaque="text-gray-400" detalhe="Disponível após a próxima atualização do sistema" />
           ) : (
-            <Indicador key="arec" titulo="A receber" valor={formatarMoeda(r.a_receber_30_valor)} icone={Clock} cor="bg-orange-100 text-orange-600"
-              detalhe={`${plural(Number(r.a_receber_30_qtd ?? 0), 'conta', 'contas')} nos próximos 30 dias`}>
-              {r.a_receber_vencidas_qtd > 0 && <p className="text-xs font-semibold text-red-700">{plural(r.a_receber_vencidas_qtd, 'vencida', 'vencidas')}</p>}
+            <Indicador key="arec" titulo="A receber" icone={Clock} cor="bg-orange-100 text-orange-600"
+              valor={formatarMoeda(Number(r.a_receber_30_valor) + (r.a_receber_vencidas_qtd > 0 && vencidas ? vencidas.receita : 0))}
+              detalhe={`${plural(Number(r.a_receber_30_qtd ?? 0), 'conta', 'contas')} nos próximos 30 dias${r.a_receber_vencidas_qtd > 0 && vencidas ? ' + vencidas' : ''}`}>
+              {r.a_receber_vencidas_qtd > 0 && <p className="text-xs font-semibold text-red-700">{plural(r.a_receber_vencidas_qtd, 'vencida', 'vencidas')}{vencidas ? ` · ${formatarMoeda(vencidas.receita)}` : ''}</p>}
             </Indicador>
           )
         ), 'A receber', Clock, 'bg-orange-100 text-orange-600')}
         {cardResumo((r) => (
-          <Indicador key="apag" titulo="A pagar" valor={formatarMoeda(r.a_pagar_30_valor)} icone={Receipt} cor="bg-blue-100 text-blue-600"
-            detalhe={`${plural(Number(r.a_pagar_30_qtd), 'conta', 'contas')} nos próximos 30 dias`}>
-            {r.a_pagar_vencidas_qtd > 0 && <p className="text-xs font-semibold text-red-700">{plural(r.a_pagar_vencidas_qtd, 'vencida', 'vencidas')}</p>}
+          <Indicador key="apag" titulo="A pagar" icone={Receipt} cor="bg-blue-100 text-blue-600"
+            valor={formatarMoeda(Number(r.a_pagar_30_valor) + (r.a_pagar_vencidas_qtd > 0 && vencidas ? vencidas.despesa : 0))}
+            detalhe={`${plural(Number(r.a_pagar_30_qtd), 'conta', 'contas')} nos próximos 30 dias${r.a_pagar_vencidas_qtd > 0 && vencidas ? ' + vencidas' : ''}`}>
+            {r.a_pagar_vencidas_qtd > 0 && <p className="text-xs font-semibold text-red-700">{plural(r.a_pagar_vencidas_qtd, 'vencida', 'vencidas')}{vencidas ? ` · ${formatarMoeda(vencidas.despesa)}` : ''}</p>}
           </Indicador>
         ), 'A pagar', Receipt, 'bg-blue-100 text-blue-600')}
       </div>
@@ -295,7 +322,7 @@ export default function PainelEmpresaPage() {
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2 min-w-0 flex">
           <Cartao titulo="Visão financeira" rotulo="Visão financeira">
-            <p className="text-sm text-gray-500 -mt-2 mb-3">Receitas e despesas {operacionalSeparado ? 'operacionais ' : ''}pagas nos últimos 6 meses</p>
+            <p className="text-sm text-gray-500 -mt-2 mb-3">Receitas e despesas {operacionalSeparado ? 'operacionais ' : ''}pagas nos últimos 6 meses{serie.some((s) => s.previstas > 0) ? ' · tracejado: receitas a receber, pelo mês de competência' : ''}</p>
             {resumo.carregando ? <Esqueleto linhas={1} altura="h-56" /> : 'erro' in resumo ? <p className="text-sm text-gray-500 py-12 text-center">Gráfico indisponível.</p>
               : temSerie ? <GraficoLinhas serie={serie} />
               : <p className="text-sm text-gray-500 py-12 text-center">Sem receitas ou despesas pagas nos últimos 6 meses.</p>}
@@ -306,16 +333,17 @@ export default function PainelEmpresaPage() {
             {resumo.carregando ? <Esqueleto linhas={1} altura="h-56" /> : 'erro' in resumo ? <p className="text-sm text-gray-500 py-12 text-center">Indisponível.</p> : (
               <>
                 <p className="text-sm text-gray-500 -mt-2 mb-3">Movimentado em {rotuloMes(resumo.dados.periodo_inicio)}</p>
-                {totalMovimentado > 0 ? (
-                  <GraficoRosca empilhado rotulo="Composição de receitas e despesas do mês" total={totalMovimentado} itens={[
+                {totalMovimentado + totalAberto > 0 ? (
+                  <GraficoRosca empilhado rotulo="Composição de receitas e despesas do mês" total={totalMovimentado + totalAberto} itens={[
                     { categoria: 'Receitas', cor: '#2563eb', icone: 'trending-up', valor: Number(resumo.dados.receitas_mes) },
                     { categoria: 'Despesas', cor: '#ef4444', icone: 'receipt', valor: Number(resumo.dados.despesas_mes) },
+                    { categoria: 'A receber (em aberto)', cor: '#f59e0b', icone: 'wallet', valor: totalAberto },
                   ].filter((i) => i.valor > 0)} />
                 ) : (
                   <p className="text-sm text-gray-500 py-12 text-center">Sem receitas ou despesas pagas neste mês.</p>
                 )}
                 <p className="text-xs text-gray-500 mt-3">
-                  Percentuais = composição do total movimentado no mês (recebido + pago). Não representam margem de lucro nem avaliação da saúde da empresa.
+                  Percentuais = composição do total movimentado no mês (recebido + pago){totalAberto > 0 ? ' mais as receitas a receber em aberto (ainda não recebidas, de qualquer mês)' : ''}. Não representam margem de lucro nem avaliação da saúde da empresa.
                   {foraDaComposicao.length > 0 && ` Não entram nesta composição: ${foraDaComposicao.join(', ')}.`}
                 </p>
               </>

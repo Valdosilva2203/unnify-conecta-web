@@ -60,6 +60,10 @@ async function prepararSessao(ctx: BrowserContext, cenario: Cenario, registro: {
     if (url.pathname.endsWith('/usuarios_empresas')) return json(EMPRESAS.map((e) => ({ empresas: e })));
     if (url.pathname.endsWith('/lancamentos_financeiros_situacao')) {
       if (cenario.resumo === 'vazio') return json([]);
+      // Soma do valor já vencido (cards A pagar/A receber)
+      if (url.searchParams.get('situacao') === 'eq.vencido') return json([{ tipo: 'despesa', valor: 1200 }]);
+      // Receitas operacionais em aberto (pendentes/vencidas), por competência
+      if (url.searchParams.get('natureza_financeira') === 'eq.operacional') return json([{ valor: 837, data_competencia: somar(-35) }]);
       const receita = url.searchParams.get('tipo') === 'eq.receita';
       return json([{ id: 'l1', descricao: receita ? 'Cliente XYZ' : 'Aluguel', valor: receita ? 2500 : 1200, data_vencimento: receita ? somar(3) : somar(-2), situacao: receita ? 'pendente' : 'vencido', categoria_icone: 'tag', categoria_cor: '#9ca3af' }]);
     }
@@ -92,11 +96,20 @@ test('indicadores, gráfico, listas e dados vêm da API (valores sem invenção)
   expect(await texto(page.getByRole('region', { name: 'Despesas do mês', exact: true }))).toContain('R$ 14.350,00');
   expect(await texto(page.getByRole('region', { name: 'A receber', exact: true }))).toContain('8 contas nos próximos 30 dias');
   expect(await texto(page.getByRole('region', { name: 'A pagar', exact: true }))).toContain('1 vencida');
+  // Valor em aberto inclui o vencido: 4.200 (30 dias) + 1.200 (vencida) — antes o vencido ficava fora do total
+  expect(await texto(page.getByRole('region', { name: 'A pagar', exact: true }))).toContain('R$ 5.400,00');
+  expect(await texto(page.getByRole('region', { name: 'A pagar', exact: true }))).toContain('1 vencida · R$ 1.200,00');
+  expect(await texto(page.getByRole('region', { name: 'A receber', exact: true }))).toContain('R$ 12.850,00'); // sem vencidas: inalterado
+  // Receita ainda não recebida: aparece SEPARADA do recebido no card, no gráfico (tracejado) e na rosca
+  await expect(page.getByTestId('receitas-em-aberto')).toContainText('+ R$ 837,00 a receber');
+  expect(await texto(page.getByRole('region', { name: 'Receitas do mês', exact: true }))).toContain('R$ 32.800,00');
+  await expect(page.locator('table').filter({ hasText: 'Receitas e despesas pagas por mês' }).locator('thead')).toContainText('A receber');
+  await expect(page.getByRole('region', { name: 'Situação financeira', exact: true })).toContainText('A receber (em aberto)');
   // Meses sem movimentação aparecem como R$ 0,00 na tabela do gráfico (nada inventado)
   const tabela = page.locator('table').filter({ hasText: 'Receitas e despesas pagas por mês' });
   await expect(tabela.locator('tbody tr')).toHaveCount(6);
   expect(await texto(tabela.locator('tbody tr').first())).toContain('R$ 0,00');
-  await expect(page.getByRole('region', { name: 'Situação financeira', exact: true })).toContainText('70%');
+  await expect(page.getByRole('region', { name: 'Situação financeira', exact: true })).toContainText('68%'); // 32.800 ÷ (32.800 + 14.350 + 837 em aberto)
   await expect(page.getByRole('region', { name: 'Situação financeira', exact: true })).toContainText('Não representam margem de lucro');
   await expect(page.getByTestId('conta-Aluguel')).toContainText('Venceu há 2 dias');
   await expect(page.getByTestId('conta-Cliente XYZ')).toContainText('Vence em 3 dias');
@@ -163,7 +176,7 @@ test('estados: erro não vira R$ 0,00; sem movimentação mostra vazio; sem migr
     }],
     ['sem030', async (p: import('@playwright/test').Page) => {
       expect(await texto(p.getByRole('region', { name: 'A receber', exact: true }))).toContain('Indisponível');
-      expect(await texto(p.getByRole('region', { name: 'A pagar', exact: true }))).toContain('R$ 4.200,00');
+      expect(await texto(p.getByRole('region', { name: 'A pagar', exact: true }))).toContain('R$ 5.400,00'); // 4.200 em 30 dias + 1.200 vencida
     }],
   ] as const) {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });

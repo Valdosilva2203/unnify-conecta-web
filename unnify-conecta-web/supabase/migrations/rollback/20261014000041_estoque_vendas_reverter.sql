@@ -1,0 +1,30 @@
+-- Reverte Estoque + Vendas. Lançamentos já gerados no Financeiro permanecem (sem o vínculo com a venda).
+-- Registros de histórico de clientes sobre vendas são removidos (a restrição antiga não os aceita).
+DROP FUNCTION IF EXISTS public.resumo_vendas(uuid, date, date);
+DROP FUNCTION IF EXISTS public.buscar_vendas(uuid, text, text, text, date, date, integer, integer);
+DROP FUNCTION IF EXISTS public.situacao_venda(uuid, text);
+DROP FUNCTION IF EXISTS public.cancelar_venda(uuid, text);
+DROP FUNCTION IF EXISTS public.registrar_recebimento_venda(uuid, numeric, date, uuid);
+DROP FUNCTION IF EXISTS public.salvar_venda(uuid, uuid, uuid, jsonb, numeric, text, text, date, text, boolean, boolean, uuid, uuid);
+DROP FUNCTION IF EXISTS public.categoria_venda(uuid, boolean);
+DROP FUNCTION IF EXISTS public.buscar_produtos(uuid, text, text, text, text, integer, integer);
+DROP FUNCTION IF EXISTS public.resumo_estoque(uuid);
+DROP FUNCTION IF EXISTS public.movimentar_estoque(uuid, text, numeric, text, uuid);
+DROP FUNCTION IF EXISTS public.salvar_produto(uuid, uuid, text, text, text, text, text, text, text, numeric, numeric, numeric, text, numeric);
+DELETE FROM public.historico_clientes WHERE acao IN ('venda_registrada', 'venda_cancelada');
+ALTER TABLE public.historico_clientes DROP CONSTRAINT historico_clientes_acao_check;
+ALTER TABLE public.historico_clientes ADD CONSTRAINT historico_clientes_acao_check CHECK (acao IN ('criado', 'editado', 'status', 'receita_vinculada', 'receita_desvinculada'));
+DROP TRIGGER IF EXISTS proteger_lancamento_venda ON public.lancamentos_financeiros;
+DROP FUNCTION IF EXISTS public.proteger_lancamento_venda();
+DROP INDEX IF EXISTS public.idx_lancamentos_venda;
+ALTER TABLE public.lancamentos_financeiros DROP COLUMN IF EXISTS id_venda;
+DROP TABLE IF EXISTS public.movimentacoes_estoque;
+DROP TABLE IF EXISTS public.historico_vendas;
+DROP TABLE IF EXISTS public.itens_venda;
+DROP TABLE IF EXISTS public.vendas;
+DROP TABLE IF EXISTS public.historico_produtos;
+DROP TRIGGER IF EXISTS proteger_saldo_produto ON public.produtos;
+DROP FUNCTION IF EXISTS public.proteger_saldo_produto();
+DROP TABLE IF EXISTS public.produtos;
+DROP FUNCTION IF EXISTS public.pode_operar_comercial(uuid);
+DROP FUNCTION IF EXISTS public.pode_ver_comercial(uuid);
