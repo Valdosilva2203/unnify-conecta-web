@@ -232,7 +232,7 @@ function PainelVenda({ linha, versao, podeOperar, aoReceber, aoCancelar, aoConti
         <div>
           <h2 className="text-sm font-bold text-gray-900 mb-1">No Financeiro</h2>
           <ul className="text-sm space-y-1" data-testid="lancamentos-venda">
-            {lancs.map((l) => <li key={l.id} className="flex justify-between gap-2"><span className="text-gray-700">{l.status === 'pago' ? `Recebido em ${formatarData(l.data_pagamento)}` : l.status === 'cancelado' ? 'Cancelado' : `A receber · vence ${formatarData(l.data_vencimento)}`}</span><span className="font-semibold whitespace-nowrap">{formatarMoeda(l.valor)}</span></li>)}
+            {lancs.map((l) => <li key={l.id} className="flex items-center justify-between gap-2"><span className="text-gray-700">{l.status === 'pago' ? `Recebido em ${formatarData(l.data_pagamento)}` : l.status === 'cancelado' ? 'Cancelado' : `A receber · vence ${formatarData(l.data_vencimento)}`}</span><span className="flex items-center gap-2"><span className="font-semibold whitespace-nowrap">{formatarMoeda(l.valor)}</span>{podeOperar && l.status === 'pago' && <Link href={`/app/recibos?lancamento=${l.id}`} aria-label={`Emitir recibo do recebimento de ${formatarMoeda(l.valor)}`} className="min-h-11 px-2 inline-flex items-center text-xs font-semibold text-orange-600 hover:underline">Emitir recibo</Link>}</span></li>)}
           </ul>
           <Link href="/app/financeiro#receber" className="inline-block mt-1 text-xs font-semibold text-orange-600 hover:underline">Abrir contas a receber</Link>
         </div>

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { bancoLocal, exigirBancoLocal } from './apoio/banco-local';
 
 function carregarEnv(): Record<string, string> {
   const texto = readFileSync(join(__dirname, '..', '..', '.env.local'), 'utf8');
@@ -14,8 +15,10 @@ function carregarEnv(): Record<string, string> {
 }
 
 const env = carregarEnv();
-const admin = () =>
-  createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+// Escreve no banco (usuários, empresas, vínculos): só com Supabase LOCAL; nunca no compartilhado
+test.skip(!bancoLocal(), 'Escreve no banco: só roda com Supabase local.');
+const admin = () => (exigirBancoLocal(),
+  createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } }));
 const novoCliente = () =>
   createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
 

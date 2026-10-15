@@ -22,7 +22,7 @@ export default function ObrigacoesContadorPage() {
         {empresas.length > 0 && <SeletorEmpresaVinculada empresas={empresas} valor={idEmpresa} aoMudar={setIdEmpresa} />}
       </CabecalhoPagina>
       {empresas.length === 0 ? <SemEmpresaAutorizada permissao="Gerenciar obrigações" />
-        : idEmpresa && <ModuloObrigacoes key={idEmpresa} idEmpresa={idEmpresa} papel="contador" versao={versao} aoAlterar={alterado} />}
+        : idEmpresa && <ModuloObrigacoes key={idEmpresa} idEmpresa={idEmpresa} papel="contador" versao={versao} aoAlterar={alterado} podeAnexar={!!empresas.find((e) => e.id_empresa === idEmpresa)?.permissoes.includes('enviar_documentos')} />}
     </div>
   );
 }

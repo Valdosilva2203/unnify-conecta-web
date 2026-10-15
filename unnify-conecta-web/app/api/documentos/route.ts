@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { excedeuLimite } from '@/lib/limite-taxa';
-import { CATEGORIAS_DOCUMENTO, detectarTipo, extensaoDoNome, nomeSeguro, pdfTemConteudoAtivo, tamanhoMaximoBytes } from '@/lib/documentos';
+import { CATEGORIAS_DOCUMENTO, LIMITE_BUCKET_BYTES, detectarTipo, extensaoDoNome, nomeSeguro, pdfTemConteudoAtivo, tamanhoMaximoBytes } from '@/lib/documentos';
 
 // Envio de documento da empresa. Valida o arquivo no SERVIDOR (tipo real pelo conteúdo, extensão, tamanho, PDF sem
 // conteúdo ativo) e grava COM A SESSÃO DO PRÓPRIO USUÁRIO (anon key + cookies): Storage e banco aplicam RLS e as
@@ -29,15 +29,17 @@ export async function POST(req: NextRequest) {
   const compartilhar = dados.get('compartilhar') === 'true';
   if (!(arquivo instanceof File) || !/^[0-9a-f-]{36}$/.test(idEmpresa)) return NextResponse.json({ erro: 'Envio inválido.' }, { status: 400 });
   if (!(categoria in CATEGORIAS_DOCUMENTO)) return NextResponse.json({ erro: 'Categoria inválida.' }, { status: 400 });
-  const maximo = tamanhoMaximoBytes();
+  // Anexo de obrigação: também aceita XLSX e vai até 10 MB (limite do bucket); a biblioteca segue com o limite configurado
+  const anexoObrigacao = dados.get('finalidade') === 'obrigacao';
+  const maximo = anexoObrigacao ? LIMITE_BUCKET_BYTES : tamanhoMaximoBytes();
   if (arquivo.size === 0 || arquivo.size > maximo) {
     return NextResponse.json({ erro: `O arquivo deve ter até ${Math.round(maximo / 1024 / 1024)} MB.` }, { status: 400 });
   }
 
   const bytes = new Uint8Array(await arquivo.arrayBuffer());
-  const tipo = detectarTipo(bytes);
+  const tipo = detectarTipo(bytes, { xlsx: anexoObrigacao });
   const extensao = extensaoDoNome(arquivo.name);
-  if (!tipo || !extensao) return NextResponse.json({ erro: 'Envie PDF, JPG, JPEG ou PNG.' }, { status: 400 });
+  if (!tipo || !extensao) return NextResponse.json({ erro: anexoObrigacao ? 'Envie PDF, JPG, PNG ou XLSX.' : 'Envie PDF, JPG, JPEG ou PNG.' }, { status: 400 });
   if (tipo.extensao !== extensao) return NextResponse.json({ erro: 'A extensão do arquivo não corresponde ao conteúdo.' }, { status: 400 });
   if (tipo.mime === 'application/pdf' && pdfTemConteudoAtivo(bytes)) {
     return NextResponse.json({ erro: 'PDF com conteúdo ativo (scripts ou arquivos embutidos) não é aceito.' }, { status: 400 });

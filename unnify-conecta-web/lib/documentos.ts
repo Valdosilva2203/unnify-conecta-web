@@ -87,19 +87,27 @@ export function tamanhoMaximoBytes(): number {
 export const formatarTamanho = (bytes: number) =>
   bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
-export type TipoArquivo = { mime: 'application/pdf' | 'image/jpeg' | 'image/png'; extensao: 'pdf' | 'jpg' | 'png' };
+export const MIME_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+export type TipoArquivo = { mime: 'application/pdf' | 'image/jpeg' | 'image/png' | typeof MIME_XLSX; extensao: 'pdf' | 'jpg' | 'png' | 'xlsx' };
 
 // Tipo REAL pelo conteúdo (assinatura dos primeiros bytes), não pelo nome nem pelo tipo informado pelo navegador
-export function detectarTipo(bytes: Uint8Array): TipoArquivo | null {
+// XLSX (anexo de obrigação): só com { xlsx: true }. É um ZIP com xl/workbook.xml; macros (vbaProject.bin) e outros pacotes Office são recusados.
+export function detectarTipo(bytes: Uint8Array, opcoes: { xlsx?: boolean } = {}): TipoArquivo | null {
   const comeca = (assinatura: number[]) => assinatura.every((b, i) => bytes[i] === b);
   if (comeca([0x25, 0x50, 0x44, 0x46, 0x2d])) return { mime: 'application/pdf', extensao: 'pdf' }; // %PDF-
   if (comeca([0xff, 0xd8, 0xff])) return { mime: 'image/jpeg', extensao: 'jpg' };
   if (comeca([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return { mime: 'image/png', extensao: 'png' };
+  if (opcoes.xlsx && comeca([0x50, 0x4b, 0x03, 0x04])) {
+    const texto = new TextDecoder('latin1').decode(bytes);
+    if (texto.includes('xl/workbook.xml') && !texto.includes('word/document.xml') && !texto.includes('vbaProject.bin')) return { mime: MIME_XLSX, extensao: 'xlsx' };
+  }
   return null;
 }
 
-const EXTENSOES_ACEITAS: Record<string, TipoArquivo['extensao']> = { pdf: 'pdf', jpg: 'jpg', jpeg: 'jpg', png: 'png' };
+const EXTENSOES_ACEITAS: Record<string, TipoArquivo['extensao']> = { pdf: 'pdf', jpg: 'jpg', jpeg: 'jpg', png: 'png', xlsx: 'xlsx' };
 export const extensaoDoNome = (nome: string) => EXTENSOES_ACEITAS[(nome.split('.').pop() ?? '').toLowerCase()] ?? null;
+export const rotuloTipo = (mime: string) => (mime === 'application/pdf' ? 'PDF' : mime === 'image/png' ? 'PNG' : mime === MIME_XLSX ? 'XLSX' : 'JPG');
+export const ANEXO_OBRIGACAO_ACEITOS = 'application/pdf,image/jpeg,image/png,' + MIME_XLSX + ',.pdf,.jpg,.jpeg,.png,.xlsx';
 
 // PDF com conteúdo ativo (scripts, ações automáticas, arquivos embutidos) é recusado
 const MARCADORES_ATIVOS = ['/JavaScript', '/JS', '/Launch', '/EmbeddedFile', '/RichMedia', '/XFA', '/AA', '/SubmitForm', '/ImportData'];

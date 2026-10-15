@@ -5,9 +5,10 @@ import { useEmpresaAtual } from '@/components/app/LayoutEmpresa';
 import { createClient } from '@/lib/supabase/client';
 import { BibliotecaDocumentos } from '@/components/documentos/BibliotecaDocumentos';
 import { Solicitacoes } from '@/components/documentos/Solicitacoes';
+import { ModuloCertidoes } from '@/components/certidoes/ModuloCertidoes';
 import { Abas, CabecalhoPagina, useAvisoEVersao } from '@/components/documentos/PaginaComAviso';
 
-type Aba = 'documentos' | 'solicitacoes';
+type Aba = 'documentos' | 'certidoes' | 'solicitacoes';
 
 export default function DocumentosEmpresaPage() {
   const { empresa, usuario } = useEmpresaAtual();
@@ -17,6 +18,7 @@ export default function DocumentosEmpresaPage() {
 
   useEffect(() => {
     if (window.location.hash === '#solicitacoes') setAba('solicitacoes');
+    if (window.location.hash === '#certidoes') setAba('certidoes');
   }, []);
 
   useEffect(() => {
@@ -33,9 +35,11 @@ export default function DocumentosEmpresaPage() {
       <CabecalhoPagina titulo="Meus documentos" subtitulo="Guarde os documentos da empresa e responda ao que o seu contador pedir." aviso={aviso} aoFecharAviso={() => setAviso(null)} />
       <Abas rotulo="Seções de documentos" atual={aba} aoMudar={mudar} abas={[
         { id: 'documentos', titulo: 'Documentos' },
+        { id: 'certidoes', titulo: 'Certidões' },
         { id: 'solicitacoes', titulo: 'Solicitações do contador', contador: aguardando },
       ]} />
-      {aba === 'documentos'
+      {aba === 'certidoes' ? <ModuloCertidoes idEmpresa={empresa.id} cnpjEmpresa={empresa.cnpj} podeGerenciar />
+        : aba === 'documentos'
         ? <BibliotecaDocumentos idEmpresa={empresa.id} papel="empresa" podeEnviar idUsuario={usuario.id} versao={versao} aoAlterar={alterado} />
         : <Solicitacoes idEmpresa={empresa.id} papel="empresa" versao={versao} aoAlterar={alterado} />}
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Download, Eye, FileText, Paperclip, Pencil, RotateCcw, Tag, Trash2, XCircle, CalendarRange } from 'lucide-react';
+import { CheckCircle2, Download, Eye, FileText, Paperclip, Pencil, Receipt, RotateCcw, Tag, Trash2, XCircle, CalendarRange } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import {
@@ -269,6 +269,7 @@ export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas,
                     )}
                     <BotaoIcone icone={Eye} titulo={`Detalhes de ${l.descricao}`} aoClicar={() => setDetalhe(l)} />
                     {l.status !== 'cancelado' && <BotaoIcone icone={Pencil} titulo={`Editar ${l.descricao}`} aoClicar={() => aoEditar(l)} />}
+                    {l.status === 'pago' && <BotaoIcone icone={Receipt} titulo={`${l.tipo === 'receita' ? 'Emitir recibo' : 'Emitir comprovante'} de ${l.descricao}`} aoClicar={() => window.location.assign(`/app/recibos?lancamento=${l.id}`)} />}
                     {l.status === 'pago' && <BotaoIcone icone={RotateCcw} titulo={`Estornar ${l.descricao}`} aoClicar={() => abrirAcao('estorno', l)} />}
                     {aberto && <BotaoIcone icone={XCircle} titulo={`Cancelar ${l.descricao}`} aoClicar={() => abrirAcao('cancelar', l)} />}
                     <BotaoIcone icone={Trash2} titulo={`Excluir ${l.descricao}`} aoClicar={() => abrirAcao('excluir', l)} />

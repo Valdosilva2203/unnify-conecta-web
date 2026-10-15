@@ -5,7 +5,7 @@ import { CalendarRange, Download, Eye, FileText, FolderOpen, Pencil, Share2, Tag
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import {
-  CATEGORIAS_DOCUMENTO, ORIGENS_DOCUMENTO, formatarTamanho, tamanhoMaximoBytes, type CategoriaDocumento, type Documento,
+  CATEGORIAS_DOCUMENTO, ORIGENS_DOCUMENTO, formatarTamanho, rotuloTipo, tamanhoMaximoBytes, type CategoriaDocumento, type Documento,
 } from '@/lib/documentos';
 import { BarraFiltros, BotaoIcone, BotaoLimparFiltros, Celula, CampoBusca, EstadoTabela, FiltroSelect, Linha, Paginacao, Selo, Tabela } from '@/components/admin/tabela';
 import { Modal, classeBotaoPerigo, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
@@ -163,7 +163,7 @@ export function BibliotecaDocumentos({ idEmpresa, papel, podeEnviar, idUsuario, 
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-gray-900 break-words">{d.nome}</p>
                     <p className="text-xs text-gray-500 flex flex-wrap items-center gap-1.5">
-                      {d.tipo_mime === 'application/pdf' ? 'PDF' : d.tipo_mime === 'image/png' ? 'PNG' : 'JPG'}
+                      {rotuloTipo(d.tipo_mime)}
                       {empresario && d.compartilhado_contador && <span className="inline-flex items-center gap-1 text-blue-700"><Share2 className="w-3 h-3" aria-hidden="true" />Compartilhado com o contador</span>}
                       {d.id_solicitacao && <span className="text-purple-700">Resposta a solicitação</span>}
                     </p>

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Home, FileText, DollarSign, AlertCircle, Calendar, ShoppingCart, ShoppingBag, Box,
+  Home, FileText, DollarSign, AlertCircle, Landmark, Calendar, ShoppingCart, ShoppingBag, Box,
   Users, UserCheck, Receipt, BarChart3, Settings, Menu, X, Briefcase, ListChecks, HeartPulse,
 } from 'lucide-react';
 import { SinoNotificacoes } from '@/components/notificacoes/SinoNotificacoes';
@@ -84,14 +84,15 @@ const menuItems = [
   { icon: ListChecks, label: 'Tarefas', href: '/app/tarefas' },
   { icon: FileText, label: 'Meus documentos', href: '/app/documentos' },
   { icon: AlertCircle, label: 'Obrigações', href: '/app/obrigacoes' },
+  { icon: Landmark, label: 'Impostos', href: '/app/impostos' },
   { icon: HeartPulse, label: 'Saúde Empresarial', href: '/app/saude-empresarial' },
   { icon: Calendar, label: 'Agenda', href: '/app/agenda' },
-  { icon: ShoppingCart, label: 'Compras', href: '#' },
+  { icon: ShoppingCart, label: 'Compras', href: '/app/compras' },
   { icon: ShoppingBag, label: 'Vendas', href: '/app/vendas' },
   { icon: Box, label: 'Estoque', href: '/app/estoque' },
   { icon: Users, label: 'Funcionários', href: '/app/funcionarios' },
   { icon: UserCheck, label: 'Clientes', href: '/app/clientes' },
-  { icon: Receipt, label: 'Recibos', href: '#' },
+  { icon: Receipt, label: 'Recibos', href: '/app/recibos' },
   { icon: BarChart3, label: 'Relatórios', href: '/app/relatorios' },
   { icon: Settings, label: 'Minha conta', href: '/app/minha-conta' },
 ];

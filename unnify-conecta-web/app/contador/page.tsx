@@ -156,7 +156,7 @@ export default function PainelContadorPage() {
                       <span className="block text-xs text-gray-500 truncate">{o.empresa_nome} · vence {formatarData(o.data_vencimento)}</span>
                     </span>
                     <Selo tipo={o.situacao === 'atrasada' ? 'perigo' : o.situacao === 'em_andamento' ? 'info' : 'alerta'} texto={o.situacao === 'atrasada' ? 'Atrasada' : o.situacao === 'em_andamento' ? 'Em andamento' : 'A vencer'} />
-                    <Link href={`/contador/empresas/${o.id_empresa}#obrigacoes`} className="min-h-11 inline-flex items-center text-sm font-semibold text-orange-600 hover:underline" aria-label={`Ver ${o.titulo}`}>Ver</Link>
+                    <Link href={`/contador/empresas/${o.id_empresa}/obrigacoes`} className="min-h-11 inline-flex items-center text-sm font-semibold text-orange-600 hover:underline" aria-label={`Ver ${o.titulo}`}>Ver</Link>
                   </li>
                 ))}
               </ul>

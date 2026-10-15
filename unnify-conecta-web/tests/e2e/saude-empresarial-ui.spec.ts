@@ -206,14 +206,14 @@ test('contador: aba Saúde Empresarial só com "Ver financeiro", somente leitura
   await sessaoSimulada(ctx, rotas('contador'));
   const page = await abrir(ctx, `/contador/empresas/${EMPRESA.id}`, 'Empresa Exemplo');
   const abas = page.getByRole('navigation', { name: 'Espaço da empresa' });
-  await abas.getByRole('button', { name: 'Saúde Empresarial', exact: true }).click();
-  await expect(page.getByRole('heading', { level: 2, name: 'Saúde Empresarial' })).toBeVisible();
+  await abas.getByRole('link', { name: 'Saúde Empresarial', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 2, name: 'Saúde Empresarial', exact: true })).toBeVisible();
   await expect.poll(() => texto(page, 'Índice de Saúde Empresarial')).toContain('928');
   // Sem links de edição do Financeiro da empresa
   await expect(page.getByRole('region', { name: 'Contas a vencer' }).getByRole('link', { name: 'Ver todas' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Composição das despesas' }).getByRole('link')).toHaveCount(0);
   const alfa = await abrir(ctx, '/contador/empresas/bbbbbbbb-0000-4000-8000-000000000002', 'Comércio Alfa');
-  await expect(alfa.getByRole('navigation', { name: 'Espaço da empresa' }).getByRole('button', { name: 'Saúde Empresarial', exact: true })).toHaveCount(0);
+  await expect(alfa.getByRole('navigation', { name: 'Espaço da empresa' }).getByRole('link', { name: 'Saúde Empresarial', exact: true })).toHaveCount(0);
   await ctx.close();
 });
 

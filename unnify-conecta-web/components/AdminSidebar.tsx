@@ -18,6 +18,7 @@ import {
   X,
   ListChecks,
   Wallet,
+  FolderOpen,
 } from 'lucide-react';
 
 const menuItems = [
@@ -32,6 +33,7 @@ const menuItems = [
   { label: 'Comissões', icon: Percent, href: '/admin/comissoes' },
   { label: 'Usuários', icon: Users, href: '/admin/usuarios' },
   { label: 'Auditoria', icon: History, href: '/admin/auditoria' },
+  { label: 'Documentos', icon: FolderOpen, href: '/admin/documentos', somenteMaster: true },
   { label: 'Configurações', icon: Settings, href: '/admin/configuracoes' },
 ];
 

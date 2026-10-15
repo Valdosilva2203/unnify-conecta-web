@@ -1,3 +1,4 @@
+// teste-sem-banco: só funções puras ou API simulada por route (não acessa o Supabase)
 import { test, expect } from '@playwright/test';
 import { recursoAusente, statusHttpDoErro, MENSAGEM_RECURSO_AUSENTE } from '../../lib/erros-banco';
 

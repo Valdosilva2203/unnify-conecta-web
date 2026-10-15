@@ -20,10 +20,12 @@ export interface EventoAgenda {
   status_origem: string;
   id_responsavel: string | null;
   responsavel_nome: string | null;
-  visibilidade: 'privado' | 'empresa' | null;
+  visibilidade: 'privado' | 'empresa' | 'compartilhado' | null;
   valor: number | null;
   link: string;
   editavel: boolean;
+  id_empresa?: string | null;     // só na agenda do contador (null = compromisso pessoal)
+  empresa_nome?: string | null;
 }
 
 export const CATEGORIAS: Record<CategoriaCompromisso, { rotulo: string; cor: string }> = {

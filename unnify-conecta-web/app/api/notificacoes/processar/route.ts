@@ -44,5 +44,8 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const segredo = process.env.CRON_SECRET;
   if (!segredo || req.headers.get('authorization') !== `Bearer ${segredo}`) return NextResponse.json({ erro: 'Não autorizado.' }, { status: 401 });
+  // Agendado: gera os alertas de vencimento de certidões (idempotente; vira notificação no sino) antes de enviar a fila
+  await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { autoRefreshToken: false, persistSession: false } })
+    .rpc('processar_alertas_certidoes').then(() => {});
   return processar(req);
 }

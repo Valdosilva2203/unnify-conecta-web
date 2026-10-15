@@ -1,0 +1,30 @@
+-- Reverte Compras. Lançamentos já gerados no Financeiro permanecem (sem o vínculo com a compra).
+-- Movimentações de estoque de compras são mantidas como "entrada"/"saida" (o saldo dos produtos não muda).
+DROP FUNCTION IF EXISTS public.resumo_compras(uuid, date, date);
+DROP FUNCTION IF EXISTS public.buscar_compras(uuid, text, text, uuid, date, date, integer, integer);
+DROP FUNCTION IF EXISTS public.situacao_compra(uuid, text);
+DROP FUNCTION IF EXISTS public.cancelar_compra(uuid, text);
+DROP FUNCTION IF EXISTS public.registrar_pagamento_compra(uuid, numeric, date, uuid);
+DROP FUNCTION IF EXISTS public.estornar_recebimento_compra(uuid, text);
+DROP FUNCTION IF EXISTS public.registrar_recebimento_compra(uuid, jsonb, date, text, uuid);
+DROP FUNCTION IF EXISTS public.salvar_compra(uuid, uuid, uuid, jsonb, numeric, numeric, text, text, integer, date, date, text, boolean, boolean, uuid, uuid);
+DROP FUNCTION IF EXISTS public.categoria_compra(uuid);
+DROP FUNCTION IF EXISTS public.buscar_fornecedores(uuid, text, text, integer, integer);
+DROP FUNCTION IF EXISTS public.salvar_fornecedor(uuid, uuid, text, text, text, text, text, text, text, text, text, text, text);
+DROP TRIGGER IF EXISTS proteger_lancamento_compra ON public.lancamentos_financeiros;
+DROP FUNCTION IF EXISTS public.proteger_lancamento_compra();
+DROP INDEX IF EXISTS public.idx_lancamentos_compra;
+ALTER TABLE public.lancamentos_financeiros DROP COLUMN IF EXISTS id_compra;
+UPDATE public.movimentacoes_estoque SET tipo = CASE WHEN tipo = 'compra' THEN 'entrada' ELSE 'saida' END WHERE tipo IN ('compra', 'estorno_compra');
+DROP INDEX IF EXISTS public.idx_movimentacoes_estoque_compra;
+ALTER TABLE public.movimentacoes_estoque DROP COLUMN IF EXISTS id_recebimento_compra;
+ALTER TABLE public.movimentacoes_estoque DROP COLUMN IF EXISTS id_compra;
+ALTER TABLE public.movimentacoes_estoque DROP CONSTRAINT movimentacoes_estoque_tipo_check;
+ALTER TABLE public.movimentacoes_estoque ADD CONSTRAINT movimentacoes_estoque_tipo_check CHECK (tipo IN ('entrada', 'saida', 'ajuste', 'venda', 'estorno_venda'));
+DROP TABLE IF EXISTS public.historico_compras;
+DROP TABLE IF EXISTS public.itens_recebimento_compra;
+DROP TABLE IF EXISTS public.recebimentos_compra;
+DROP TABLE IF EXISTS public.itens_compra;
+DROP TABLE IF EXISTS public.compras;
+DROP TABLE IF EXISTS public.historico_fornecedores;
+DROP TABLE IF EXISTS public.fornecedores;

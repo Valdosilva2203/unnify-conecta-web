@@ -47,6 +47,9 @@ export const PERMISSOES = {
   ver_comprovantes_financeiros: 'Ver comprovantes financeiros',
   exportar_financeiro: 'Exportar financeiro',
   gerenciar_financeiro: 'Gerenciar lançamentos financeiros',
+  gerenciar_impostos: 'Gerenciar impostos e parcelamentos',
+  gerenciar_agenda: 'Agenda compartilhada (compromissos com a empresa)',
+  gerenciar_certidoes: 'Gerenciar certidões',
 } as const;
 export type Permissao = keyof typeof PERMISSOES;
 

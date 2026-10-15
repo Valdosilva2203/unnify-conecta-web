@@ -144,7 +144,7 @@ export default function EstoquePage() {
   );
 }
 
-interface Movimento { id: string; tipo: string; quantidade: number; saldo_apos: number; motivo: string | null; criado_em: string; vendas: { numero: number } | null }
+interface Movimento { id: string; tipo: string; quantidade: number; saldo_apos: number; motivo: string | null; criado_em: string; vendas: { numero: number } | null; compras?: { numero: number } | null }
 
 function PainelProduto({ id, versao, podeOperar, aoEditar, aoMovimentar }: {
   id: string | null; versao: number; podeOperar: boolean; aoEditar: (p: ProdutoCompleto) => void; aoMovimentar: (p: ProdutoCompleto, t: TipoMovimentacao) => void;
@@ -159,7 +159,7 @@ function PainelProduto({ id, versao, podeOperar, aoEditar, aoMovimentar }: {
     setP(null); setMovs(null); setVendido(null);
     supabase.from('produtos').select('id, tipo, nome, descricao, sku, codigo_barras, categoria, unidade, custo, preco_venda, estoque_atual, estoque_minimo, status, criado_em, atualizado_em').eq('id', id).maybeSingle()
       .then(({ data, error }) => setP(error || !data ? 'erro' : (data as ProdutoCompleto)));
-    supabase.from('movimentacoes_estoque').select('id, tipo, quantidade, saldo_apos, motivo, criado_em, vendas(numero)').eq('id_produto', id).order('criado_em', { ascending: false }).limit(50)
+    supabase.from('movimentacoes_estoque').select('id, tipo, quantidade, saldo_apos, motivo, criado_em, vendas(numero), compras(numero)').eq('id_produto', id).order('criado_em', { ascending: false }).limit(50)
       .then(({ data }) => setMovs((data ?? []) as unknown as Movimento[]));
     supabase.from('itens_venda').select('quantidade, total, vendas!inner(status)').eq('id_produto', id).eq('vendas.status', 'confirmada').limit(5000)
       .then(({ data }) => setVendido((data ?? []).reduce((a, x) => ({ qtd: a.qtd + Number(x.quantidade), total: a.total + Number(x.total) }), { qtd: 0, total: 0 })));
@@ -203,7 +203,7 @@ function PainelProduto({ id, versao, podeOperar, aoEditar, aoMovimentar }: {
             <ul className="divide-y divide-gray-100 text-sm max-h-72 overflow-y-auto" data-testid="movimentacoes">
               {movs.map((m) => (
                 <li key={m.id} className="py-2 flex items-start gap-2">
-                  <span className="flex-1 min-w-0"><span className="block font-medium text-gray-900">{TIPO_MOVIMENTO[m.tipo] ?? m.tipo}{m.vendas ? ` · venda ${numeroVenda(m.vendas.numero)}` : ''}</span>
+                  <span className="flex-1 min-w-0"><span className="block font-medium text-gray-900">{TIPO_MOVIMENTO[m.tipo] ?? m.tipo}{m.vendas ? ` · venda ${numeroVenda(m.vendas.numero)}` : m.compras ? ` · compra ${numeroVenda(m.compras.numero)}` : ''}</span>
                     <span className="block text-xs text-gray-500 break-words">{new Date(m.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' })}{m.motivo ? ` · ${m.motivo}` : ''}</span></span>
                   <span className="text-right whitespace-nowrap"><span className={`block font-semibold ${Number(m.quantidade) < 0 ? 'text-red-700' : 'text-green-700'}`}>{Number(m.quantidade) > 0 ? '+' : ''}{formatarQuantidade(m.quantidade)}</span>
                     <span className="block text-xs text-gray-500">saldo {formatarQuantidade(m.saldo_apos)}</span></span>

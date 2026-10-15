@@ -144,12 +144,13 @@ test('contador: espaço da empresa respeita permissões; empresa não vinculada 
   await sessaoSimulada(ctx, rotas('contador'));
   const page = await abrir(ctx, `/contador/empresas/${EMPRESA.id}`, 'Empresa Exemplo');
   const abas = page.getByRole('navigation', { name: 'Espaço da empresa' });
-  for (const a of ['Solicitações', 'Documentos', 'Obrigações', 'Financeiro', 'Tarefas']) await expect(abas.getByRole('button', { name: a, exact: true })).toBeVisible();
+  for (const a of ['Visão geral', 'Solicitações', 'Documentos', 'Obrigações', 'Financeiro', 'Tarefas']) await expect(abas.getByRole('link', { name: a, exact: true })).toBeVisible();
+  await abas.getByRole('link', { name: 'Solicitações', exact: true }).click();
   await expect(page.getByTestId('solicitacao-Extrato bancário')).toBeVisible({ timeout: 15000 });
   const alfa = await abrir(ctx, '/contador/empresas/bbbbbbbb-0000-4000-8000-000000000002', 'Comércio Alfa');
   const abasAlfa = alfa.getByRole('navigation', { name: 'Espaço da empresa' });
-  await expect(abasAlfa.getByRole('button', { name: 'Obrigações', exact: true })).toHaveCount(0);
-  await expect(abasAlfa.getByRole('button', { name: 'Financeiro', exact: true })).toHaveCount(0);
+  await expect(abasAlfa.getByRole('link', { name: 'Obrigações', exact: true })).toHaveCount(0);
+  await expect(abasAlfa.getByRole('link', { name: 'Financeiro', exact: true })).toHaveCount(0);
   const negada = await ctx.newPage();
   await negada.goto(`${BASE}/contador/empresas/cccccccc-0000-4000-8000-000000000003`);
   await expect(negada.getByText('Você não tem acesso a esta empresa.')).toBeVisible({ timeout: 90000 });

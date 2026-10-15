@@ -32,7 +32,7 @@ export const SITUACAO_VENDA: Record<SituacaoVenda, { rotulo: string; selo: 'suce
 export const FORMAS_PAGAMENTO: Record<FormaPagamento, string> = {
   pix: 'Pix', dinheiro: 'Dinheiro', cartao_credito: 'Cartão de crédito', cartao_debito: 'Cartão de débito', boleto: 'Boleto', transferencia: 'Transferência', outro: 'Outro',
 };
-export const TIPO_MOVIMENTO: Record<string, string> = { entrada: 'Entrada', saida: 'Saída', ajuste: 'Ajuste', venda: 'Venda', estorno_venda: 'Estorno de venda' };
+export const TIPO_MOVIMENTO: Record<string, string> = { entrada: 'Entrada', saida: 'Saída', ajuste: 'Ajuste', venda: 'Venda', estorno_venda: 'Estorno de venda', compra: 'Recebimento de compra', estorno_compra: 'Estorno de recebimento' };
 
 // Quantidades: até 3 casas decimais, vírgula como separador
 const fmtQtd = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });

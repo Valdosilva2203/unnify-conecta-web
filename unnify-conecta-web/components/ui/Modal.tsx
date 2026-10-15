@@ -19,7 +19,7 @@ export function Modal({
   descricao?: string;
   children: ReactNode;
   rodape?: ReactNode;
-  tamanho?: 'md' | 'lg';
+  tamanho?: 'md' | 'lg' | 'xl';
 }) {
   const painelRef = useRef<HTMLDivElement>(null);
   const idTitulo = useId();
@@ -77,7 +77,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={idTitulo}
         aria-describedby={descricao ? idDescricao : undefined}
-        className={`relative w-full ${tamanho === 'lg' ? 'sm:max-w-3xl' : 'sm:max-w-lg'} max-h-[90dvh] flex flex-col bg-white rounded-t-2xl sm:rounded-2xl shadow-xl pb-[env(safe-area-inset-bottom)]`}
+        className={`relative w-full ${tamanho === 'xl' ? 'sm:max-w-6xl' : tamanho === 'lg' ? 'sm:max-w-3xl' : 'sm:max-w-lg'} max-h-[90dvh] flex flex-col bg-white rounded-t-2xl sm:rounded-2xl shadow-xl pb-[env(safe-area-inset-bottom)]`}
       >
         <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-gray-100">
           <div className="min-w-0">

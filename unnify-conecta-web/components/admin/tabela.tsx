@@ -1,6 +1,8 @@
 'use client';
 
 import { Children, createContext, useContext, type ReactNode } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Calendar,
   ChevronDown,
@@ -141,11 +143,28 @@ export function Tabela({ colunas, children }: { colunas: Coluna[]; children: Rea
   );
 }
 
-export function Linha({ children }: { children: ReactNode }) {
+// href (opcional): a linha inteira abre o destino ao clicar; botões, links e campos dentro dela mantêm a própria ação (sem navegação dupla).
+// Para teclado e leitor de tela, o nome da linha deve ser um link (CelulaNome com href).
+const INTERATIVOS = 'a, button, input, select, textarea, label, summary, [role="menuitem"], [role="button"]';
+export function Linha({ children, href }: { children: ReactNode; href?: string }) {
   const colunas = useContext(ColunasContexto);
+  const router = useRouter();
   let indice = -1;
   return (
-    <tr className="block rounded-xl border border-gray-200 bg-white p-3 min-[85rem]:table-row min-[85rem]:rounded-none min-[85rem]:border-0 min-[85rem]:p-0 min-[85rem]:hover:bg-gray-50/60 transition-colors">
+    <tr
+      onClick={
+        href
+          ? (e) => {
+              if ((e.target as HTMLElement).closest(INTERATIVOS)) return;
+              if (window.getSelection()?.toString()) return; // quem está selecionando texto não navega
+              router.push(href);
+            }
+          : undefined
+      }
+      className={`block rounded-xl border border-gray-200 bg-white p-3 min-[85rem]:table-row min-[85rem]:rounded-none min-[85rem]:border-0 min-[85rem]:p-0 min-[85rem]:hover:bg-gray-50/60 transition-colors ${
+        href ? 'cursor-pointer hover:border-orange-200 hover:bg-gray-50/60' : ''
+      }`}
+    >
       {Children.map(children, (filho) => {
         indice += 1;
         return (
@@ -232,16 +251,26 @@ export function CelulaNome({
   nome,
   detalhes = [],
   indice,
+  href,
 }: {
   nome: string;
   detalhes?: (string | null | undefined)[];
   indice?: number;
+  href?: string;
 }) {
   return (
     <div className="flex items-center gap-2.5 2xl:gap-3 min-[85rem]:min-w-[150px] 2xl:min-w-[200px]">
       <Avatar nome={nome} indice={indice} />
       <div className="min-w-0">
-        <p className="text-sm font-bold text-gray-900 leading-snug break-words">{nome}</p>
+        <p className="text-sm font-bold text-gray-900 leading-snug break-words">
+          {href ? (
+            <Link href={href} className="hover:text-orange-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-sm">
+              {nome}
+            </Link>
+          ) : (
+            nome
+          )}
+        </p>
         {detalhes.filter(Boolean).map((detalhe, i) => (
           <p key={i} className="text-xs text-gray-500 leading-snug break-words">
             {detalhe}
@@ -420,7 +449,7 @@ export function Paginacao({
               onClick={() => aoMudarPagina(p)}
               aria-label={`Página ${p}`}
               aria-current={p === pagina ? 'page' : undefined}
-              className={`${tamanho} rounded-lg text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+              className={`${tamanho} ${Math.abs(p - pagina) > 1 ? 'hidden sm:inline-block' : ''} rounded-lg text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
                 p === pagina
                   ? 'bg-orange-500 text-white shadow-sm'
                   : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'

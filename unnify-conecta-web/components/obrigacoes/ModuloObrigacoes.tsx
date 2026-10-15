@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { AlertCircle, CalendarClock, CheckCircle2, ClipboardList, History, ListChecks, Pencil, Play, Plus, RotateCcw, Tag, XCircle } from 'lucide-react';
+import { AlertCircle, CalendarClock, CheckCircle2, ClipboardList, Download, Eye, FileText, History, ListChecks, Paperclip, Pencil, Play, Plus, RotateCcw, Tag, X, XCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import { formatarData, hojeBrasil } from '@/lib/financeiro';
-import { CATEGORIAS_OBRIGACAO, SELO_OBRIGACAO, SITUACOES_OBRIGACAO, type Obrigacao } from '@/lib/documentos';
+import { ANEXO_OBRIGACAO_ACEITOS, CATEGORIAS_OBRIGACAO, LIMITE_BUCKET_BYTES, MIME_XLSX, SELO_OBRIGACAO, SITUACOES_OBRIGACAO, extensaoDoNome, formatarTamanho, nomeSeguro, rotuloTipo, type Documento, type Obrigacao } from '@/lib/documentos';
+import { abrirDocumento, enviarDocumento } from '@/components/documentos/acoes';
 import { BarraFiltros, BotaoIcone, BotaoLimparFiltros, Celula, CampoBusca, FiltroSelect, Linha, Paginacao, Selo, Tabela } from '@/components/admin/tabela';
 import { Modal, classeBotaoPerigo, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { Indicador } from '@/components/financeiro/Indicador';
@@ -16,6 +17,7 @@ const ACOES: Record<string, string> = { criada: 'Criada', editada: 'Editada', in
 
 interface Resumo { obrigacoes_atrasadas: number; obrigacoes_7_dias: number; obrigacoes_abertas: number; obrigacoes_concluidas_mes: number }
 type Pessoa = { id_usuario: string; nome: string; papel: string };
+type Anexo = Pick<Documento, 'id' | 'nome' | 'caminho' | 'tipo_mime' | 'tamanho'>;
 
 function prazo(o: Obrigacao): string {
   if (o.situacao === 'concluida' || o.situacao === 'cancelada') return formatarData(o.data_vencimento);
@@ -27,8 +29,9 @@ function prazo(o: Obrigacao): string {
 
 // Obrigações da empresa: cadastradas por quem tem permissão (dono/sócio ou contador com "gerenciar_obrigacoes").
 // Nada é gerado automaticamente (sem impostos, valores ou datas inventadas).
-export function ModuloObrigacoes({ idEmpresa, papel, versao, aoAlterar, compacto = false }: {
+export function ModuloObrigacoes({ idEmpresa, papel, versao, aoAlterar, compacto = false, podeAnexar = true }: {
   idEmpresa: string; papel: 'empresa' | 'contador'; versao: number; aoAlterar: (m: string) => void; compacto?: boolean; // compacto: sem os indicadores
+  podeAnexar?: boolean; // contador: precisa da permissão "enviar_documentos" para anexar arquivo
 }) {
   const [busca, setBusca] = useState('');
   const [buscaAplicada, setBuscaAplicada] = useState('');
@@ -38,6 +41,7 @@ export function ModuloObrigacoes({ idEmpresa, papel, versao, aoAlterar, compacto
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
   const [lista, setLista] = useState<Obrigacao[]>([]);
+  const [anexos, setAnexos] = useState<Record<string, Anexo>>({});
   const [total, setTotal] = useState(0);
   const [resumo, setResumo] = useState<Resumo | null>(null);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
@@ -79,9 +83,15 @@ export function ModuloObrigacoes({ idEmpresa, papel, versao, aoAlterar, compacto
       setCarregando(false);
       if (l.error) return setErro(mensagemDeErro(l.error, 'Não foi possível carregar as obrigações.'));
       setErro(null);
-      setLista((l.data ?? []) as Obrigacao[]);
+      const itens = (l.data ?? []) as Obrigacao[];
+      setLista(itens);
       setTotal(l.count ?? 0);
       setResumo(r.error ? null : (r.data as Resumo));
+      // Anexos: só os que quem está vendo consegue ler (RLS de documentos_empresa)
+      const ids = itens.map((o) => o.id_documento).filter((x): x is string => !!x);
+      if (!ids.length) return setAnexos({});
+      supabase.from('documentos_empresa').select('id, nome, caminho, tipo_mime, tamanho').in('id', ids)
+        .then(({ data }) => { if (ativo) setAnexos(Object.fromEntries(((data ?? []) as Anexo[]).map((d) => [d.id, d]))); });
     });
     return () => { ativo = false; };
   }, [idEmpresa, situacao, categoria, janela, buscaAplicada, pagina, porPagina, versao]);
@@ -153,7 +163,10 @@ export function ModuloObrigacoes({ idEmpresa, papel, versao, aoAlterar, compacto
                       <div className="min-w-0" data-testid={`obrigacao-${o.titulo}`}>
                         <p className="text-sm font-bold text-gray-900 break-words">{o.titulo}</p>
                         {o.descricao && <p className="text-xs text-gray-500 break-words">{o.descricao}</p>}
-                        <p className="text-xs text-gray-500">{[o.id_documento && 'Com documento', o.id_tarefa && 'Com tarefa'].filter(Boolean).join(' · ')}</p>
+                        <p className="text-xs text-gray-500">{[o.id_documento && !anexos[o.id_documento] && 'Com documento', o.id_tarefa && 'Com tarefa'].filter(Boolean).join(' · ')}</p>
+                        {o.id_documento && anexos[o.id_documento] && (
+                          <div className="min-w-0 [contain:inline-size]"><AnexoDaObrigacao anexo={anexos[o.id_documento]} aoErro={(m) => aoAlterar(`Atenção: ${m}`)} /></div> // não aumenta a largura mínima do cartão no celular
+                        )}
                       </div>
                     </Celula>
                     <Celula>{CATEGORIAS_OBRIGACAO[o.categoria]}</Celula>
@@ -182,7 +195,7 @@ export function ModuloObrigacoes({ idEmpresa, papel, versao, aoAlterar, compacto
         {!erro && !carregando && total > 0 && <Paginacao pagina={pagina} aoMudarPagina={setPagina} porPagina={porPagina} aoMudarPorPagina={setPorPagina} total={total} />}
       </section>
 
-      <FormObrigacao alvo={form} idEmpresa={idEmpresa} pessoas={pessoas} aoFechar={() => setForm(null)} aoSalvar={(m) => { setForm(null); aoAlterar(m); }} />
+      <FormObrigacao alvo={form} idEmpresa={idEmpresa} pessoas={pessoas} podeAnexar={podeAnexar} aoFechar={() => setForm(null)} aoSalvar={(m) => { setForm(null); aoAlterar(m); }} />
       <CancelarObrigacao obrigacao={cancelando} aoFechar={() => setCancelando(null)} aoConcluir={(m) => { setCancelando(null); aoAlterar(m); }} />
       <Modal aberto={!!historico} aoFechar={() => setHistorico(null)} titulo="Histórico da obrigação" descricao={historico?.o.titulo}>
         <ol className="border-l-2 border-orange-200 pl-3 space-y-1.5 text-sm">
@@ -196,7 +209,29 @@ export function ModuloObrigacoes({ idEmpresa, papel, versao, aoAlterar, compacto
   );
 }
 
-function FormObrigacao({ alvo, idEmpresa, pessoas, aoFechar, aoSalvar }: { alvo: { o: Obrigacao | null } | null; idEmpresa: string; pessoas: Pessoa[]; aoFechar: () => void; aoSalvar: (m: string) => void }) {
+// Anexo já cadastrado: nome, tipo, tamanho e abrir/baixar (URL temporária, autorizada pelo Storage). Planilha só baixa.
+function BotaoAnexo({ icone: Icone, titulo, aoClicar }: { icone: typeof Eye; titulo: string; aoClicar: () => void }) {
+  return (
+    <button type="button" title={titulo} aria-label={titulo} onClick={aoClicar}
+      className="shrink-0 w-8 h-8 inline-flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
+      <Icone className="w-4 h-4" aria-hidden="true" />
+    </button>
+  );
+}
+
+function AnexoDaObrigacao({ anexo, aoErro }: { anexo: Anexo; aoErro: (m: string) => void }) {
+  const abrir = (baixar: boolean) => abrirDocumento(anexo, baixar).catch((e: Error) => aoErro(e.message));
+  return (
+    <div className="mt-1 flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-lg bg-gray-50 border border-gray-200 px-2 py-1 text-xs text-gray-700" data-testid={`anexo-${anexo.nome}`}>
+      <Paperclip className="w-3.5 h-3.5 shrink-0 text-orange-600" aria-hidden="true" />
+      <span className="min-w-0 truncate">{anexo.nome}</span><span className="shrink-0 text-gray-500 whitespace-nowrap">{rotuloTipo(anexo.tipo_mime)} · {formatarTamanho(anexo.tamanho)}</span>
+      {anexo.tipo_mime !== MIME_XLSX && <BotaoAnexo icone={Eye} titulo={`Visualizar anexo ${anexo.nome}`} aoClicar={() => abrir(false)} />}
+      <BotaoAnexo icone={Download} titulo={`Baixar anexo ${anexo.nome}`} aoClicar={() => abrir(true)} />
+    </div>
+  );
+}
+
+function FormObrigacao({ alvo, idEmpresa, pessoas, podeAnexar, aoFechar, aoSalvar }: { alvo: { o: Obrigacao | null } | null; idEmpresa: string; pessoas: Pessoa[]; podeAnexar: boolean; aoFechar: () => void; aoSalvar: (m: string) => void }) {
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [categoria, setCategoria] = useState('outras');
@@ -205,6 +240,8 @@ function FormObrigacao({ alvo, idEmpresa, pessoas, aoFechar, aoSalvar }: { alvo:
   const [observacoes, setObservacoes] = useState('');
   const [documento, setDocumento] = useState('');
   const [docs, setDocs] = useState<{ id: string; nome: string }[]>([]);
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [seletorArquivo, setSeletorArquivo] = useState(0); // troca a chave do <input> para limpar a seleção
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
@@ -212,7 +249,7 @@ function FormObrigacao({ alvo, idEmpresa, pessoas, aoFechar, aoSalvar }: { alvo:
     if (!alvo) return;
     const o = alvo.o;
     setTitulo(o?.titulo ?? ''); setDescricao(o?.descricao ?? ''); setCategoria(o?.categoria ?? 'outras'); setResponsavel(o?.id_responsavel ?? '');
-    setVencimento(o?.data_vencimento ?? ''); setObservacoes(o?.observacoes ?? ''); setDocumento(o?.id_documento ?? ''); setErro(null);
+    setVencimento(o?.data_vencimento ?? ''); setObservacoes(o?.observacoes ?? ''); setDocumento(o?.id_documento ?? ''); setErro(null); setArquivo(null);
     // Só documentos que quem está editando consegue ver (RLS)
     createClient().from('documentos_empresa').select('id, nome').eq('id_empresa', idEmpresa).order('enviado_em', { ascending: false }).limit(100)
       .then(({ data }) => setDocs(data ?? []));
@@ -223,10 +260,28 @@ function FormObrigacao({ alvo, idEmpresa, pessoas, aoFechar, aoSalvar }: { alvo:
     if (titulo.trim().length < 3) return setErro('Informe o título (mínimo 3 caracteres).');
     if (!vencimento) return setErro('Informe o vencimento.');
     setSalvando(true);
-    const { error } = await createClient().rpc('salvar_obrigacao', {
+    const supabase = createClient();
+    // 1) Envia o anexo (vira documento privado da empresa, visível a quem acessa a obrigação). Falhou: nada é salvo.
+    let idDocumento: string | null = documento || null;
+    let novoDocumento: string | null = null;
+    if (arquivo) {
+      try {
+        novoDocumento = await enviarDocumento({ arquivo, idEmpresa, nome: nomeSeguro(arquivo.name.replace(/\.[^.]+$/, ''), 'Anexo'), categoria: 'outros', compartilhar: true, finalidade: 'obrigacao' });
+        idDocumento = novoDocumento;
+      } catch (e) {
+        setSalvando(false);
+        return setErro((e as Error).message || 'Não foi possível enviar o anexo.');
+      }
+    }
+    // 2) Salva a obrigação já com o vínculo. Falhou: descarta o anexo recém-enviado (sem referência inválida nem arquivo órfão)
+    const { error } = await supabase.rpc('salvar_obrigacao', {
       p_id: alvo?.o?.id ?? null, p_id_empresa: idEmpresa, p_titulo: titulo.trim(), p_descricao: descricao.trim() || null, p_categoria: categoria,
-      p_id_responsavel: responsavel || null, p_data_vencimento: vencimento, p_observacoes: observacoes.trim() || null, p_id_documento: documento || null,
+      p_id_responsavel: responsavel || null, p_data_vencimento: vencimento, p_observacoes: observacoes.trim() || null, p_id_documento: idDocumento,
     });
+    if (error && novoDocumento) {
+      const { data: caminho } = await supabase.rpc('excluir_documento', { p_id: novoDocumento });
+      if (caminho) await supabase.storage.from('documentos-empresas').remove([caminho as string]);
+    }
     setSalvando(false);
     if (error) return setErro(mensagemDeErro(error, 'Não foi possível salvar a obrigação.'));
     aoSalvar(alvo?.o ? 'Obrigação atualizada.' : 'Obrigação cadastrada.');
@@ -259,6 +314,31 @@ function FormObrigacao({ alvo, idEmpresa, pessoas, aoFechar, aoSalvar }: { alvo:
             <option value="">Nenhum</option>
             {docs.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
           </select></div>
+        <div><label htmlFor="obr-anexo" className={rotulo}>Anexar arquivo <span className="font-normal text-gray-500">(opcional)</span></label>
+          {podeAnexar ? (
+            <>
+              <input id="obr-anexo" key={seletorArquivo} type="file" accept={ANEXO_OBRIGACAO_ACEITOS} aria-describedby="obr-anexo-ajuda"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  if (!f) return setArquivo(null);
+                  if (!extensaoDoNome(f.name)) { setErro('Envie PDF, JPG, PNG ou XLSX.'); setArquivo(null); return setSeletorArquivo((n) => n + 1); }
+                  if (f.size === 0 || f.size > LIMITE_BUCKET_BYTES) { setErro('O arquivo deve ter até 10 MB.'); setArquivo(null); return setSeletorArquivo((n) => n + 1); }
+                  setErro(null); setArquivo(f);
+                }}
+                className="block w-full text-sm text-gray-700 file:mr-3 file:h-10 file:px-4 file:rounded-lg file:border-0 file:bg-gray-100 file:text-sm file:font-semibold file:text-gray-800 hover:file:bg-gray-200" />
+              <p id="obr-anexo-ajuda" className="mt-1 text-xs text-gray-500">PDF, JPG, PNG ou XLSX, até 10 MB. {documento ? 'Ao anexar, substitui o documento relacionado acima.' : 'Fica visível para a empresa e para o contador desta obrigação.'}</p>
+              {arquivo && (
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm" data-testid="anexo-selecionado">
+                  <FileText className="w-4 h-4 shrink-0 text-orange-600" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate font-medium text-gray-900">{arquivo.name}</span>
+                  <span className="text-xs text-gray-500 whitespace-nowrap">{formatarTamanho(arquivo.size)}</span>
+                  <button type="button" aria-label={`Remover ${arquivo.name}`} onClick={() => { setArquivo(null); setSeletorArquivo((n) => n + 1); }}
+                    className="p-1 rounded text-gray-500 hover:text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"><X className="w-4 h-4" aria-hidden="true" /></button>
+                </div>
+              )}
+            </>
+          ) : <p className="text-xs text-gray-500">Seu vínculo não inclui enviar documentos. Peça à empresa para liberar "Enviar documentos".</p>}
+        </div>
         <div><label htmlFor="obr-observacoes" className={rotulo}>Observações <span className="font-normal text-gray-500">(opcional)</span></label>
           <textarea id="obr-observacoes" rows={2} maxLength={2000} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
         {erro && <p role="alert" className="text-sm text-red-700">{erro}</p>}

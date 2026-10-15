@@ -230,10 +230,12 @@ export default function EmpresasDoContadorPage() {
               const recebida = v.origem === 'empresa';
               const precisaDesignar = aba === 'escritorio' && pendente && recebida && !v.id_contador;
               const podeResponder = pendente && recebida && (aba === 'minhas' || precisaDesignar);
+              // Só abre o painel da empresa quando o vínculo está ativo e é meu (o destino confere de novo o vínculo e as permissões)
+              const destino = v.status === 'ativo' && (aba === 'minhas' || v.id_contador === contador.id) ? `/contador/empresas/${v.id_empresa}` : undefined;
               return (
-                <Linha key={v.id_vinculo}>
+                <Linha key={v.id_vinculo} href={destino}>
                   <Celula>
-                    <CelulaNome nome={nome} detalhes={[v.nome_comercial ? v.razao_social : null, `CNPJ ${v.cnpj}`]} indice={(pagina - 1) * porPagina + i} />
+                    <CelulaNome nome={nome} detalhes={[v.nome_comercial ? v.razao_social : null, `CNPJ ${v.cnpj}`]} indice={(pagina - 1) * porPagina + i} href={destino} />
                   </Celula>
                   <Celula>
                     <CelulaCidade cidade={v.cidade} uf={v.estado} />

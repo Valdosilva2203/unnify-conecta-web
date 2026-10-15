@@ -1,3 +1,4 @@
+// teste-sem-banco: só funções puras ou API simulada por route (não acessa o Supabase)
 import { test, expect, type BrowserContext } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

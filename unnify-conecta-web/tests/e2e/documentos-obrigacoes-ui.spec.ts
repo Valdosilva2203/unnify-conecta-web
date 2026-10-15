@@ -182,7 +182,8 @@ test('obrigações: indicadores, criação com responsável, cancelamento com mo
   await expect(atrasada).toContainText('Atrasada');
   await expect(atrasada).toContainText('Venceu há 2 dias');
   await expect(atrasada).toContainText('Carlos Contador');
-  await expect(page.getByRole('row').filter({ hasText: 'Renovar alvará' })).toContainText('Com documento · Com tarefa');
+  await expect(page.getByRole('row').filter({ hasText: 'Renovar alvará' })).toContainText('Com tarefa');
+  await expect(page.getByTestId('anexo-Contrato social')).toContainText('PDF'); // documento vinculado aparece como anexo, com nome e tamanho
 
   await page.getByRole('button', { name: 'Nova obrigação' }).click();
   const d = page.getByRole('dialog');

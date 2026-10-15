@@ -194,7 +194,7 @@ function Barras({ dados }: { dados: { mes: string; novos: number; cadastrados: n
 
 interface Movimento { id: string; descricao: string; valor: number; status: string; situacao: string; data_vencimento: string | null; data_pagamento: string | null; categoria: string | null }
 interface EventoHist { acao: string; dados: Record<string, unknown> | null; criado_em: string }
-const ROTULO_ACAO: Record<string, string> = { criado: 'Cliente cadastrado', editado: 'Dados atualizados', status: 'Situação alterada', receita_vinculada: 'Receita vinculada', receita_desvinculada: 'Receita desvinculada' };
+const ROTULO_ACAO: Record<string, string> = { criado: 'Cliente cadastrado', editado: 'Dados atualizados', status: 'Situação alterada', receita_vinculada: 'Receita vinculada', receita_desvinculada: 'Receita desvinculada', venda_registrada: 'Venda registrada', venda_cancelada: 'Venda cancelada', recibo_emitido: 'Recibo emitido', recibo_cancelado: 'Recibo cancelado' };
 const CAMPOS: Record<string, string> = { tipo: 'tipo', nome: 'nome', documento: 'documento', contato: 'contato', endereco: 'endereço', observacoes: 'observações' };
 
 function PainelCliente({ id, idEmpresa, versao, aoEditar, aoAlterar }: { id: string | null; idEmpresa: string; versao: number; aoEditar: (c: ClienteCompleto) => void; aoAlterar: (m: string) => void }) {
@@ -269,7 +269,7 @@ function PainelCliente({ id, idEmpresa, versao, aoEditar, aoAlterar }: { id: str
               <p className="text-xs text-gray-500">{new Date(h.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                 {h.acao === 'editado' && Array.isArray(h.dados?.campos) ? ` · ${(h.dados!.campos as string[]).map((x) => CAMPOS[x] ?? x).join(', ')}` : ''}
                 {h.acao === 'status' ? ` · ${STATUS_CLIENTE[h.dados?.de as StatusCliente]?.rotulo} → ${STATUS_CLIENTE[h.dados?.para as StatusCliente]?.rotulo}` : ''}
-                {h.acao.startsWith('receita') ? ` · ${h.dados?.descricao} (${formatarMoeda(h.dados?.valor as number)})` : ''}</p>
+                {/^(receita|venda|recibo)_/.test(h.acao) ? ` · ${h.dados?.descricao} (${formatarMoeda(h.dados?.valor as number)})` : ''}</p>
             </li>
           ))}
         </ul>
