@@ -62,7 +62,7 @@ const TOKEN = 'A'.repeat(43);
 test('ativação: colaborador define a própria senha (requisitos), conta criada no servidor, vínculo pela sessão dele e entra no portal', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const reg = await semSessao(ctx, rotasPortal((c) => {
-    if (c === 'rpc/dados_convite_colaborador') return { corpo: [CONVITE] };
+    if (c === 'rpc/dados_convite_colaborador') return { corpo: CONVITE };
     if (c === 'rpc/aceitar_convite_colaborador') return { corpo: 'f2' };
     return undefined;
   }));
@@ -95,7 +95,7 @@ test('ativação: colaborador define a própria senha (requisitos), conta criada
 test('ativação: convite expirado, e-mail já cadastrado e conta logada de outro e-mail', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   let situacao = 'expirado';
-  await semSessao(ctx, rotasPortal((c) => (c === 'rpc/dados_convite_colaborador' ? { corpo: [situacao === 'valido' ? CONVITE : { situacao, nome: null, empresa: null, email: null, expira_em: null }] } : undefined)));
+  await semSessao(ctx, rotasPortal((c) => (c === 'rpc/dados_convite_colaborador' ? { corpo: situacao === 'valido' ? CONVITE : { situacao, nome: null, empresa: null, email: null, expira_em: null } } : undefined)));
   const page = await ctx.newPage();
   await page.goto(`${BASE}/colaborador/ativar#${TOKEN}`);
   await expect(page.getByRole('heading', { name: 'Convite indisponível' })).toBeVisible({ timeout: 90000 });
@@ -112,7 +112,7 @@ test('ativação: convite expirado, e-mail já cadastrado e conta logada de outr
   await ctx.close();
   // Sessão de outra conta: não ativa, pede para sair
   const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  await sessaoSimulada(ctx2, rotasPortal((c) => (c === 'rpc/dados_convite_colaborador' ? { corpo: [{ ...CONVITE, email: 'outra.pessoa@exemplo.test' }] } : undefined)));
+  await sessaoSimulada(ctx2, rotasPortal((c) => (c === 'rpc/dados_convite_colaborador' ? { corpo: { ...CONVITE, email: 'outra.pessoa@exemplo.test' } } : undefined)));
   const p2 = await ctx2.newPage();
   await p2.goto(`${BASE}/colaborador/ativar#${TOKEN}`);
   await expect(p2.getByText('Você está conectado com outra conta (simulado@exemplo.test).', { exact: false })).toBeVisible({ timeout: 90000 });
@@ -178,7 +178,7 @@ test('ponto: GPS capturado, câmera indisponível sem bloquear, mesmo id na nova
   const reg = await sessaoSimulada(ctx, rotasPortal((c) => {
     if (c === 'rpc/registrar_marcacao_ponto') {
       tentativas += 1;
-      return tentativas === 1 ? { status: 503, corpo: { message: 'falha de rede' } } : { corpo: [{ id: 'm1', registrado_em: new Date().toISOString(), data_local: hoje, duplicada: false }] };
+      return tentativas === 1 ? { status: 503, corpo: { message: 'falha de rede' } } : { corpo: { id: 'm1', registrado_em: new Date().toISOString(), data_local: hoje, duplicada: false } };
     }
     return undefined;
   }));
@@ -205,7 +205,7 @@ test('ponto: GPS capturado, câmera indisponível sem bloquear, mesmo id na nova
   await ctx.close();
   // GPS negado: marcação segue sem localização
   const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 } });
-  const reg2 = await sessaoSimulada(ctx2, rotasPortal((c) => (c === 'rpc/registrar_marcacao_ponto' ? { corpo: [{ id: 'm2', registrado_em: new Date().toISOString(), data_local: hoje, duplicada: false }] } : undefined)));
+  const reg2 = await sessaoSimulada(ctx2, rotasPortal((c) => (c === 'rpc/registrar_marcacao_ponto' ? { corpo: { id: 'm2', registrado_em: new Date().toISOString(), data_local: hoje, duplicada: false } } : undefined)));
   const p2 = await ctx2.newPage();
   await p2.addInitScript(() => {
     Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia: () => Promise.reject(new DOMException('negado', 'NotAllowedError')) } });
@@ -341,9 +341,11 @@ function rotasRH(extra?: Rotas): Rotas {
 test('RH: convidar para o Portal pelo resumo do colaborador e configurar a jornada', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   let situacao = 'sem_convite';
+  let temJornada = false;
   const reg = await sessaoSimulada(ctx, rotasRH((c) => {
-    if (c === 'rpc/situacao_portal_funcionario') return { corpo: [{ situacao, email: situacao === 'sem_convite' ? null : 'denilson@exemplo.test', convite_expira_em: '2026-10-23T10:00:00Z', convite_enviado: true, ativado_em: null, revogado_em: null, motivo_revogacao: null }] };
-    if (c === 'rpc/salvar_jornada_funcionario') return { corpo: 'j1' };
+    if (c === 'rpc/situacao_portal_funcionario') return { corpo: { situacao, email: situacao === 'sem_convite' ? null : 'denilson@exemplo.test', convite_expira_em: '2026-10-23T10:00:00Z', convite_enviado: true, ativado_em: null, revogado_em: null, motivo_revogacao: null } };
+    if (c === 'rpc/salvar_jornada_funcionario') { temJornada = true; return { corpo: 'j1' }; }
+    if (c === 'jornadas_funcionario') return { corpo: temJornada ? [{ id: 'j1', vigente_desde: hoje, escala: ESCALA, tolerancia_minutos: 10, intervalo_minimo_minutos: 60, limite_sem_intervalo_minutos: 360, tratamento_excedente: 'conferir' }] : [] };
     return undefined;
   }));
   const page = await ctx.newPage();
@@ -353,6 +355,13 @@ test('RH: convidar para o Portal pelo resumo do colaborador e configurar a jorna
   await page.getByTestId('linha-Denilson Amorim').click({ timeout: 90000 });
   const painel = page.getByRole('complementary', { name: 'Resumo do colaborador' });
   await expect(painel.getByTestId('portal-jornada')).toContainText('Sem acesso');
+  // Sem jornada o convite fica bloqueado, com o motivo
+  await expect(painel.getByRole('button', { name: 'Convidar para o Portal' })).toBeDisabled();
+  await expect(painel.getByText('Configure a jornada de trabalho abaixo antes de convidar para o portal.')).toBeVisible();
+  await painel.getByRole('button', { name: 'Configurar jornada' }).click();
+  await page.getByRole('dialog', { name: 'Jornada de trabalho' }).getByRole('button', { name: 'Salvar jornada' }).click();
+  await expect(page.getByText('Jornada salva.', { exact: false })).toBeVisible();
+  await expect(painel.getByRole('button', { name: 'Convidar para o Portal' })).toBeEnabled();
   await painel.getByRole('button', { name: 'Convidar para o Portal' }).click();
   const m = page.getByRole('dialog', { name: 'Convidar para o Portal' });
   await m.getByLabel('E-mail do colaborador').fill('nao-e-email');
@@ -363,14 +372,14 @@ test('RH: convidar para o Portal pelo resumo do colaborador e configurar a jorna
   await expect(page.getByText('Convite enviado para denilson@exemplo.test.')).toBeVisible();
   expect(convites).toEqual([{ id_funcionario: 'f2', email: 'Denilson@Exemplo.test' }]);
   await expect(painel.getByTestId('portal-jornada')).toContainText('Convite enviado');
-  await painel.getByRole('button', { name: 'Configurar jornada' }).click();
+  await painel.getByRole('button', { name: 'Alterar jornada' }).click();
   const j = page.getByRole('dialog', { name: 'Jornada de trabalho' });
   await j.getByTestId('editor-escala').getByRole('listitem').filter({ hasText: 'Sábado' }).getByRole('checkbox').check();
   await j.getByLabel('Sábado período 2 fim').fill('16:00');
   await j.getByLabel('Horas excedentes (sugestão na conferência)').selectOption('banco_horas');
   await j.getByRole('button', { name: 'Salvar jornada' }).click();
   await expect(page.getByText('Jornada salva.', { exact: false })).toBeVisible();
-  const corpo = chamadas(reg, 'rpc/salvar_jornada_funcionario')[0].corpo as Record<string, unknown>;
+  const corpo = chamadas(reg, 'rpc/salvar_jornada_funcionario')[1].corpo as Record<string, unknown>;
   expect(corpo).toMatchObject({ p_id_funcionario: 'f2', p_vigente_desde: hoje, p_tolerancia: 10, p_intervalo_minimo: 60, p_limite_sem_intervalo: 360, p_tratamento: 'banco_horas' });
   expect((corpo.p_escala as Record<string, string[][]>)['6']).toEqual([['08:00', '12:00'], ['13:00', '16:00']]);
   await ctx.close();

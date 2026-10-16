@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import { excedeuLimite, ipDaRequisicao } from '@/lib/limite-taxa';
+import { registroUnico } from '@/lib/portal-colaborador';
 
 // Cria a conta do colaborador a partir de um convite VÁLIDO. O token (recebido no e-mail) prova a posse do e-mail.
 // A chave de serviço é usada SÓ para criar a identidade no Auth (como no cadastro); nenhum dado é gravado em nome do usuário aqui.
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   const anonimo = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data } = await anonimo.rpc('dados_convite_colaborador', { p_token: token });
-  const convite = (data as { situacao: string; email: string | null }[] | null)?.[0];
+  const convite = registroUnico<{ situacao: string; email: string | null }>(data);
   if (!convite || convite.situacao !== 'valido' || !convite.email) {
     return NextResponse.json({ erro: 'Este convite não é mais válido. Peça um novo ao RH da empresa.' }, { status: 400 });
   }

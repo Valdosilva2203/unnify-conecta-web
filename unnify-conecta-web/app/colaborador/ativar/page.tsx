@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { CheckCircle2, Circle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
-import { CHAVE_CONVITE, SENHA_REGRAS } from '@/lib/portal-colaborador';
+import { CHAVE_CONVITE, SENHA_REGRAS, registroUnico } from '@/lib/portal-colaborador';
 import { CartaoAcesso } from '@/components/colaborador/CartaoAcesso';
 import { classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 
@@ -56,7 +56,7 @@ export default function AtivarColaboradorPage() {
       const { data: { session } } = await supabase.auth.getSession();
       setSessaoEmail(session?.user.email ?? null);
       const { data } = await supabase.rpc('dados_convite_colaborador', { p_token: t });
-      const c = ((data as Convite[] | null)?.[0] ?? { situacao: 'invalido' }) as Convite;
+      const c = registroUnico<Convite>(data) ?? ({ situacao: 'invalido' } as Convite);
       setConvite(c);
       if (c.nome) setNome(c.nome);
     })().catch(() => setConvite({ situacao: 'invalido', nome: null, empresa: null, email: null, expira_em: null }));

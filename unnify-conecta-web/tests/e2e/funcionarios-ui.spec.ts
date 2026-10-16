@@ -34,7 +34,7 @@ function rotas(extra?: Rotas): Rotas {
     if (c === 'rpc/historico_funcionario') return { corpo: [{ tipo: 'pagamento', data: hoje, competencia: comp, descricao: 'Salário', valor: 1000, situacao: 'pago' }] };
     if (['rpc/registrar_pagamento_folha', 'rpc/adicionar_ajuste_folha', 'rpc/salvar_funcionario', 'rpc/desligar_funcionario', 'rpc/remover_ajuste_folha'].includes(c)) return { corpo: 'ok' };
     if (c === 'notificacoes') return { corpo: [] };
-    if (c === 'rpc/situacao_portal_funcionario') return { corpo: [{ situacao: 'sem_convite', email: null, convite_expira_em: null, convite_enviado: null, ativado_em: null, revogado_em: null, motivo_revogacao: null }] };
+    if (c === 'rpc/situacao_portal_funcionario') return { corpo: { situacao: 'sem_convite', email: null, convite_expira_em: null, convite_enviado: null, ativado_em: null, revogado_em: null, motivo_revogacao: null } };
     return undefined;
   };
 }

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { excedeuLimite } from '@/lib/limite-taxa';
+import { registroUnico } from '@/lib/portal-colaborador';
 import { enviarEmail, escaparHtml } from '@/lib/email';
 import { clienteDoUsuario, erroAmigavel, gerarToken, hashDoToken, origemConfiavel } from '@/lib/convites-servidor';
 
@@ -18,9 +19,13 @@ export async function POST(req: NextRequest) {
   if (!idFuncionario) return NextResponse.json({ erro: 'Funcionário inválido.' }, { status: 400 });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ erro: 'Informe um e-mail válido.' }, { status: 400 });
 
+  // Regra de negócio: sem jornada configurada o ponto não é apurado (o banco também confere, migration 057)
+  const { data: jornada } = await supabase.from('jornadas_funcionario').select('id').eq('id_funcionario', idFuncionario).limit(1);
+  if (!jornada?.length) return NextResponse.json({ erro: 'Configure a jornada de trabalho do funcionário antes de convidá-lo para o portal.' }, { status: 400 });
+
   const token = gerarToken();
   const { data, error } = await supabase.rpc('criar_convite_colaborador', { p_id_funcionario: idFuncionario, p_email: email, p_hash: hashDoToken(token) });
-  const convite = (data as { id: string; nome: string; empresa: string; email: string; expira_em: string }[] | null)?.[0];
+  const convite = registroUnico<{ id: string; nome: string; empresa: string; email: string; expira_em: string }>(data);
   if (error || !convite) return erroAmigavel(error, 'Não foi possível criar o convite. Tente novamente.');
 
   const link = `${origemConfiavel(req)}/colaborador/ativar#${token}`;

@@ -47,11 +47,19 @@ test('convite: só com sessão; token só no e-mail (banco recebe o hash); link 
   let resend = 200;
   responder = (c) => {
     if (c.url === '/auth/v1/user') return { corpo: USUARIO };
-    if (c.url === '/rest/v1/rpc/criar_convite_colaborador') return { corpo: [{ id: 'cv1', nome: 'Denilson Amorim', empresa: 'Empresa Exemplo', email: 'denilson@exemplo.test', expira_em: '2026-10-23T10:00:00Z' }] };
+    if (c.url === '/rest/v1/rpc/criar_convite_colaborador') return { corpo: { id: 'cv1', nome: 'Denilson Amorim', empresa: 'Empresa Exemplo', email: 'denilson@exemplo.test', expira_em: '2026-10-23T10:00:00Z' } };
     if (c.url === '/rest/v1/rpc/registrar_envio_convite_colaborador') return { status: 204 };
     if (c.url === 'https://api.resend.com/emails') return { status: resend, corpo: { id: 'e1' } };
+    if (c.url.startsWith('/rest/v1/jornadas_funcionario')) return { corpo: semJornada ? [] : [{ id: 'j1' }] };
     return undefined;
   };
+  // Sem jornada configurada: recusado antes de criar o convite ou enviar e-mail
+  let semJornada = true;
+  const bloqueado = await POST(req('https://unnifyconecta.com.br/api/colaborador/convites', { id_funcionario: '22222222-2222-4222-8222-222222222222', email: 'x@y.z' }, { cookie: cookieSessao }));
+  expect(bloqueado.status).toBe(400);
+  expect(await bloqueado.json()).toEqual({ erro: 'Configure a jornada de trabalho do funcionário antes de convidá-lo para o portal.' });
+  expect(chamadas.some((c) => c.url.includes('criar_convite_colaborador')) || emails().length > 0).toBe(false);
+  semJornada = false; chamadas = [];
   const semSessao = await POST(req('https://unnifyconecta.com.br/api/colaborador/convites', { id_funcionario: '22222222-2222-4222-8222-222222222222', email: 'x@y.z' }));
   expect(semSessao.status).toBe(401);
   expect(chamadas.some((c) => c.url.includes('/rpc/'))).toBe(false);
@@ -82,7 +90,7 @@ test('convite: só com sessão; token só no e-mail (banco recebe o hash); link 
 
   // Erro do banco (ex.: acesso já ativo) chega como mensagem amigável
   chamadas = [];
-  responder = (c) => (c.url === '/auth/v1/user' ? { corpo: USUARIO } : c.url.endsWith('criar_convite_colaborador')
+  responder = (c) => (c.url === '/auth/v1/user' ? { corpo: USUARIO } : c.url.startsWith('/rest/v1/jornadas_funcionario') ? { corpo: [{ id: 'j1' }] } : c.url.endsWith('criar_convite_colaborador')
     ? { status: 400, corpo: { code: '23514', message: 'Este colaborador já tem acesso ativo ao portal.' } } : undefined);
   const jaAtivo = await POST(req('https://unnifyconecta.com.br/api/colaborador/convites', { id_funcionario: '22222222-2222-4222-8222-222222222222', email: 'denilson@exemplo.test' }, { cookie: cookieSessao }));
   expect(await jaAtivo.json()).toEqual({ erro: 'Este colaborador já tem acesso ativo ao portal.' });
@@ -94,7 +102,7 @@ test('ativação: e-mail vem do convite (não do pedido), senha forte, convite i
   let situacao = 'valido';
   let jaExiste = false;
   responder = (c) => {
-    if (c.url === '/rest/v1/rpc/dados_convite_colaborador') return { corpo: [{ situacao, nome: 'Denilson', empresa: 'Empresa Exemplo', email: situacao === 'valido' ? 'denilson@exemplo.test' : null, expira_em: null }] };
+    if (c.url === '/rest/v1/rpc/dados_convite_colaborador') return { corpo: { situacao, nome: 'Denilson', empresa: 'Empresa Exemplo', email: situacao === 'valido' ? 'denilson@exemplo.test' : null, expira_em: null } };
     if (c.url === '/auth/v1/admin/users') return jaExiste ? { status: 422, corpo: { code: 'email_exists', msg: 'A user with this email address has already been registered' } } : { corpo: { id: 'u1', email: 'denilson@exemplo.test' } };
     return undefined;
   };

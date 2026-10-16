@@ -5,7 +5,7 @@ import { CalendarClock, Mail, ShieldOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import { formatarData, hojeBrasil } from '@/lib/financeiro';
-import { DIAS_SEMANA, type Escala } from '@/lib/portal-colaborador';
+import { DIAS_SEMANA, registroUnico, type Escala } from '@/lib/portal-colaborador';
 import type { Funcionario } from '@/lib/funcionarios';
 import { Selo } from '@/components/admin/tabela';
 import { Modal, classeBotaoPerigo, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
@@ -156,19 +156,22 @@ function ModalJornada({ funcionario: f, atual, aoFechar, aoConcluir }: { funcion
 export function PortalJornada({ funcionario: f, versao, aoAlterado }: { funcionario: Funcionario; versao: number; aoAlterado: (m: string) => void }) {
   const [sit, setSit] = useState<Situacao | null>(null);
   const [jornada, setJornada] = useState<Jornada | null | undefined>(undefined);
+  const [temJornada, setTemJornada] = useState(false); // inclui jornada com início futuro
   const [erro, setErro] = useState<string | null>(null);
   const [modal, setModal] = useState<'convite' | 'revogar' | 'jornada' | null>(null);
   const carregar = useCallback(async () => {
     const s = createClient();
-    const [a, j] = await Promise.all([
+    const [a, j, qualquer] = await Promise.all([
       s.rpc('situacao_portal_funcionario', { p_id_funcionario: f.id }),
       s.from('jornadas_funcionario').select('id, vigente_desde, escala, tolerancia_minutos, intervalo_minimo_minutos, limite_sem_intervalo_minutos, tratamento_excedente')
         .eq('id_funcionario', f.id).lte('vigente_desde', hojeBrasil()).order('vigente_desde', { ascending: false }).limit(1),
+      s.from('jornadas_funcionario').select('id').eq('id_funcionario', f.id).limit(1),
     ]);
     if (a.error) { setErro(mensagemDeErro(a.error, 'Portal do colaborador indisponível.')); return; }
     setErro(null);
-    setSit(((a.data as Situacao[] | null)?.[0]) ?? null);
+    setSit(registroUnico<Situacao>(a.data));
     setJornada(((j.data ?? []) as Jornada[])[0] ?? null);
+    setTemJornada((qualquer.data ?? []).length > 0);
   }, [f.id]);
   useEffect(() => { carregar(); }, [carregar, versao]);
   const concluir = (m: string) => { setModal(null); aoAlterado(m); carregar(); };
@@ -192,9 +195,12 @@ export function PortalJornada({ funcionario: f, versao, aoAlterado }: { funciona
           {sit.situacao === 'revogado' && `Revogado em ${formatarData(sit.revogado_em?.slice(0, 10))}${sit.motivo_revogacao ? ` · ${sit.motivo_revogacao}` : ''}`}
           {sit.situacao === 'sem_convite' && 'O colaborador ainda não foi convidado.'}
         </p>
+        {ativoFunc && sit.situacao !== 'ativo' && !temJornada && (
+          <p id={`aviso-jornada-${f.id}`} className="text-xs text-orange-800 bg-orange-50 rounded-lg px-2.5 py-1.5">Configure a jornada de trabalho abaixo antes de convidar para o portal.</p>
+        )}
         {ativoFunc && (
           <div className="flex flex-wrap gap-2">
-            {sit.situacao !== 'ativo' && <button type="button" onClick={() => setModal('convite')} className={`${classeBotaoPrimario} flex-1`}><Mail className="w-4 h-4" aria-hidden="true" />{sit.situacao === 'sem_convite' ? 'Convidar para o Portal' : 'Reenviar convite'}</button>}
+            {sit.situacao !== 'ativo' && <button type="button" onClick={() => setModal('convite')} disabled={!temJornada} aria-describedby={temJornada ? undefined : `aviso-jornada-${f.id}`} className={`${classeBotaoPrimario} flex-1`}><Mail className="w-4 h-4" aria-hidden="true" />{sit.situacao === 'sem_convite' ? 'Convidar para o Portal' : 'Reenviar convite'}</button>}
             {sit.situacao === 'convite_pendente' && <button type="button" onClick={cancelarConvite} className={`${classeBotaoSecundario} flex-1`}>Cancelar convite</button>}
             {sit.situacao === 'ativo' && <button type="button" onClick={() => setModal('revogar')} className={`${classeBotaoSecundario} flex-1`}><ShieldOff className="w-4 h-4" aria-hidden="true" />Revogar acesso</button>}
           </div>

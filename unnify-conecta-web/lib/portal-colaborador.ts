@@ -84,6 +84,8 @@ export const SENHA_REGRAS: [string, (s: string) => boolean][] = [
   ['Pelo menos 8 caracteres', (s) => s.length >= 8 && s.length <= 72], ['Uma letra maiúscula', (s) => /[A-Z]/.test(s)], ['Uma letra minúscula', (s) => /[a-z]/.test(s)],
   ['Um número', (s) => /[0-9]/.test(s)], ['Um caractere especial', (s) => /[^A-Za-z0-9]/.test(s)],
 ];
+// Funções com parâmetros OUT (sem SETOF) voltam do PostgREST como OBJETO, não lista; aceita os dois formatos
+export const registroUnico = <T,>(d: unknown): T | null => ((Array.isArray(d) ? d[0] : d) ?? null) as T | null;
 export const CHAVE_CONVITE = 'unnify_convite_colaborador';
 export const CHAVE_VINCULO = 'unnify_vinculo_colaborador';
 export const AVISO_REP = 'Controle auxiliar de jornada integrado ao RH. Não é um REP-P homologado (Portaria MTP 671/2021).';

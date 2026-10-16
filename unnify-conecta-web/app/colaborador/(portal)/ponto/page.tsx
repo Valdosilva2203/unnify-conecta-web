@@ -5,7 +5,7 @@ import { Camera, CameraOff, CheckCircle2, Fingerprint, MapPin, MapPinOff } from 
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import { formatarData, hojeBrasil } from '@/lib/financeiro';
-import { AVISO_REP, DIAS_SEMANA, TIPOS_MARCACAO, diaDaSemana, horaLocal, horaMarcacao, proximaMarcacao, type MarcacaoPonto, type TipoMarcacao } from '@/lib/portal-colaborador';
+import { AVISO_REP, DIAS_SEMANA, TIPOS_MARCACAO, diaDaSemana, horaLocal, horaMarcacao, proximaMarcacao, registroUnico, type MarcacaoPonto, type TipoMarcacao } from '@/lib/portal-colaborador';
 import { useColaborador } from '@/components/colaborador/LayoutColaborador';
 import { Cartao, Carregando, Erro, Sucesso, campo, rotulo } from '@/components/colaborador/comum';
 import { Modal, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
@@ -117,7 +117,7 @@ export default function MeuPontoPage() {
       p_precisao: local.situacao === 'capturada' ? Math.round(local.precisao * 10) / 10 : null, p_situacao_foto: foto.situacao,
     });
     if (error) { setErro(mensagemDeErro(error, 'Não foi possível registrar. Verifique a conexão e tente novamente.')); setOcupado(false); return; }
-    const r = (data as { registrado_em: string }[] | null)?.[0];
+    const r = registroUnico<{ registrado_em: string }>(data);
     let semFoto = false;
     if (foto.situacao === 'pendente') {
       const { error: e1 } = await s.storage.from('ponto').upload(`${vinculo.id_empresa}/${vinculo.id_funcionario}/${id}.jpg`, foto.blob, { contentType: 'image/jpeg', upsert: false });

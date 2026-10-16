@@ -46,6 +46,10 @@ const ana = (await um("select salvar_funcionario(null,$1,'Ana Souza','Auxiliar',
 await como(donoB);
 const denB = (await um("select salvar_funcionario(null,$1,'Denilson Amorim','Vendedor',($2::date - 200),'clt',1700,5,true,null,null) id", [B, hoje])).id;
 await admin();
+// Convite exige jornada configurada (057): jornada inicial dos funcionários convidados
+const ESC0 = Object.fromEntries([1, 2, 3, 4, 5].map((d) => [d, [['08:00', '12:00'], ['13:00', '17:00']]]));
+const jornadaInicial = (f, e) => c.query('insert into jornadas_funcionario (id_empresa, id_funcionario, vigente_desde, escala) values ($2,$1,$3::date,$4::jsonb)', [f, e, comp, JSON.stringify(ESC0)]);
+await jornadaInicial(den, A); await jornadaInicial(ana, A); await jornadaInicial(denB, B);
 const uDen = await usuario('denilson.portal@local.test');
 const uAna = await usuario('ana.portal@local.test');
 const uOutro = await usuario('outro.portal@local.test');
@@ -224,7 +228,9 @@ ok('Horas a menos (7h de 8h) = 60 min', N((await ap(D.ter2)).atraso_minutos) ===
 const total1 = N((await um('select count(*) n from apuracoes_ponto where id_funcionario=$1', [den])).n);
 await c.query('select apurar_ponto_competencia($1,$2::date)', [A, comp]);
 ok('Reapurar não duplica', N((await um('select count(*) n from apuracoes_ponto where id_funcionario=$1', [den])).n) === total1);
-ok('Funcionária sem jornada aparece como pendência no painel', (await um('select painel_ponto($1,$2::date) p', [A, comp])).p.sem_jornada.some((x) => x.id === ana));
+const caio = (await um("select salvar_funcionario(null,$1,'Caio Sem Jornada','Auxiliar',($2::date - 200),'clt',1800,5,true,null,null) id", [A, hoje])).id;
+ok('Funcionário sem jornada aparece como pendência no painel', (await um('select painel_ponto($1,$2::date) p', [A, comp])).p.sem_jornada.some((x) => x.id === caio));
+await falha('Convite para o portal exige jornada configurada', CONV, [caio, 'caio.portal@local.test', hash(token())], 'Configure a jornada');
 const CONF = 'select conferir_apuracao_ponto($1,$2,$3)';
 await falha('Excedente não pode ser apagado/virar falta', CONF, [(await ap(D.seg)).id, 'falta', null], 'Classificação inválida');
 await falha('Incompleta não é conferida', CONF, [(await ap(D.qua)).id, 'ciente', null], 'incompletas');
@@ -302,6 +308,7 @@ await falha('Folha enviada ao contador: integração bloqueada', 'select integra
 // ===== Sequência completa no portal (entrada → intervalo → retorno → saída) =====
 await como(donoA);
 const bia = (await um("select salvar_funcionario(null,$1,'Bia Lima','Operadora',($2::date - 300),'clt',1900,5,true,null,null) id", [A, hoje])).id;
+await admin(); await jornadaInicial(bia, A); await como(donoA);
 const tB = token();
 await um(CONV, [bia, 'bia.portal@local.test', hash(tB)]);
 await admin();
