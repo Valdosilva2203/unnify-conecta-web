@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  AlertCircle, ArrowDown, ArrowUp, Building2, ChevronDown, Clock, FileText, Hash, Landmark, Mail, MapPin, Pencil, Phone, Receipt, RefreshCw, TrendingDown, TrendingUp,
+  AlertCircle, ArrowDown, ArrowUp, ChevronDown, Clock, Landmark, ListChecks, Pencil, Receipt, RefreshCw, TrendingDown, TrendingUp,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useEmpresaAtual } from '@/components/app/LayoutEmpresa';
-import { formatarCnpj, formatarTelefone, mensagemDeErro } from '@/lib/contabil';
-import { ROTULO_SITUACAO, SELO_SITUACAO, formatarMoeda, hojeBrasil, inicioDoMes, rotuloMes, variacaoPercentual, type Situacao } from '@/lib/financeiro';
+import { formatarCnpj, mensagemDeErro } from '@/lib/contabil';
+import { ROTULO_SITUACAO, SELO_SITUACAO, formatarData, formatarMoeda, hojeBrasil, inicioDoMes, rotuloMes, variacaoPercentual, type Situacao } from '@/lib/financeiro';
 import { Selo } from '@/components/admin/tabela';
 import { Aviso } from '@/components/conta/Aviso';
 import { Indicador } from '@/components/financeiro/Indicador';
@@ -16,6 +16,8 @@ import { GraficoRosca } from '@/components/financeiro/GraficoRosca';
 import { IconeCategoria } from '@/components/financeiro/IconeCategoria';
 import { GraficoLinhas, type PontoSerie } from '@/components/app/GraficoLinhas';
 import { FormDadosEmpresa, type DadosEmpresa } from '@/components/app/FormDadosEmpresa';
+import { EVENTO_DADOS_EMPRESA } from '@/components/app/MenuPerfilEmpresa';
+import { ROTULO_PRIORIDADE, SELO_PRIORIDADE, type Tarefa } from '@/lib/tarefas';
 
 // Valores vêm prontos do banco (resumo_financeiro); o navegador só formata.
 interface Resumo {
@@ -111,6 +113,37 @@ function FalhaCarregamento({ mensagem, aoTentar }: { mensagem: string; aoTentar:
   );
 }
 
+function prazoTarefa(t: Tarefa, hoje: string): string {
+  if (!t.prazo) return 'Sem prazo';
+  const dias = Math.round((Date.parse(`${t.prazo}T12:00:00Z`) - Date.parse(`${hoje}T12:00:00Z`)) / 86400000);
+  const hora = t.hora ? ` às ${t.hora.slice(0, 5)}` : '';
+  if (dias < 0) return `Atrasada há ${-dias} ${dias === -1 ? 'dia' : 'dias'} (${formatarData(t.prazo)})`;
+  if (dias === 0) return `Vence hoje${hora}`;
+  return dias === 1 ? `Vence amanhã${hora}` : `Vence em ${dias} dias (${formatarData(t.prazo)})`;
+}
+
+function ListaTarefas({ estado, hoje, aoTentar }: { estado: Estado<Tarefa[]>; hoje: string; aoTentar: () => void }) {
+  if (estado.carregando) return <Esqueleto linhas={4} />;
+  if ('erro' in estado) return <FalhaCarregamento mensagem={estado.erro} aoTentar={aoTentar} />;
+  if (estado.dados.length === 0) return <p className="text-sm text-gray-500 text-center py-8">Nenhuma tarefa em aberto.</p>;
+  return (
+    <ul className="divide-y divide-gray-100">
+      {estado.dados.map((t) => (
+        <li key={t.id} className="flex items-center gap-3 py-2.5" data-testid={`tarefa-${t.titulo}`}>
+          <span className={`w-9 h-9 shrink-0 rounded-full inline-flex items-center justify-center ${t.atrasada ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'}`} aria-hidden="true">
+            <ListChecks className="w-4 h-4" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">{t.titulo}</p>
+            <p className={`text-xs truncate ${t.atrasada ? 'text-red-700 font-semibold' : 'text-gray-500'}`}>{prazoTarefa(t, hoje)}{t.responsavel_nome ? ` · ${t.responsavel_nome}` : ''}</p>
+          </div>
+          <Selo tipo={SELO_PRIORIDADE[t.prioridade]} texto={ROTULO_PRIORIDADE[t.prioridade]} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function ListaContas({ estado, tipo, hoje, vazio, aoTentar }: { estado: Estado<Conta[]>; tipo: 'receita' | 'despesa'; hoje: string; vazio: string; aoTentar: () => void }) {
   if (estado.carregando) return <Esqueleto linhas={4} />;
   if ('erro' in estado) return <FalhaCarregamento mensagem={estado.erro} aoTentar={aoTentar} />;
@@ -146,8 +179,16 @@ export default function PainelEmpresaPage() {
   const [resumo, setResumo] = useState<Estado<Resumo>>(carregando);
   const [aPagar, setAPagar] = useState<Estado<Conta[]>>(carregando);
   const [aReceber, setAReceber] = useState<Estado<Conta[]>>(carregando);
+  const [tarefas, setTarefas] = useState<Estado<Tarefa[]>>(carregando);
   const [dados, setDados] = useState<Estado<DadosEmpresa>>(carregando);
   const [editando, setEditando] = useState(false);
+  // Menu do usuário → "Dados da empresa": abre o formulário (vindo de outra página pelo #dados-empresa, ou já aqui pelo evento)
+  useEffect(() => {
+    if (window.location.hash === '#dados-empresa') { setEditando(true); window.history.replaceState(null, '', '/app'); }
+    const aoEvento = () => setEditando(true);
+    window.addEventListener(EVENTO_DADOS_EMPRESA, aoEvento);
+    return () => window.removeEventListener(EVENTO_DADOS_EMPRESA, aoEvento);
+  }, []);
   const [aviso, setAviso] = useState<string | null>(null);
 
   // Data só no navegador (cacheComponents não aceita new Date() na renderização)
@@ -183,6 +224,7 @@ export default function PainelEmpresaPage() {
     setResumo(carregando);
     setAPagar(carregando);
     setAReceber(carregando);
+    setTarefas(carregando);
     setDados(carregando);
     setVencidas(null);
     setEmAberto(null);
@@ -204,6 +246,10 @@ export default function PainelEmpresaPage() {
     });
     contas('despesa').then(({ data, error }) => {
       if (ativo) setAPagar(error ? falha(error, 'Não foi possível carregar as contas a pagar.') : { carregando: false, dados: (data ?? []) as Conta[] });
+    });
+    // Tarefas em aberto da empresa (pendentes e em andamento), as mais urgentes primeiro: o banco já ordena por prazo e confere o acesso
+    supabase.rpc('listar_tarefas', { p_contexto: 'empresa', p_id_empresa: empresa.id, p_visao: 'todas', p_limite: 4 }).then(({ data, error }) => {
+      if (ativo) setTarefas(error ? falha(error, 'Não foi possível carregar as tarefas.') : { carregando: false, dados: (data ?? []) as Tarefa[] });
     });
     contas('receita').then(({ data, error }) => {
       if (ativo) setAReceber(error ? falha(error, 'Não foi possível carregar as contas a receber.') : { carregando: false, dados: (data ?? []) as Conta[] });
@@ -335,7 +381,7 @@ export default function PainelEmpresaPage() {
                 <p className="text-sm text-gray-500 -mt-2 mb-3">Movimentado em {rotuloMes(resumo.dados.periodo_inicio)}</p>
                 {totalMovimentado + totalAberto > 0 ? (
                   <GraficoRosca empilhado rotulo="Composição de receitas e despesas do mês" total={totalMovimentado + totalAberto} itens={[
-                    { categoria: 'Receitas', cor: '#2563eb', icone: 'trending-up', valor: Number(resumo.dados.receitas_mes) },
+                    { categoria: 'Receitas', cor: '#16a34a', icone: 'trending-up', valor: Number(resumo.dados.receitas_mes) },
                     { categoria: 'Despesas', cor: '#ef4444', icone: 'receipt', valor: Number(resumo.dados.despesas_mes) },
                     { categoria: 'A receber (em aberto)', cor: '#f59e0b', icone: 'wallet', valor: totalAberto },
                   ].filter((i) => i.valor > 0)} />
@@ -360,31 +406,8 @@ export default function PainelEmpresaPage() {
           <ListaContas estado={aReceber} tipo="receita" hoje={hoje} vazio="Nenhuma conta a receber pendente." aoTentar={recarregar} />
         </Cartao>
         <div className="lg:col-span-2 xl:col-span-1 min-w-0 flex">
-          <Cartao titulo="Dados da empresa" acao={d && (
-            <button type="button" onClick={() => setEditando(true)} className="min-h-11 inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:underline"><Pencil className="w-4 h-4" aria-hidden="true" />Editar</button>
-          )}>
-            {dados.carregando ? <Esqueleto linhas={4} altura="h-7" /> : 'erro' in dados ? <FalhaCarregamento mensagem={dados.erro} aoTentar={recarregar} /> : (
-              <dl className="space-y-2.5 text-sm" aria-label="Dados cadastrais">
-                {[
-                  [Building2, 'Razão social', dados.dados.razao_social],
-                  [Hash, 'CNPJ', formatarCnpj(dados.dados.cnpj)],
-                  [FileText, 'Nome comercial', dados.dados.nome_comercial],
-                  [Phone, 'Telefone', formatarTelefone(dados.dados.telefone)],
-                  [Mail, 'E-mail', dados.dados.email_comercial],
-                  [MapPin, 'Cidade / UF', [dados.dados.cidade, dados.dados.estado].filter(Boolean).join(' - ')],
-                  [FileText, 'CNAE principal', dados.dados.cnae_principal],
-                ].map(([Icone, rotulo, valor]) => {
-                  const I = Icone as typeof Building2;
-                  return (
-                    <div key={rotulo as string} className="grid grid-cols-[1.25rem_6.75rem_1fr] items-start gap-2">
-                      <I className="w-4 h-4 text-gray-400 mt-0.5" aria-hidden="true" />
-                      <dt className="text-gray-500">{rotulo as string}</dt>
-                      <dd className="text-gray-900 font-medium break-words min-w-0">{(valor as string) || <span className="text-gray-400 font-normal">Não informado</span>}</dd>
-                    </div>
-                  );
-                })}
-              </dl>
-            )}
+          <Cartao titulo="Tarefas" acao={<Link href="/app/tarefas" className="min-h-11 inline-flex items-center text-sm font-semibold text-orange-600 hover:underline">Ver todas →</Link>}>
+            <ListaTarefas estado={tarefas} hoje={hoje} aoTentar={recarregar} />
           </Cartao>
         </div>
       </div>

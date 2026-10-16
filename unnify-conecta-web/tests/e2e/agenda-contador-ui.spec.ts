@@ -249,3 +249,27 @@ test('painel da empresa sem vínculo continua negando acesso; layout de 320 a 19
   }
   await l.close();
 });
+
+test('Minhas empresas: recarga lenta da lista mantém as linhas e o foco (não troca a tabela pelo carregamento)', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1536, height: 1000 } });
+  await sessaoSimulada(ctx, rotas());
+  const page = await abrir(ctx, '/contador/empresas', 'Minhas empresas');
+  const linhaUnnify = page.getByRole('row').filter({ hasText: 'UNNIFY' });
+  await expect(linhaUnnify).toBeVisible();
+  // A partir daqui, toda nova consulta da lista demora: a tabela atual precisa continuar na tela durante a espera
+  let liberar: () => void = () => {};
+  const espera = new Promise<void>((ok) => { liberar = ok; });
+  await page.route('**/rest/v1/rpc/empresas_do_contador', async (rota) => { await espera; await rota.fallback(); });
+  const link = linhaUnnify.getByRole('link', { name: 'UNNIFY' });
+  const elemento = await link.elementHandle();
+  await page.getByLabel('Itens por página').selectOption('20');
+  await page.waitForRequest('**/rest/v1/rpc/empresas_do_contador');
+  await expect(linhaUnnify).toBeVisible();
+  expect(await elemento!.evaluate((el) => el.isConnected)).toBe(true); // mesmo nó: nada foi desmontado
+  await link.focus();
+  liberar();
+  await expect(page.getByRole('row').filter({ hasText: 'Logar Digital' })).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(`/contador/empresas/${UNNIFY.id}$`), { timeout: 30000 });
+  await ctx.close();
+});

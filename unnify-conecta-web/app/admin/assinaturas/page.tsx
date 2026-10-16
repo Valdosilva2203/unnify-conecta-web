@@ -47,130 +47,10 @@ interface Assinatura {
   dataAcao: string;
 }
 
-const assinaturasFicticias: Assinatura[] = [
-  {
-    id: '1',
-    nomeFantasia: 'Comercial Ferreira',
-    razaoSocial: 'Comercial Ferreira LTDA',
-    cnpj: '12.345.678/0001-90',
-    plano: 'Básico',
-    valor: 49.90,
-    dataInicio: '10/01/2026',
-    proximaCobranca: '10/11/2026',
-    status: 'ativa',
-    dataAcao: '10/01/2026 às 23:41',
-  },
-  {
-    id: '2',
-    nomeFantasia: 'Top Serviços',
-    razaoSocial: 'Top Serviços e Soluções LTDA',
-    cnpj: '33.444.555/0001-66',
-    plano: 'Pro',
-    valor: 99.90,
-    dataInicio: '05/02/2026',
-    proximaCobranca: '05/11/2026',
-    status: 'ativa',
-    dataAcao: '05/02/2026 às 14:20',
-  },
-  {
-    id: '3',
-    nomeFantasia: 'Mercado Almeida',
-    razaoSocial: 'Mercado Almeida LTDA',
-    cnpj: '22.333.444/0001-55',
-    plano: 'Pro',
-    valor: 99.90,
-    dataInicio: '12/02/2026',
-    proximaCobranca: '12/11/2026',
-    status: 'pendente',
-    dataAcao: '12/02/2026 às 10:15',
-  },
-  {
-    id: '4',
-    nomeFantasia: 'Farmácia Central',
-    razaoSocial: 'Farmácia Central LTDA',
-    cnpj: '55.666.777/0001-88',
-    plano: 'Premium',
-    valor: 149.90,
-    dataInicio: '20/01/2026',
-    proximaCobranca: '20/11/2026',
-    status: 'ativa',
-    dataAcao: '20/01/2026 às 09:30',
-  },
-  {
-    id: '5',
-    nomeFantasia: 'Barbearia Reis',
-    razaoSocial: 'Barbearia Reis LTDA',
-    cnpj: '77.888.999/0001-00',
-    plano: 'Básico',
-    valor: 49.90,
-    dataInicio: '18/03/2026',
-    proximaCobranca: '18/11/2026',
-    status: 'cancelada',
-    dataAcao: '18/03/2026 às 16:45',
-  },
-  {
-    id: '6',
-    nomeFantasia: 'Loja Silva',
-    razaoSocial: 'Loja Silva LTDA',
-    cnpj: '11.222.333/0001-44',
-    plano: 'Pro',
-    valor: 99.90,
-    dataInicio: '01/04/2026',
-    proximaCobranca: '01/11/2026',
-    status: 'ativa',
-    dataAcao: '01/04/2026 às 11:20',
-  },
-  {
-    id: '7',
-    nomeFantasia: 'Transportadora Rápido',
-    razaoSocial: 'Transportadora Rápido LTDA',
-    cnpj: '66.777.888/0001-22',
-    plano: 'Premium',
-    valor: 149.90,
-    dataInicio: '15/03/2026',
-    proximaCobranca: '15/11/2026',
-    status: 'ativa',
-    dataAcao: '15/03/2026 às 14:50',
-  },
-  {
-    id: '8',
-    nomeFantasia: 'Padaria Alvorada',
-    razaoSocial: 'Padaria Alvorada LTDA',
-    cnpj: '44.555.666/0001-77',
-    plano: 'Básico',
-    valor: 49.90,
-    dataInicio: '28/02/2026',
-    proximaCobranca: '28/11/2026',
-    status: 'ativa',
-    dataAcao: '28/02/2026 às 08:15',
-  },
-  {
-    id: '9',
-    nomeFantasia: 'Auto Peças Rodrigues',
-    razaoSocial: 'Auto Peças Rodrigues LTDA',
-    cnpj: '99.000.111/0001-33',
-    plano: 'Pro',
-    valor: 99.90,
-    dataInicio: '10/03/2026',
-    proximaCobranca: '10/11/2026',
-    status: 'ativa',
-    dataAcao: '10/03/2026 às 13:40',
-  },
-  {
-    id: '10',
-    nomeFantasia: 'Restaurante Vitória',
-    razaoSocial: 'Restaurante Vitória LTDA',
-    cnpj: '88.999.000/0001-11',
-    plano: 'Premium',
-    valor: 149.90,
-    dataInicio: '05/01/2026',
-    proximaCobranca: '05/11/2026',
-    status: 'cancelada',
-    dataAcao: '05/01/2026 às 19:25',
-  },
-];
 
 export default function AssinaturasPage() {
+  // Ainda não existe cadastro de assinaturas no sistema: a lista fica vazia (nada fictício).
+  const assinaturas: Assinatura[] = [];
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [planoFilter, setPlanoFilter] = useState('todos');
@@ -179,13 +59,13 @@ export default function AssinaturasPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Calcular stats
-  const totalAssinaturas = assinaturasFicticias.length;
-  const ativasCount = assinaturasFicticias.filter((a) => a.status === 'ativa').length;
-  const pendentesCount = assinaturasFicticias.filter((a) => a.status === 'pendente').length;
-  const canceladasCount = assinaturasFicticias.filter((a) => a.status === 'cancelada').length;
+  const totalAssinaturas = assinaturas.length;
+  const ativasCount = assinaturas.filter((a) => a.status === 'ativa').length;
+  const pendentesCount = assinaturas.filter((a) => a.status === 'pendente').length;
+  const canceladasCount = assinaturas.filter((a) => a.status === 'cancelada').length;
 
   // Filtrar assinaturas
-  const filteredAssinaturas = assinaturasFicticias.filter((assinatura) => {
+  const filteredAssinaturas = assinaturas.filter((assinatura) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       assinatura.nomeFantasia.toLowerCase().includes(searchLower) ||
@@ -344,7 +224,7 @@ export default function AssinaturasPage() {
             )}
           </BarraFiltros>
 
-          <EstadoTabela vazio={filteredAssinaturas.length === 0} mensagemVazio="Nenhuma assinatura encontrada.">
+          <EstadoTabela vazio={filteredAssinaturas.length === 0} mensagemVazio="Ainda não há assinaturas cadastradas no sistema.">
             <Tabela
               colunas={[
                 { titulo: 'Empresa' },

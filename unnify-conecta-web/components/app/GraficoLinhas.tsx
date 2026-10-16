@@ -10,7 +10,7 @@ export interface PontoSerie {
   previstas?: number; // receitas ainda NÃO recebidas, pelo mês de competência (linha tracejada, separada do recebido)
 }
 
-const COR_RECEITAS = '#2563eb';
+const COR_RECEITAS = '#16a34a';
 const COR_DESPESAS = '#ef4444';
 const COR_PREVISTAS = '#f59e0b';
 

@@ -14,6 +14,7 @@ import { Paginacao, Selo } from '@/components/admin/tabela';
 import { Indicador } from '@/components/financeiro/Indicador';
 import { classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { ModalCancelarVenda, ModalNovaVenda, ModalRecebimento, type RascunhoVenda } from '@/components/vendas/Modais';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 type Lista = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string; ausente: boolean } | { tipo: 'ok'; linhas: VendaLinha[]; total: number };
 type Periodo = 'mes' | 'anterior' | '90' | 'ano';
@@ -81,17 +82,13 @@ export default function VendasPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><ShoppingBag className="w-7 h-7" aria-hidden="true" /></span>
-          <div className="min-w-0"><h1 className="text-2xl sm:text-3xl font-black text-gray-900">Vendas</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Registre vendas de produtos e serviços, integradas ao estoque e ao financeiro.</p></div>
-        </div>
+      <CabecalhoModulo icone={ShoppingBag} titulo="Vendas" descricao="Registre vendas de produtos e serviços, integradas ao estoque e ao financeiro."
+        acoes={<>
         <div className="flex flex-col min-[420px]:flex-row gap-2 self-stretch xl:self-auto">
           <select aria-label="Período" value={periodo} onChange={(e) => { setPeriodo(e.target.value as Periodo); setPagina(1); }} className={filtro}>{Object.entries(ROTULO_PERIODO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
           {podeOperar && <button type="button" className={`${classeBotaoPrimario} whitespace-nowrap`} onClick={() => setNova({ r: null })}><Plus className="w-4 h-4" aria-hidden="true" />Nova venda</button>}
         </div>
-      </div>
+        </>} />
 
       {aviso && <div role="status" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex justify-between gap-3"><span>{aviso}</span><button type="button" className="underline" onClick={() => setAviso(null)}>Fechar</button></div>}
       {lista.tipo === 'erro' && (lista.ausente
@@ -112,7 +109,7 @@ export default function VendasPage() {
           <div role="tablist" aria-label="Situação da venda" className="flex flex-wrap gap-1">
             {([['', 'Todas'], ['aguardando_pagamento', 'Aguardando pagamento'], ['concluida', 'Concluídas'], ['rascunho', 'Rascunhos'], ['cancelada', 'Canceladas']] as const).map(([v, rot]) => (
               <button key={v} type="button" role="tab" aria-selected={aba === v} onClick={() => { setAba(v); setPagina(1); }}
-                className={`min-h-11 px-3 sm:px-4 rounded-lg text-sm font-semibold ${aba === v ? 'bg-orange-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>{rot}</button>
+                className={classePilula(aba === v)}>{rot}</button>
             ))}
           </div>
           <div className="flex flex-col sm:flex-row gap-2">

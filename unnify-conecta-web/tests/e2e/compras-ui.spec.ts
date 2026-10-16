@@ -68,7 +68,7 @@ test('painel, lista com filtros no servidor e detalhe: comprado ≠ recebido ≠
   const ctx = await browser.newContext({ viewport: { width: 1536, height: 1000 } });
   const registro = await sessaoSimulada(ctx, rotas());
   const page = await abrir(ctx);
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Compras' })).toHaveAttribute('href', '/app/compras');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Compras' })).toHaveAttribute('href', '/app/compras');
   await expect.poll(() => texto(page, 'Compras do período')).toContain('R$ 12.450,00');
   expect(await texto(page, 'Compras do período')).toContain('+12%');
   expect(await texto(page, 'A pagar')).toContain('R$ 4.280,00');

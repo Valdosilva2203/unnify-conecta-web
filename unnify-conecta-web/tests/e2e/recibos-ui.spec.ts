@@ -53,7 +53,7 @@ test('painel, lista com filtros no servidor, visualização, PDF/segunda via aud
   const ctx = await browser.newContext({ viewport: { width: 1536, height: 1000 } });
   const registro = await sessaoSimulada(ctx, rotas());
   const page = await abrir(ctx);
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Recibos' })).toHaveAttribute('href', '/app/recibos');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Recibos' })).toHaveAttribute('href', '/app/recibos');
   await expect.poll(() => texto(page, 'Recibos emitidos')).toContain('48');
   expect(await texto(page, 'Recibos emitidos')).toContain('+11,6%');
   expect(await texto(page, 'Valor recebido documentado')).toContain('R$ 18.450,00');

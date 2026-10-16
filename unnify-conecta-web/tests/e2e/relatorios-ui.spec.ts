@@ -52,7 +52,7 @@ test('visão geral: indicadores com comparação, contas e detalhamento até os 
   const ctx = await browser.newContext({ viewport: { width: 1536, height: 1000 } });
   const registro = await sessaoSimulada(ctx, rotas());
   const page = await abrir(ctx);
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Relatórios' })).toHaveAttribute('href', '/app/relatorios');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Relatórios' })).toHaveAttribute('href', '/app/relatorios');
   await expect.poll(() => texto(page, 'Receitas')).toContain('R$ 42.850,00');
   expect(await texto(page, 'Receitas')).toContain('12% vs. período anterior');
   expect(await texto(page, 'Resultado gerencial')).toContain('não é lucro contábil');

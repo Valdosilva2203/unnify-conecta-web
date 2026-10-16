@@ -14,6 +14,7 @@ import { Aviso } from '@/components/conta/Aviso';
 import { IconeCategoria } from '@/components/financeiro/IconeCategoria';
 import { CategoriasTarefas, FormTarefa } from './FormulariosTarefa';
 import { DetalheTarefa } from './DetalheTarefa';
+import { CabecalhoModulo } from '@/components/navegacao/NavegacaoModulos';
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -189,15 +190,12 @@ export function ModuloTarefas({ contexto, idEmpresa }: Props) {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Tarefas</h1>
-          <p className="text-gray-600 mt-1">Organize suas atividades e acompanhe os prazos.</p>
-        </div>
+      <CabecalhoModulo icone={ListChecks} titulo="Tarefas" descricao="Organize suas atividades e acompanhe os prazos."
+        acoes={<>
         <button type="button" onClick={() => setForm({ tarefa: null })} className="min-h-11 px-5 inline-flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold">
           <Plus className="w-4 h-4" aria-hidden="true" />Nova tarefa
         </button>
-      </div>
+        </>} />
 
       {aviso && (
         <div className="flex items-start gap-2">

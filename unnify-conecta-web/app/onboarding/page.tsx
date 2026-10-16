@@ -8,6 +8,7 @@ import { OnboardingCard } from '@/components/OnboardingCard';
 import { createClient } from '@/lib/supabase/client';
 import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
 import { lerTokenConvite, type DadosConvite } from '@/lib/convites';
+import { CHAVE_CONVITE } from '@/lib/portal-colaborador';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -80,6 +81,14 @@ export default function OnboardingPage() {
           return;
         }
 
+        // Convite do Portal do Colaborador aberto antes do login: volta para concluir a ativação
+        let conviteColaborador: string | null = null;
+        try { conviteColaborador = sessionStorage.getItem(CHAVE_CONVITE); } catch { /* sem armazenamento */ }
+        if (conviteColaborador) {
+          router.replace('/colaborador/ativar');
+          return;
+        }
+
         // ⚠️ REGRA: Se tipo_usuario está preenchido (empresa/contador) → redireciona para dashboard
         const { data: userData, error: userError } = await supabase
           .from('perfis')
@@ -103,6 +112,13 @@ export default function OnboardingPage() {
         if (count && count > 0) {
           // User has companies, redirect to app
           router.replace('/app');
+          return;
+        }
+
+        // Conta só de colaborador (sem empresa nem perfil contábil): vai para o portal
+        const { data: vinculosColaborador } = await supabase.rpc('portal_colaborador');
+        if (Array.isArray(vinculosColaborador) && vinculosColaborador.length > 0) {
+          router.replace('/colaborador');
           return;
         }
 

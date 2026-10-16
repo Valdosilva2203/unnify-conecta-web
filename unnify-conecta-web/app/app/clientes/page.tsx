@@ -14,6 +14,7 @@ import { Indicador } from '@/components/financeiro/Indicador';
 import { GraficoRosca } from '@/components/financeiro/GraficoRosca';
 import { classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { ModalCliente, ModalVincularReceita } from '@/components/clientes/ModaisCliente';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 interface Resumo { total: number; ativos: number; inativos: number; prospects: number; novos_mes: number; novos_mes_anterior: number; a_receber: number | null; a_receber_vencido: number | null; evolucao: { mes: string; novos: number; cadastrados: number }[] }
 type Lista = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string; ausente: boolean } | { tipo: 'ok'; linhas: Cliente[]; total: number };
@@ -72,14 +73,10 @@ export default function ClientesPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><Users className="w-7 h-7" aria-hidden="true" /></span>
-          <div className="min-w-0"><h1 className="text-2xl sm:text-3xl font-black text-gray-900">Clientes</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Gerencie seus clientes, histórico e recebimentos.</p></div>
-        </div>
+      <CabecalhoModulo icone={Users} titulo="Clientes" descricao="Gerencie seus clientes, histórico e recebimentos."
+        acoes={<>
         <button type="button" className={`${classeBotaoPrimario} whitespace-nowrap self-start xl:self-auto`} onClick={() => setModal({ c: null })}><Plus className="w-4 h-4" aria-hidden="true" />Novo cliente</button>
-      </div>
+        </>} />
 
       {aviso && <div role="status" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex justify-between gap-3"><span>{aviso}</span><button type="button" className="underline" onClick={() => setAviso(null)}>Fechar</button></div>}
       {lista.tipo === 'erro' && (lista.ausente
@@ -101,7 +98,7 @@ export default function ClientesPage() {
           <div role="tablist" aria-label="Situação" className="flex flex-wrap gap-1">
             {([['', 'Todos'], ['ativo', 'Ativos'], ['inativo', 'Inativos'], ['prospect', 'Prospects']] as const).map(([v, rot]) => (
               <button key={v} type="button" role="tab" aria-selected={aba === v} onClick={() => { setAba(v); setPagina(1); }}
-                className={`min-h-11 px-3 sm:px-4 rounded-lg text-sm font-semibold ${aba === v ? 'bg-orange-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>{rot}</button>
+                className={classePilula(aba === v)}>{rot}</button>
             ))}
           </div>
           <div className="flex flex-col sm:flex-row gap-2">

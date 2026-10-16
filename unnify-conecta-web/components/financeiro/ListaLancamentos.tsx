@@ -64,10 +64,10 @@ export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas,
   }, [busca]);
 
   const montarConsulta = useCallback(
-    (comContagem: boolean) => {
+    (comContagem: boolean, colunas: '*' | 'valor,tipo' = '*') => {
       let q = createClient()
         .from('lancamentos_financeiros_situacao')
-        .select('*', comContagem ? { count: 'exact' } : undefined)
+        .select(colunas, comContagem ? { count: 'exact' } : undefined)
         .eq('id_empresa', idEmpresa);
       const t = tipoFixo ?? tipo;
       if (t) q = q.eq('tipo', t);
@@ -82,6 +82,7 @@ export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas,
         const termo = buscaAplicada.replace(/[%,()]/g, ' ');
         q = q.or(`descricao.ilike.%${termo}%,contraparte.ilike.%${termo}%`);
       }
+      if (modo === 'receber') return q.order('criado_em', { ascending: false }).order('id', { ascending: false }); // últimas contas a receber criadas no topo (id: desempate estável na paginação)
       return modo === 'todos'
         ? q.order('data_competencia', { ascending: false }).order('criado_em', { ascending: false })
         : q.order('data_vencimento', { ascending: true, nullsFirst: false });
@@ -96,7 +97,7 @@ export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas,
     const { data, error, count } = await montarConsulta(true).range(inicio, inicio + porPagina - 1);
     if (error) setErro(error.message);
     else {
-      setItens((data ?? []) as Lancamento[]);
+      setItens((data ?? []) as unknown as Lancamento[]);
       setTotal(count ?? 0);
     }
     setCarregando(false);
@@ -105,6 +106,28 @@ export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas,
   useEffect(() => {
     carregar();
   }, [carregar, versao]);
+
+  // Soma de TODAS as contas que atendem aos filtros (não só da página), em centavos para não acumular erro de ponto flutuante
+  const [somaFiltro, setSomaFiltro] = useState<{ receita: number; despesa: number; limitado: boolean } | null>(null);
+  useEffect(() => {
+    let ativo = true;
+    setSomaFiltro(null);
+    (async () => {
+      let receita = 0, despesa = 0;
+      const POR_LOTE = 1000, MAX_LOTES = 10;
+      for (let lote = 0; lote < MAX_LOTES; lote++) {
+        const { data, error } = await montarConsulta(false, 'valor,tipo').range(lote * POR_LOTE, (lote + 1) * POR_LOTE - 1);
+        if (!ativo || error) return;
+        for (const l of (data ?? []) as unknown as { valor: number | string; tipo: TipoLancamento }[]) {
+          const c = Math.round(Number(l.valor) * 100);
+          if (l.tipo === 'receita') receita += c; else despesa += c;
+        }
+        if ((data ?? []).length < POR_LOTE) return setSomaFiltro({ receita, despesa, limitado: false });
+      }
+      if (ativo) setSomaFiltro({ receita, despesa, limitado: true });
+    })();
+    return () => { ativo = false; };
+  }, [montarConsulta, versao]);
 
   const abrirAcao = (tipoAcao: NonNullable<Acao>['tipo'], l: Lancamento) => {
     setErroAcao(null);
@@ -143,7 +166,7 @@ export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas,
     const { data, error } = await montarConsulta(false).limit(5000);
     if (error) return;
     const linhas = [['Tipo', 'Descrição', 'Categoria', 'Cliente/Fornecedor', 'Valor', 'Competência', 'Vencimento', 'Pagamento', 'Situação']];
-    for (const l of (data ?? []) as Lancamento[]) {
+    for (const l of (data ?? []) as unknown as Lancamento[]) {
       linhas.push([
         l.tipo === 'receita' ? 'Receita' : 'Despesa', l.descricao, l.categoria_nome, l.contraparte ?? '',
         Number(l.valor).toFixed(2).replace('.', ','), formatarData(l.data_competencia), formatarData(l.data_vencimento),
@@ -279,6 +302,23 @@ export function ListaLancamentos({ modo, idEmpresa, periodo, categorias, contas,
             );
           })}
         </Tabela>
+        {somaFiltro && itens.length > 0 && (
+          <p className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-sm text-gray-600" data-testid="total-filtro">
+            {modo === 'todos' ? (
+              <>
+                <span>Receitas: <strong className="text-green-700">{formatarMoeda(somaFiltro.receita / 100)}</strong></span>
+                <span>Despesas: <strong className="text-red-700">{formatarMoeda(somaFiltro.despesa / 100)}</strong></span>
+                <span>Saldo: <strong className={`text-base ${somaFiltro.receita >= somaFiltro.despesa ? 'text-green-700' : 'text-red-700'}`}>{formatarMoeda((somaFiltro.receita - somaFiltro.despesa) / 100)}</strong></span>
+              </>
+            ) : (
+              <>
+                <span>{modo === 'receber' ? 'Total a receber' : 'Total a pagar'}{total > 0 ? ` (${total} ${total === 1 ? 'conta' : 'contas'})` : ''}:</span>
+                <strong className={`text-base ${modo === 'receber' ? 'text-green-700' : 'text-red-700'}`}>{formatarMoeda((modo === 'receber' ? somaFiltro.receita : somaFiltro.despesa) / 100)}</strong>
+              </>
+            )}
+            {somaFiltro.limitado && <span className="text-xs text-amber-700">soma das primeiras 10.000 contas</span>}
+          </p>
+        )}
         <Paginacao pagina={pagina} aoMudarPagina={setPagina} porPagina={porPagina} aoMudarPorPagina={setPorPagina} total={total} />
       </EstadoTabela>
 

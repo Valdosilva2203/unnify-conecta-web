@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, LogOut, Mail, ShieldCheck, Bell, SlidersHorizontal, FileText, User as IconeUsuario, UserCircle2, CalendarDays, CircleCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, LogOut, Mail, ShieldCheck, Bell, SlidersHorizontal, FileText, User as IconeUsuario, UserCircle2, CalendarDays, CircleCheck, UserCog } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { PREFERENCIAS_PADRAO, formatarData, formatarDataHora, rotuloDoPerfil, type PerfilPessoal, type Preferencias, type Secao } from '@/lib/conta';
@@ -11,6 +11,7 @@ import { DadosPessoais } from './DadosPessoais';
 import { SecaoSeguranca } from './SecaoSeguranca';
 import { Notificacoes, PreferenciasExibicao } from './SecoesPreferencias';
 import { Privacidade } from './Privacidade';
+import { CabecalhoModulo } from '@/components/navegacao/NavegacaoModulos';
 
 const SECOES: { id: Secao; titulo: string; descricao: string; icone: typeof IconeUsuario; cor: string }[] = [
   { id: 'dados', titulo: 'Dados pessoais', descricao: 'Nome, foto e telefone', icone: IconeUsuario, cor: 'bg-orange-100 text-orange-600' },
@@ -166,10 +167,7 @@ export function MinhaConta({ secaoInicial }: { secaoInicial?: Secao }) {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Minha conta</h1>
-        <p className="text-gray-600 mt-1">Gerencie suas informações pessoais, segurança e preferências.</p>
-      </div>
+      <CabecalhoModulo icone={UserCog} titulo="Minha conta" descricao="Gerencie suas informações pessoais, segurança e preferências." />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <section aria-label="Resumo da conta" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">

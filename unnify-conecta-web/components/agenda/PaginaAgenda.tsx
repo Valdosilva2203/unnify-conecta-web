@@ -14,6 +14,7 @@ import {
   CATEGORIAS, DIAS_CURTOS, GRUPO_STATUS, ORIGENS, STATUS, diasDoEvento, estiloEvento, fimDoMes, gradeDoMes, hojeSP, horarioEvento,
   inicioDaSemana, inicioDoMes, rotuloDiaCurto, rotuloDiaLongo, rotuloMesAno, somarDias, somarMeses, type EventoAgenda, type Origem,
 } from '@/lib/agenda';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 type Visao = 'mes' | 'semana' | 'lista';
 type Estado = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string; ausente: boolean } | { tipo: 'ok'; eventos: EventoAgenda[] };
@@ -122,7 +123,8 @@ export function PaginaAgenda({ modo, usuarioId, empresa, empresas = [], empresas
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {embutida ? (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><Calendar className="w-7 h-7" aria-hidden="true" /></span>
           <div className="min-w-0">
@@ -132,6 +134,12 @@ export function PaginaAgenda({ modo, usuarioId, empresa, empresas = [], empresas
         </div>
         <button type="button" className={`${classeBotaoPrimario} whitespace-nowrap shrink-0`} onClick={() => setModal({ evento: null })}><Plus className="w-4 h-4" aria-hidden="true" />Novo compromisso</button>
       </div>
+        ) : (
+        <CabecalhoModulo icone={Calendar} titulo="Agenda" descricao={modo === 'empresa' ? 'Organize seus compromissos, tarefas, obrigações e vencimentos em um só lugar.' : 'Seus compromissos, os compartilhados com as empresas atendidas e as obrigações dos clientes.'}
+        acoes={<>
+        <button type="button" className={`${classeBotaoPrimario} whitespace-nowrap shrink-0`} onClick={() => setModal({ evento: null })}><Plus className="w-4 h-4" aria-hidden="true" />Novo compromisso</button>
+        </>} />
+        )}
 
       {aviso && (
         <div role="status" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex justify-between gap-3">
@@ -146,7 +154,7 @@ export function PaginaAgenda({ modo, usuarioId, empresa, empresas = [], empresas
             <div role="tablist" aria-label="Visualização" className="flex gap-1">
               {([['mes', 'Mês', CalendarDays], ['semana', 'Semana', Calendar], ['lista', 'Lista', List]] as const).map(([v, r, Icone]) => (
                 <button key={v} type="button" role="tab" aria-selected={visao === v} onClick={() => setVisao(v)}
-                  className={`min-h-11 px-2.5 sm:px-4 rounded-lg text-sm font-semibold inline-flex items-center gap-1.5 ${visao === v ? 'bg-orange-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>
+                  className={classePilula(visao === v)}>
                   <Icone className="w-4 h-4" aria-hidden="true" />{r}
                 </button>
               ))}

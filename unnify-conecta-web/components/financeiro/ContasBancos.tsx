@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeftRight, Archive, ArchiveRestore, Landmark, ListOrdered, Pencil, Plus, Star, Wallet } from 'lucide-react';
+import { ArrowLeftRight, Archive, ArchiveRestore, Landmark, ListOrdered, Pencil, PiggyBank, Plus, Star, Wallet } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import {
@@ -11,6 +11,7 @@ import {
 import { BotaoIcone, Selo } from '@/components/admin/tabela';
 import { Modal, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { SeletorConta } from './SeletorConta';
+import { FormDeposito } from './FormDeposito';
 import { SeletorCor } from '@/components/ui/SeletorCor';
 import { corSobre } from '@/lib/cores';
 
@@ -38,6 +39,7 @@ export function ContasBancos({ idEmpresa, contas, aoAlterar }: Props) {
   const [mostrarArquivadas, setMostrarArquivadas] = useState(false);
   const [editando, setEditando] = useState<ContaFinanceira | 'nova' | null>(null);
   const [transferindo, setTransferindo] = useState(false);
+  const [depositando, setDepositando] = useState(false);
   const [extrato, setExtrato] = useState<ContaFinanceira | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -65,6 +67,11 @@ export function ContasBancos({ idEmpresa, contas, aoAlterar }: Props) {
           <button type="button" onClick={() => setEditando('nova')} className={classeBotaoPrimario}>
             <Plus className="w-4 h-4" aria-hidden="true" />
             Nova conta
+          </button>
+          <button type="button" disabled={!ativas.some((c) => c.tipo !== 'caixa')} onClick={() => setDepositando(true)} className={classeBotaoSecundario}
+            title={ativas.some((c) => c.tipo !== 'caixa') ? undefined : 'Cadastre uma conta bancária'}>
+            <PiggyBank className="w-4 h-4" aria-hidden="true" />
+            Depositar
           </button>
         </div>
       </div>
@@ -126,6 +133,7 @@ export function ContasBancos({ idEmpresa, contas, aoAlterar }: Props) {
       )}
 
       <FormConta idEmpresa={idEmpresa} conta={editando} aoFechar={() => setEditando(null)} aoSalvar={(m) => { setEditando(null); aoAlterar(m); }} />
+      <FormDeposito aberto={depositando} idEmpresa={idEmpresa} contas={contas} aoFechar={() => setDepositando(false)} aoSalvar={(m) => { setDepositando(false); aoAlterar(m); }} />
       <FormTransferencia aberto={transferindo} contas={contas} aoFechar={() => setTransferindo(false)} aoSalvar={(m) => { setTransferindo(false); aoAlterar(m); }} />
       <Extrato conta={extrato} aoFechar={() => setExtrato(null)} aoAlterar={aoAlterar} />
     </div>

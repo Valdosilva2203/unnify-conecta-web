@@ -1,90 +1,57 @@
 'use client';
 
-import { adminMockData } from '@/lib/mockData/adminMockData';
+const CORES: Record<string, string> = { ATIVA: '#16a34a', PENDENTE: '#f59e0b', SUSPENSA: '#ef4444' };
+const ROTULOS: Record<string, string> = { ATIVA: 'Ativas', PENDENTE: 'Pendentes', SUSPENSA: 'Suspensas' };
 
-const colors = ['#EA4335', '#FF8A65', '#FFAB91'];
-
-export function PlansChart() {
-  const totalSubscriptions = adminMockData.plansDistribution.reduce(
-    (acc, plan) => acc + plan.value,
-    0
-  );
+// Distribuição REAL das empresas por status de cadastro
+export function PlansChart({ porStatus, titulo = 'Empresas por status' }: { porStatus: Record<string, number>; titulo?: string }) {
+  const itens = Object.entries(porStatus).filter(([, v]) => v > 0);
+  const total = itens.reduce((acc, [, v]) => acc + v, 0);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-      <h3 className="text-lg font-bold text-gray-900 mb-8">
-        Planos mais utilizados
-      </h3>
-
-      <div className="flex flex-col items-center gap-8">
-        {/* Donut Chart */}
-        <div className="relative w-48 h-48">
-          <svg viewBox="0 0 100 100" className="transform -rotate-90">
-            {(() => {
-              let currentAngle = 0;
-
-              return adminMockData.plansDistribution.map((plan, index) => {
-                const sliceAngle = (plan.value / totalSubscriptions) * 360;
-                const startAngle = currentAngle;
-                const endAngle = currentAngle + sliceAngle;
-
-                const startRad = (startAngle * Math.PI) / 180;
-                const endRad = (endAngle * Math.PI) / 180;
-
-                const x1 = 50 + 40 * Math.cos(startRad);
-                const y1 = 50 + 40 * Math.sin(startRad);
-                const x2 = 50 + 40 * Math.cos(endRad);
-                const y2 = 50 + 40 * Math.sin(endRad);
-
-                const largeArc = sliceAngle > 180 ? 1 : 0;
-
-                const path = `M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArc} 1 ${x2} ${y2} Z`;
-
-                const result = (
-                  <path
-                    key={plan.name}
-                    d={path}
-                    fill={colors[index]}
-                    className="hover:opacity-80 transition-opacity cursor-pointer"
-                  />
-                );
-
-                currentAngle = endAngle;
-                return result;
-              });
-            })()}
-          </svg>
-
-          {/* Center Text */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-2xl font-black text-gray-900">
-              {totalSubscriptions.toLocaleString('pt-BR')}
-            </p>
-            <p className="text-xs text-gray-600">assinaturas</p>
+      <h3 className="text-lg font-bold text-gray-900 mb-8">{titulo}</h3>
+      {total === 0 ? (
+        <p className="text-sm text-gray-500 text-center py-16">Ainda não há empresas cadastradas.</p>
+      ) : (
+        <div className="flex flex-col items-center gap-8">
+          <div className="relative w-48 h-48">
+            <svg viewBox="0 0 100 100" className="transform -rotate-90" role="img" aria-label={titulo}>
+              {(() => {
+                let atual = 0;
+                return itens.map(([status, valor]) => {
+                  const fatia = (valor / total) * 360;
+                  if (itens.length === 1) return <circle key={status} cx="50" cy="50" r="40" fill={CORES[status] ?? '#9ca3af'} />;
+                  const ini = (atual * Math.PI) / 180;
+                  const fim = ((atual + fatia) * Math.PI) / 180;
+                  const d = `M 50 50 L ${50 + 40 * Math.cos(ini)} ${50 + 40 * Math.sin(ini)} A 40 40 0 ${fatia > 180 ? 1 : 0} 1 ${50 + 40 * Math.cos(fim)} ${50 + 40 * Math.sin(fim)} Z`;
+                  atual += fatia;
+                  return <path key={status} d={d} fill={CORES[status] ?? '#9ca3af'} />;
+                });
+              })()}
+              <circle cx="50" cy="50" r="22" fill="white" />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <p className="text-2xl font-black text-gray-900">{total.toLocaleString('pt-BR')}</p>
+              <p className="text-xs text-gray-600">empresas</p>
+            </div>
+          </div>
+          <div className="w-full space-y-3">
+            {itens.map(([status, valor]) => (
+              <div key={status} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CORES[status] ?? '#9ca3af' }} />
+                  <span className="text-gray-900 font-medium">{ROTULOS[status] ?? 'Sem status'}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-gray-900 font-semibold">{valor}</span>
+                  <span className="text-gray-600 ml-2">{((valor / total) * 100).toFixed(1).replace('.', ',')}%</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-
-        {/* Legend */}
-        <div className="w-full space-y-3">
-          {adminMockData.plansDistribution.map((plan, index) => (
-            <div key={plan.name} className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: colors[index] }}
-                />
-                <span className="text-gray-900 font-medium">{plan.name}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-gray-900 font-semibold">
-                  {plan.value}
-                </span>
-                <span className="text-gray-600 ml-2">{plan.percentage}%</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

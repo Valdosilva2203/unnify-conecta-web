@@ -4,10 +4,9 @@ import { Suspense, createContext, useCallback, useContext, useEffect, useState, 
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Home, FileText, DollarSign, AlertCircle, Landmark, Calendar, ShoppingCart, ShoppingBag, Box,
-  Users, UserCheck, Receipt, BarChart3, Settings, Menu, X, Briefcase, ListChecks, HeartPulse,
-} from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import { ProvedorModulos } from '@/components/navegacao/NavegacaoModulos';
+import { DEPARTAMENTOS, departamentoDaRota, modulosDaRotaEmpresa } from '@/lib/navegacao-empresa';
 import { SinoNotificacoes } from '@/components/notificacoes/SinoNotificacoes';
 import { createClient } from '@/lib/supabase/client';
 import { precisaSegundoFator, ROTA_VERIFICACAO_MFA } from '@/lib/supabase/mfa';
@@ -77,55 +76,35 @@ async function buscarEmpresasDoUsuario(idUsuario: string): Promise<EmpresaAtual[
     .sort((a, b) => (a.nome_comercial || a.razao_social).localeCompare(b.nome_comercial || b.razao_social, 'pt-BR'));
 }
 
-const menuItems = [
-  { icon: Home, label: 'Início', href: '/app' },
-  { icon: Briefcase, label: 'Meu contador', href: '/app/meu-contador' },
-  { icon: DollarSign, label: 'Financeiro', href: '/app/financeiro' },
-  { icon: ListChecks, label: 'Tarefas', href: '/app/tarefas' },
-  { icon: FileText, label: 'Meus documentos', href: '/app/documentos' },
-  { icon: AlertCircle, label: 'Obrigações', href: '/app/obrigacoes' },
-  { icon: Landmark, label: 'Impostos', href: '/app/impostos' },
-  { icon: HeartPulse, label: 'Saúde Empresarial', href: '/app/saude-empresarial' },
-  { icon: Calendar, label: 'Agenda', href: '/app/agenda' },
-  { icon: ShoppingCart, label: 'Compras', href: '/app/compras' },
-  { icon: ShoppingBag, label: 'Vendas', href: '/app/vendas' },
-  { icon: Box, label: 'Estoque', href: '/app/estoque' },
-  { icon: Users, label: 'Funcionários', href: '/app/funcionarios' },
-  { icon: UserCheck, label: 'Clientes', href: '/app/clientes' },
-  { icon: Receipt, label: 'Recibos', href: '/app/recibos' },
-  { icon: BarChart3, label: 'Relatórios', href: '/app/relatorios' },
-  { icon: Settings, label: 'Minha conta', href: '/app/minha-conta' },
-];
-
+// Menu lateral por DEPARTAMENTOS (os módulos de cada um ficam na barra de pílulas do cabeçalho de cada página)
 function ListaNavegacao({ pathname }: { pathname: string | null }) {
+  const atual = departamentoDaRota(pathname);
   return (
-    <nav aria-label="Menu principal" className="flex-1 overflow-y-auto py-4">
-      {menuItems.map((item) => {
-        const Icon = item.icon;
-        const ativo = !!pathname && (item.href === '/app' ? pathname === '/app' : item.href !== '#' && pathname.startsWith(item.href));
-        if (item.href === '#') {
+    <nav aria-label="Menu principal" className="flex-1 overflow-y-auto py-3">
+      {DEPARTAMENTOS.map((dep) => {
+        const Icon = dep.icone;
+        if (!dep.href) {
+          // Departamento reservado (ainda sem módulos): visível, mas sem navegação
           return (
-            <div
-              key={item.label}
-              aria-disabled="true"
-              className="w-full min-h-11 flex items-center gap-3 px-6 text-sm font-medium text-gray-400 cursor-default"
-            >
+            <div key={dep.id} aria-disabled="true" className="w-full min-h-11 flex items-center gap-3 px-6 text-sm font-medium text-gray-400 cursor-default">
               <Icon className="w-5 h-5" aria-hidden="true" />
-              <span className="flex-1">{item.label}</span>
+              <span className="flex-1">{dep.rotulo}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide">Em breve</span>
             </div>
           );
         }
+        const ativo = atual?.id === dep.id;
         return (
           <Link
-            key={item.label}
-            href={item.href}
+            key={dep.id}
+            href={dep.href}
             aria-current={ativo ? 'page' : undefined}
             className={`w-full min-h-11 flex items-center gap-3 px-6 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500 ${
-              ativo ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-600' : 'text-gray-700 hover:bg-gray-50'
+              ativo ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-600 pl-5' : 'text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <Icon className="w-5 h-5" aria-hidden="true" />
-            <span className="flex-1">{item.label}</span>
+            <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
+            <span className="flex-1">{dep.rotulo}</span>
           </Link>
         );
       })}
@@ -251,8 +230,9 @@ export function LayoutEmpresa({ children }: { children: ReactNode }) {
 
   return (
     <ContextoEmpresa.Provider value={{ empresa, usuario, empresas, trocarEmpresa, recarregarEmpresas }}>
+      <ProvedorModulos value={modulosDaRotaEmpresa}>
       <div className="flex min-h-screen bg-gray-50">
-        <aside className="hidden lg:flex sticky top-0 h-screen w-56 shrink-0 bg-white border-r border-gray-200 flex-col">
+        <aside className="hidden lg:flex sticky top-0 h-screen w-64 shrink-0 bg-white border-r border-gray-200 flex-col">
           <div className="p-6 border-b border-gray-200">
             <Link href="/app" aria-label="Unnify Conecta — início">
               <Image src="/brand/unnify-logo.png" alt="Unnify Conecta" width={150} height={50} priority className="h-8 w-auto" />
@@ -335,6 +315,7 @@ export function LayoutEmpresa({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
+      </ProvedorModulos>
     </ContextoEmpresa.Provider>
   );
 }

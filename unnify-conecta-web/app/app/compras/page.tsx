@@ -16,6 +16,7 @@ import { Paginacao, Selo } from '@/components/admin/tabela';
 import { Indicador } from '@/components/financeiro/Indicador';
 import { classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { ModalFornecedor, ModalMotivo, ModalNovaCompra, ModalPagarCompra, ModalReceberCompra, type ItemParaReceber, type RascunhoCompra } from '@/components/compras/Modais';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 type Lista<T> = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string; ausente: boolean } | { tipo: 'ok'; linhas: T[]; total: number };
 type Periodo = 'mes' | 'anterior' | '90' | 'ano';
@@ -48,15 +49,11 @@ export default function ComprasPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex items-start gap-3 min-w-0">
-        <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><ShoppingCart className="w-7 h-7" aria-hidden="true" /></span>
-        <div className="min-w-0"><h1 className="text-2xl sm:text-3xl font-black text-gray-900">Compras</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Gerencie suas compras, fornecedores e recebimentos.</p></div>
-      </div>
-      <div role="tablist" aria-label="Seções de compras" className="flex gap-1 border-b border-gray-200">
+      <CabecalhoModulo icone={ShoppingCart} titulo="Compras" descricao="Gerencie suas compras, fornecedores e recebimentos." />
+      <div role="tablist" aria-label="Seções de compras" className="flex flex-wrap gap-2">
         {([['compras', 'Compras'], ['fornecedores', 'Fornecedores']] as const).map(([v, r]) => (
           <button key={v} type="button" role="tab" aria-selected={aba === v} onClick={() => setAba(v)}
-            className={`min-h-11 px-4 -mb-px border-b-2 text-sm font-semibold ${aba === v ? 'border-orange-600 text-orange-700' : 'border-transparent text-gray-600 hover:text-gray-900'}`}>{r}</button>
+            className={classePilula(aba === v)}>{r}</button>
         ))}
       </div>
       {aviso && <div role="status" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex justify-between gap-3"><span>{aviso}</span><button type="button" className="underline" onClick={() => setAviso(null)}>Fechar</button></div>}
@@ -147,7 +144,7 @@ function AbaCompras({ idEmpresa, hoje, podeOperar, contas, versao: versaoExt, ao
           <div role="tablist" aria-label="Situação da compra" className="flex flex-wrap gap-1">
             {([['', 'Todas'], ['rascunho', 'Rascunho'], ['solicitada', 'Solicitadas'], ['parcialmente_recebida', 'Parcialmente recebidas'], ['recebida', 'Recebidas'], ['cancelada', 'Canceladas']] as const).map(([v, rot]) => (
               <button key={v} type="button" role="tab" aria-selected={situacao === v} onClick={() => { setSituacao(v); setPagina(1); }}
-                className={`min-h-11 px-3 rounded-lg text-sm font-semibold ${situacao === v ? 'bg-orange-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>{rot}</button>
+                className={classePilula(situacao === v)}>{rot}</button>
             ))}
           </div>
           <div className="flex flex-col sm:flex-row gap-2">

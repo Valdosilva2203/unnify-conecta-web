@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { Eye } from 'lucide-react';
 import { AdminLayout } from '@/components/AdminLayout';
 import {
@@ -37,140 +38,35 @@ interface AuditoriaEvento {
   detalhes: string;
 }
 
-const eventosFicticios: AuditoriaEvento[] = [
-  {
-    id: '1',
-    dataHora: '10/10/2026 14:20:35',
-    usuarioNome: 'Vado Silva',
-    usuarioId: 'VS',
-    usuarioRole: 'Administrador Master',
-    evento: 'Login no sistema',
-    eventoBadgeColor: 'bg-blue-100 text-blue-800',
-    modulo: 'Autenticação',
-    enderecoIp: '179.189.25.14',
-    resultado: 'sucesso',
-    detalhes: 'Login realizado com sucesso via navegador Chrome.',
-  },
-  {
-    id: '2',
-    dataHora: '10/10/2026 14:18:12',
-    usuarioNome: 'Ana Clara Souza',
-    usuarioId: 'AC',
-    usuarioRole: 'Contadora',
-    evento: 'Alteração de empresa',
-    eventoBadgeColor: 'bg-orange-100 text-orange-800',
-    modulo: 'Empresas',
-    enderecoIp: '179.189.25.14',
-    resultado: 'sucesso',
-    detalhes: 'Dados da empresa ABC LTDA foram atualizados.',
-  },
-  {
-    id: '3',
-    dataHora: '10/10/2026 13:45:03',
-    usuarioNome: 'Ricardo Sousa',
-    usuarioId: 'RS',
-    usuarioRole: 'Parceiro',
-    evento: 'Inclusão de usuário',
-    eventoBadgeColor: 'bg-green-100 text-green-800',
-    modulo: 'Usuários',
-    enderecoIp: '187.62.33.51',
-    resultado: 'sucesso',
-    detalhes: 'Novo usuário, João Martins foi cadastrado.',
-  },
-  {
-    id: '4',
-    dataHora: '10/10/2026 12:33:18',
-    usuarioNome: 'João Martins',
-    usuarioId: 'JM',
-    usuarioRole: 'Empresário',
-    evento: 'Alteração de assinatura',
-    eventoBadgeColor: 'bg-orange-100 text-orange-800',
-    modulo: 'Assinaturas',
-    enderecoIp: '179.189.25.14',
-    resultado: 'sucesso',
-    detalhes: 'Plano da empresa Mercado Almeida foi alterado para Premium.',
-  },
-  {
-    id: '5',
-    dataHora: '10/10/2026 11:12:47',
-    usuarioNome: 'Fernanda Silva',
-    usuarioId: 'FS',
-    usuarioRole: 'Contadora',
-    evento: 'Exclusão de documento',
-    eventoBadgeColor: 'bg-red-100 text-red-800',
-    modulo: 'Documentos',
-    enderecoIp: '200.217.18.90',
-    resultado: 'sucesso',
-    detalhes: 'Documento "Contrato.pdf" foi excluído.',
-  },
-  {
-    id: '6',
-    dataHora: '09/10/2026 18:25:30',
-    usuarioNome: 'Diego Lima',
-    usuarioId: 'DL',
-    usuarioRole: 'Contador',
-    evento: 'Tentativa de login',
-    eventoBadgeColor: 'bg-yellow-100 text-yellow-800',
-    modulo: 'Autenticação',
-    enderecoIp: '201.48.102.77',
-    resultado: 'falha',
-    detalhes: 'Tentativa de login com senha inválida.',
-  },
-  {
-    id: '7',
-    dataHora: '09/10/2026 16:10:22',
-    usuarioNome: 'Maria Vitória',
-    usuarioId: 'MV',
-    usuarioRole: 'Empresária',
-    evento: 'Visualização de relatório',
-    eventoBadgeColor: 'bg-purple-100 text-purple-800',
-    modulo: 'Relatórios',
-    enderecoIp: '179.189.25.14',
-    resultado: 'sucesso',
-    detalhes: 'Relatório de comissões visualizado.',
-  },
-  {
-    id: '8',
-    dataHora: '09/10/2026 15:47:19',
-    usuarioNome: 'Carlos Santos',
-    usuarioId: 'CS',
-    usuarioRole: 'Contador',
-    evento: 'Alteração de permissão',
-    eventoBadgeColor: 'bg-indigo-100 text-indigo-800',
-    modulo: 'Usuários',
-    enderecoIp: '177.91.12.43',
-    resultado: 'sucesso',
-    detalhes: 'Permissões do usuário Lucas Mendes foram atualizadas.',
-  },
-  {
-    id: '9',
-    dataHora: '09/10/2026 14:30:11',
-    usuarioNome: 'Paulo Ribeiro',
-    usuarioId: 'PR',
-    usuarioRole: 'Empresário',
-    evento: 'Cadastro de empresa',
-    eventoBadgeColor: 'bg-blue-100 text-blue-800',
-    modulo: 'Empresas',
-    enderecoIp: '179.189.25.14',
-    resultado: 'sucesso',
-    detalhes: 'Empresa Barbearia Reis LTDA foi cadastrada.',
-  },
-  {
-    id: '10',
-    dataHora: '09/10/2026 13:05:56',
-    usuarioNome: 'Lucas Mendes',
-    usuarioId: 'LM',
-    usuarioRole: 'Empresário',
-    evento: 'Alteração de plano',
-    eventoBadgeColor: 'bg-orange-100 text-orange-800',
-    modulo: 'Assinaturas',
-    enderecoIp: '189.72.44.21',
-    resultado: 'sucesso',
-    detalhes: 'Plano alterado de Básico para Pro.',
-  },
-];
 
 export default function AuditoriaPage() {
+  // Eventos REAIS da tabela de auditoria (o banco não guarda IP nem resultado: esses campos ficam como "—" / registrado)
+  const [eventos, setEventos] = useState<AuditoriaEvento[]>([]);
+  useEffect(() => {
+    const supabase = createClient();
+    const MODULOS: Record<string, string> = { empresas: 'Empresas', perfis: 'Usuários', usuarios_empresas: 'Usuários', vinculos_contabeis: 'Usuários', documentos_empresa: 'Documentos' };
+    const ACOES: Record<string, [string, string]> = { INSERT: ['Inclusão de registro', 'bg-green-100 text-green-800'], UPDATE: ['Alteração de registro', 'bg-blue-100 text-blue-800'], DELETE: ['Exclusão de registro', 'bg-red-100 text-red-800'] };
+    supabase.from('auditoria').select('id, id_usuario, acao, nome_tabela, id_registro, criado_em').order('criado_em', { ascending: false }).limit(500).then(async ({ data }) => {
+      const linhas = data ?? [];
+      const ids = [...new Set(linhas.map((l) => l.id_usuario as string | null).filter((x): x is string => !!x))];
+      const nomes = new Map<string, { nome: string; papel: string }>();
+      if (ids.length) {
+        const { data: ps } = await supabase.from('perfis').select('id_usuario, nome_completo, email, funcao_global, tipo_usuario').in('id_usuario', ids);
+        for (const p of ps ?? []) nomes.set(p.id_usuario as string, { nome: (p.nome_completo as string | null) || (p.email as string) || 'Usuário',
+          papel: p.funcao_global === 'admin_master' ? 'Administrador Master' : p.funcao_global === 'admin' ? 'Administrador' : p.tipo_usuario === 'contador' ? 'Contador' : 'Empresário' });
+      }
+      setEventos(linhas.map((l) => {
+        const quem = nomes.get(l.id_usuario as string) ?? { nome: 'Sistema', papel: '—' };
+        const [evento, cor] = ACOES[String(l.acao).toUpperCase()] ?? [String(l.acao), 'bg-gray-100 text-gray-800'];
+        return {
+          id: l.id as string, dataHora: new Date(l.criado_em as string).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+          usuarioNome: quem.nome, usuarioId: quem.nome.split(' ').filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase(), usuarioRole: quem.papel,
+          evento, eventoBadgeColor: cor, modulo: MODULOS[l.nome_tabela as string] ?? String(l.nome_tabela), enderecoIp: '—', resultado: 'sucesso',
+          detalhes: `Tabela ${l.nome_tabela}${l.id_registro ? ` · registro ${String(l.id_registro).slice(0, 8)}` : ''}`,
+        };
+      }));
+    });
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoEventoFilter, setTipoEventoFilter] = useState('todos');
   const [periodoFilter, setPeriodoFilter] = useState('todos');
@@ -179,17 +75,17 @@ export default function AuditoriaPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Calcular stats
-  const totalEventos = eventosFicticios.length;
-  const acessos = eventosFicticios.filter((e) => e.modulo === 'Autenticação').length;
-  const alteracoes = eventosFicticios.filter((e) =>
+  const totalEventos = eventos.length;
+  const acessos = eventos.filter((e) => e.modulo === 'Autenticação').length;
+  const alteracoes = eventos.filter((e) =>
     e.evento.includes('Alteração') || e.evento.includes('Exclusão') || e.evento.includes('Inclusão')
   ).length;
-  const seguranca = eventosFicticios.filter((e) =>
+  const seguranca = eventos.filter((e) =>
     e.evento.includes('Tentativa') || e.resultado === 'falha'
   ).length;
 
   // Filtrar eventos
-  const filteredEventos = eventosFicticios.filter((evento) => {
+  const filteredEventos = eventos.filter((evento) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       evento.usuarioNome.toLowerCase().includes(searchLower) ||

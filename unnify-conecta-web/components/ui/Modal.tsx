@@ -44,7 +44,7 @@ export function Modal({
     (focaveis()[1] ?? focaveis()[0])?.focus();
 
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') aoFecharRef.current();
+      if (e.key === 'Escape' && !e.defaultPrevented) aoFecharRef.current(); // quem trata o Esc (ex.: mini-formulário interno) usa preventDefault
       if (e.key !== 'Tab') return;
       const lista = focaveis();
       if (!lista.length) return;

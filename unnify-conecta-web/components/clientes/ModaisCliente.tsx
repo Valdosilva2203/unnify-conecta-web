@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro, UFS } from '@/lib/contabil';
 import { formatarData, formatarMoeda } from '@/lib/financeiro';
@@ -20,11 +20,97 @@ export function ModalCliente({ aberto, aoFechar, idEmpresa, cliente, aoSalvar }:
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const set = (k: string, v: string) => setF((x) => ({ ...x, [k]: v }));
+  const [buscaCep, setBuscaCep] = useState<'buscando' | 'erro' | null>(null);
+  const cepConsultado = useRef('');
+  const autoCep = useRef<Record<string, string>>({}); // o que o CEP preencheu (pode ser trocado por outro CEP)
+
+  const [buscaCnpj, setBuscaCnpj] = useState<'buscando' | 'erro' | 'ok' | null>(null);
+  const cnpjConsultado = useRef('');
+  const autoCnpj = useRef<Record<string, string>>({}); // o que o CNPJ preencheu (pode ser trocado por outro CNPJ)
+
+  // Novo CNPJ: remove os dados que a consulta anterior preencheu, deixando o formulário pronto para a próxima empresa
+  const limparDadosDoCnpj = () => {
+    const auto = autoCnpj.current;
+    if (!Object.keys(auto).length) return;
+    autoCnpj.current = {};
+    setF((x) => ({ ...x, ...Object.fromEntries(Object.keys(auto).filter((k) => x[k] === auto[k]).map((k) => [k, ''])) }));
+    if (autoCep.current.cep === undefined) cepConsultado.current = ''; // o CEP anterior veio do CNPJ: libera nova consulta de CEP
+  };
+
+  // CNPJ válido (14 dígitos) → consulta pública BrasilAPI (só o CNPJ é enviado). Preenche campos vazios ou já vindos de CNPJ.
+  const consultarCnpj = async (doc: string) => {
+    const digitos = doc.replace(/\D/g, '');
+    if (digitos.length !== 14 || digitos === cnpjConsultado.current || !documentoValido('pj', doc)) return;
+    cnpjConsultado.current = digitos;
+    setBuscaCnpj('buscando');
+    try {
+      let r = await fetch('https://brasilapi.com.br/api/cnpj/v1/' + digitos, { signal: AbortSignal.timeout(10000) });
+      if (r.status === 503 || r.status === 429) { // serviço instável: uma nova tentativa
+        await new Promise((ok) => setTimeout(ok, 1500));
+        if (cnpjConsultado.current !== digitos) return;
+        r = await fetch('https://brasilapi.com.br/api/cnpj/v1/' + digitos, { signal: AbortSignal.timeout(10000) });
+      }
+      if (cnpjConsultado.current !== digitos) return; // CNPJ já mudou
+      if (!r.ok) { setBuscaCnpj('erro'); return; }
+      const d = (await r.json()) as Record<string, unknown>;
+      const t = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+      const fone = t(d.ddd_telefone_1, 11).replace(/\D/g, '');
+      const cep = t(d.cep, 8).replace(/\D/g, '');
+      const numero = t(d.numero, 20);
+      const uf = t(d.uf, 2);
+      const novos: Record<string, string> = {
+        nome: t(d.razao_social, 150), fantasia: t(d.nome_fantasia, 150), telefone: fone.length >= 10 ? mascaraTelefone(fone) : '', email: t(d.email, 254).toLowerCase(),
+        cep: cep.length === 8 ? mascaraCep(cep) : '', logradouro: t(d.logradouro, 150), numero: /^S\/?N$/i.test(numero) ? 'S/N' : numero, complemento: t(d.complemento, 80),
+        bairro: t(d.bairro, 80), cidade: t(d.municipio, 80), estado: (UFS as readonly string[]).includes(uf) ? uf : '',
+      };
+      if (!novos.nome) { setBuscaCnpj('erro'); return; }
+      const anterior = autoCnpj.current; // capturado fora do setF (a função de atualização pode rodar duas vezes)
+      autoCnpj.current = novos;
+      setF((x) => {
+        const n = { ...x };
+        for (const [k, v] of Object.entries(novos)) if (v && (!x[k] || x[k] === anterior[k])) n[k] = v;
+        return n;
+      });
+      if (novos.cep) { cepConsultado.current = novos.cep.replace(/\D/g, ''); setBuscaCep(null); } // endereço já veio do CNPJ: o CEP não sobrescreve
+      setBuscaCnpj('ok');
+    } catch {
+      if (cnpjConsultado.current === digitos) setBuscaCnpj('erro');
+    }
+  };
+
+  // CEP completo (8 dígitos) → consulta pública ViaCEP (só o CEP é enviado). Preenche campos vazios ou já vindos de CEP.
+  const consultarCep = async (cep: string) => {
+    const digitos = cep.replace(/\D/g, '');
+    if (digitos.length !== 8 || digitos === cepConsultado.current) return;
+    cepConsultado.current = digitos;
+    setBuscaCep('buscando');
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${digitos}/json/`, { signal: AbortSignal.timeout(8000) });
+      const d = (await r.json()) as { erro?: boolean | string; logradouro?: string; bairro?: string; localidade?: string; uf?: string };
+      if (cepConsultado.current !== digitos) return; // CEP já mudou
+      if (!r.ok || d.erro) { setBuscaCep('erro'); return; }
+      const texto = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+      const novos: Record<string, string> = { logradouro: texto(d.logradouro, 150), bairro: texto(d.bairro, 80), cidade: texto(d.localidade, 80), estado: (UFS as readonly string[]).includes(d.uf ?? '') ? d.uf! : '' };
+      const anterior = autoCep.current; // capturado fora do setF (a função de atualização pode rodar duas vezes)
+      autoCep.current = novos;
+      setF((x) => {
+        const n = { ...x };
+        for (const [k, v] of Object.entries(novos)) if (v && (!x[k] || x[k] === anterior[k])) n[k] = v;
+        return n;
+      });
+      setBuscaCep(null);
+      document.getElementById('cli-numero')?.focus();
+    } catch {
+      if (cepConsultado.current === digitos) setBuscaCep('erro');
+    }
+  };
 
   useEffect(() => {
     if (!aberto) return;
     const c = cliente;
     setErro(null); setTipo(c?.tipo_pessoa ?? 'pf'); setStatus(c?.status ?? 'ativo');
+    setBuscaCep(null); cepConsultado.current = (c?.cep ?? '').replace(/\D/g, ''); autoCep.current = {};
+    setBuscaCnpj(null); cnpjConsultado.current = c?.tipo_pessoa === 'pj' ? (c.documento ?? '').replace(/\D/g, '') : ''; autoCnpj.current = {};
     setF({
       nome: c?.nome ?? '', fantasia: c?.nome_fantasia ?? '', documento: c?.documento ? mascaraDocumento(c.tipo_pessoa, c.documento) : '',
       telefone: c?.telefone ? mascaraTelefone(c.telefone) : '', email: c?.email ?? '', cep: c?.cep ? mascaraCep(c.cep) : '', logradouro: c?.logradouro ?? '',
@@ -60,7 +146,7 @@ export function ModalCliente({ aberto, aoFechar, idEmpresa, cliente, aoSalvar }:
         <Erro texto={erro} />
         <div role="radiogroup" aria-label="Tipo de pessoa" className="flex gap-2">
           {(['pf', 'pj'] as const).map((t) => (
-            <button key={t} type="button" role="radio" aria-checked={tipo === t} onClick={() => { setTipo(t); set('documento', ''); }}
+            <button key={t} type="button" role="radio" aria-checked={tipo === t} onClick={() => { setTipo(t); set('documento', ''); setBuscaCnpj(null); cnpjConsultado.current = ''; }}
               className={`flex-1 min-h-11 rounded-lg border text-sm font-semibold ${tipo === t ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-600'}`}>
               {t === 'pf' ? 'Pessoa física' : 'Pessoa jurídica'}</button>
           ))}
@@ -68,7 +154,11 @@ export function ModalCliente({ aberto, aoFechar, idEmpresa, cliente, aoSalvar }:
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">{input('nome', tipo === 'pf' ? 'Nome completo' : 'Razão social', { maxLength: 150 })}</div>
           {tipo === 'pj' && input('fantasia', 'Nome fantasia (opcional)', { maxLength: 150 })}
-          {input('documento', tipo === 'pf' ? 'CPF (opcional)' : 'CNPJ (opcional)', { inputMode: 'numeric' }, (v) => mascaraDocumento(tipo, v))}
+          <div><label htmlFor="cli-documento" className={rotulo}>{tipo === 'pf' ? 'CPF (opcional)' : 'CNPJ (opcional)'}</label>
+            <input id="cli-documento" inputMode="numeric" value={f.documento ?? ''} aria-describedby="cli-doc-status" className={campo}
+              onChange={(e) => { const v = mascaraDocumento(tipo, e.target.value); set('documento', v); if (tipo === 'pj') { if (v.replace(/\D/g, '') !== cnpjConsultado.current) limparDadosDoCnpj(); if (v.replace(/\D/g, '').length === 14) consultarCnpj(v); else { cnpjConsultado.current = ''; setBuscaCnpj(null); } } }} />
+            <p id="cli-doc-status" role="status" className={`mt-1 text-xs ${buscaCnpj === 'erro' ? 'text-amber-700' : 'text-gray-500'}`}>
+              {buscaCnpj === 'buscando' ? 'Buscando dados da empresa...' : buscaCnpj === 'ok' ? 'Dados da empresa preenchidos. Confira antes de salvar.' : buscaCnpj === 'erro' ? 'Não foi possível buscar os dados deste CNPJ. Preencha manualmente.' : ''}</p></div>
           {input('telefone', 'Telefone', { inputMode: 'tel' }, mascaraTelefone)}
           {input('email', 'E-mail', { type: 'email', maxLength: 254 })}
           <div><label htmlFor="cli-status" className={rotulo}>Situação</label>
@@ -77,7 +167,11 @@ export function ModalCliente({ aberto, aoFechar, idEmpresa, cliente, aoSalvar }:
         </div>
         <fieldset className="grid sm:grid-cols-6 gap-4">
           <legend className="text-sm font-semibold text-gray-900 mb-1 sm:col-span-6">Endereço (opcional)</legend>
-          <div className="sm:col-span-2">{input('cep', 'CEP', { inputMode: 'numeric' }, mascaraCep)}</div>
+          <div className="sm:col-span-2"><label htmlFor="cli-cep" className={rotulo}>CEP</label>
+            <input id="cli-cep" inputMode="numeric" value={f.cep ?? ''} aria-describedby="cli-cep-status" className={campo}
+              onChange={(e) => { const v = mascaraCep(e.target.value); set('cep', v); if (v.replace(/\D/g, '').length === 8) consultarCep(v); else { cepConsultado.current = ''; setBuscaCep(null); } }} />
+            <p id="cli-cep-status" role="status" className={`mt-1 text-xs ${buscaCep === 'erro' ? 'text-amber-700' : 'text-gray-500'}`}>
+              {buscaCep === 'buscando' ? 'Buscando endereço...' : buscaCep === 'erro' ? 'CEP não encontrado. Preencha o endereço manualmente.' : ''}</p></div>
           <div className="sm:col-span-4">{input('logradouro', 'Logradouro', { maxLength: 150 })}</div>
           <div className="sm:col-span-2">{input('numero', 'Número', { maxLength: 20 })}</div>
           <div className="sm:col-span-4">{input('complemento', 'Complemento', { maxLength: 80 })}</div>

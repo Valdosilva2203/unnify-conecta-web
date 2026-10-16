@@ -106,7 +106,7 @@ test('empresário: indicadores, gráficos, índice, recomendações, contas a ve
   const page = await abrir(ctx, '/app/saude-empresarial', 'Saúde Empresarial');
   await expect(page.getByText('Acompanhe a saúde financeira da sua empresa e tome decisões com mais segurança.')).toBeVisible();
   // Item no menu
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Saúde Empresarial' })).toHaveAttribute('href', '/app/saude-empresarial');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Saúde Empresarial' })).toHaveAttribute('href', '/app/saude-empresarial');
   // Cards principais
   await expect.poll(() => texto(page, 'Receita operacional')).toContain('R$ 48.320,00');
   expect(await texto(page, 'Receita operacional')).toContain('12% vs. período anterior');

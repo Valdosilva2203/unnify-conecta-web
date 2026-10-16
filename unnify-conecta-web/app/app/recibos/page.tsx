@@ -14,6 +14,7 @@ import { Paginacao, Selo } from '@/components/admin/tabela';
 import { Indicador } from '@/components/financeiro/Indicador';
 import { classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { ModalCancelarRecibo, ModalConciliar, ModalNovoRecibo } from '@/components/recibos/Modais';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 type Lista = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string; ausente: boolean } | { tipo: 'ok'; linhas: ReciboLinha[]; total: number };
 type Periodo = 'mes' | 'anterior' | '90' | 'ano';
@@ -90,17 +91,13 @@ export default function RecibosPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><FileText className="w-7 h-7" aria-hidden="true" /></span>
-          <div className="min-w-0"><h1 className="text-2xl sm:text-3xl font-black text-gray-900">Recibos</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Emita e gerencie os comprovantes de pagamentos recebidos ou realizados.</p></div>
-        </div>
+      <CabecalhoModulo icone={FileText} titulo="Recibos" descricao="Emita e gerencie os comprovantes de pagamentos recebidos ou realizados."
+        acoes={<>
         <div className="flex flex-col min-[420px]:flex-row gap-2 self-stretch xl:self-auto">
           <select aria-label="Período" value={periodo} onChange={(e) => { setPeriodo(e.target.value as Periodo); setPagina(1); }} className={filtro}>{Object.entries(ROTULO_PERIODO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
           {podeOperar && <button type="button" className={`${classeBotaoPrimario} whitespace-nowrap`} onClick={() => setNovo(true)}><Plus className="w-4 h-4" aria-hidden="true" />Novo recibo</button>}
         </div>
-      </div>
+        </>} />
 
       {aviso && <div role="status" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex justify-between gap-3"><span>{aviso}</span><button type="button" className="underline" onClick={() => setAviso(null)}>Fechar</button></div>}
       {lista.tipo === 'erro' && (lista.ausente
@@ -121,7 +118,7 @@ export default function RecibosPage() {
           <div role="tablist" aria-label="Situação do recibo" className="flex flex-wrap gap-1">
             {([['', 'Todos'], ['emitido', 'Emitidos'], ['cancelado', 'Cancelados']] as const).map(([v, rot]) => (
               <button key={v} type="button" role="tab" aria-selected={situacao === v} onClick={() => { setSituacao(v); setPagina(1); }}
-                className={`min-h-11 px-3 sm:px-4 rounded-lg text-sm font-semibold ${situacao === v ? 'bg-orange-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>{rot}</button>
+                className={classePilula(situacao === v)}>{rot}</button>
             ))}
           </div>
           <div className="flex flex-col lg:flex-row gap-2">

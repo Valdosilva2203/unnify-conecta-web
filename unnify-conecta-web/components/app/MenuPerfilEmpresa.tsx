@@ -12,10 +12,14 @@ interface MenuPerfilEmpresaProps {
   iniciais: string;
 }
 
+// Abre o formulário de dados da empresa que já existe no painel (/app): pelo endereço (vindo de outra página) ou pelo evento (já no painel)
+export const ABRIR_DADOS_EMPRESA = '/app#dados-empresa';
+export const EVENTO_DADOS_EMPRESA = 'unnify:abrir-dados-empresa';
+
 const opcoes: { icone: typeof User; rotulo: string; descricao: string; href?: string }[] = [
   { icone: User, rotulo: 'Minha conta', descricao: 'E-mail de acesso e segurança', href: '/app/minha-conta' },
-  { icone: Building2, rotulo: 'Dados da empresa', descricao: 'Informações cadastrais da empresa' },
-  { icone: Settings, rotulo: 'Configurações', descricao: 'Preferências e notificações' },
+  { icone: Building2, rotulo: 'Dados da empresa', descricao: 'Informações cadastrais da empresa', href: ABRIR_DADOS_EMPRESA },
+  { icone: Settings, rotulo: 'Configurações', descricao: 'Preferências e notificações', href: '/app/minha-conta#notificacoes' }, // seções que já existem em Minha conta (Notificações e Preferências)
 ];
 
 export function MenuPerfilEmpresa({ nomeUsuario, email, nomeEmpresa, iniciais }: MenuPerfilEmpresaProps) {
@@ -122,7 +126,9 @@ export function MenuPerfilEmpresa({ nomeUsuario, email, nomeEmpresa, iniciais }:
                     role="menuitem"
                     onClick={() => {
                       setAberto(false);
-                      router.push(destino);
+                      // Já no painel: avisa a página (o endereço não recarregaria nada). Em outra página: navega e o painel abre o formulário ao carregar.
+                      if (destino === ABRIR_DADOS_EMPRESA && window.location.pathname === '/app') window.dispatchEvent(new Event(EVENTO_DADOS_EMPRESA));
+                      else router.push(destino);
                     }}
                     className="w-full min-h-11 px-4 py-3 text-left flex gap-3 items-start hover:bg-orange-50 focus-visible:bg-orange-50 focus-visible:outline-none transition-colors"
                   >

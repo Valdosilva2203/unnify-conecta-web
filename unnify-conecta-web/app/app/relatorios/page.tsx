@@ -12,6 +12,7 @@ import { MODOS, ROTULO_SITUACAO_DETALHE, baixarArquivo, buscarTudo, consultaDeta
 import { Paginacao, Selo } from '@/components/admin/tabela';
 import { GraficoRosca } from '@/components/financeiro/GraficoRosca';
 import { classeBotaoPrimario } from '@/components/ui/Modal';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 type Aba = 'geral' | 'financeiro' | 'clientes' | 'funcionarios';
 type Estado<T> = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string; ausente: boolean } | { tipo: 'ok'; dados: T };
@@ -82,12 +83,8 @@ export default function RelatoriosPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><BarChart3 className="w-7 h-7" aria-hidden="true" /></span>
-          <div className="min-w-0"><h1 className="text-2xl sm:text-3xl font-black text-gray-900">Relatórios</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Acompanhe o desempenho da sua empresa com dados reais e atualizados.</p></div>
-        </div>
+      <CabecalhoModulo icone={BarChart3} titulo="Relatórios" descricao="Acompanhe o desempenho da sua empresa com dados reais e atualizados."
+        acoes={<>
         <div className="flex flex-wrap items-center gap-2">
           {personalizado ? (
             <div className="flex flex-wrap items-center gap-1">
@@ -109,7 +106,7 @@ export default function RelatoriosPage() {
             <button type="button" disabled={!r || exportando} onClick={() => exportar('pdf')} className={`${classeBotaoPrimario} whitespace-nowrap`}><Download className="w-4 h-4" aria-hidden="true" />PDF</button>
           </div>
         </div>
-      </div>
+        </>} />
 
       {!periodoValido && <p role="alert" className="text-sm text-red-700">O fim do período deve ser depois do início.</p>}
       {avisoExport && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{avisoExport}</p>}
@@ -119,7 +116,7 @@ export default function RelatoriosPage() {
         <div role="tablist" aria-label="Relatórios" className="flex flex-wrap gap-1">
           {([['geral', 'Visão geral', LayoutGrid], ['financeiro', 'Financeiro', Wallet], ['clientes', 'Clientes', UserCheck], ['funcionarios', 'Funcionários', Users]] as const).map(([a, rot, Icone]) => (
             <button key={a} type="button" role="tab" aria-selected={aba === a} onClick={() => setAba(a)}
-              className={`min-h-11 px-3 sm:px-4 rounded-lg text-sm font-semibold inline-flex items-center gap-1.5 ${aba === a ? 'bg-orange-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}><Icone className="w-4 h-4" aria-hidden="true" />{rot}</button>
+              className={classePilula(aba === a)}><Icone className="w-4 h-4" aria-hidden="true" />{rot}</button>
           ))}
         </div>
         {(aba === 'geral' || aba === 'financeiro') && (

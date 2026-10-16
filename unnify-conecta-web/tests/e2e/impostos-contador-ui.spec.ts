@@ -178,7 +178,7 @@ test('empresário: menu Impostos, confirma pagamento com baixa na conta; estados
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
   const registro = await sessaoSimulada(ctx, rotas('empresa'));
   const page = await abrir(ctx, '/app/impostos', 'Impostos');
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Impostos' })).toHaveAttribute('href', '/app/impostos');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Impostos' })).toHaveAttribute('href', '/app/impostos');
   await page.getByTestId('imposto-ISSQN').click();
   const det = page.getByRole('complementary', { name: 'Detalhes do imposto' });
   await expect(det).toContainText('Não conta como pago');
@@ -213,4 +213,116 @@ test('empresário: menu Impostos, confirma pagamento com baixa na conta; estados
     expect(await pl.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), `@${largura}`).toBeLessThanOrEqual(1);
   }
   await l.close();
+});
+
+test('contador: excluir guia com confirmação (banco primeiro, depois o arquivo); comprovante sem exclusão; erro do banco aparece', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  const CAM = `${EMPRESA.id}/11111111-1111-4111-8111-111111111111/guia-x.pdf`;
+  let recusar = false;
+  const registro = await sessaoSimulada(ctx, rotas('contador', ['ver_documentos', 'gerenciar_impostos'], (c) => {
+    if (c === 'arquivos_impostos') return { corpo: [
+      { id: 'ar1', tipo: 'guia', caminho: CAM, nome_arquivo: 'DAS SIMPLES.pdf', tamanho: 160000, criado_em: `${hoje}T10:00:00Z` },
+      { id: 'ar2', tipo: 'comprovante', caminho: `${EMPRESA.id}/x/comprovante-y.pdf`, nome_arquivo: 'comprovante.pdf', tamanho: 90000, criado_em: `${hoje}T11:00:00Z` }] };
+    if (c === 'rpc/excluir_guia_imposto') return recusar ? { status: 400, corpo: { code: '23514', message: 'Imposto já pago: a guia fica guardada como prova do pagamento.', details: null, hint: null } } : { corpo: CAM };
+    if (c === '/storage/v1/object/guias-impostos') return { corpo: [] };
+  }));
+  const page = await abrir(ctx, `/contador/empresas/${EMPRESA.id}/impostos`, 'Empresa Exemplo');
+  await page.getByTestId('imposto-DAS – Simples Nacional').click();
+  const painel = page.getByRole('complementary', { name: 'Detalhes do imposto' });
+  await expect(painel.getByRole('button', { name: 'Excluir guia DAS SIMPLES.pdf' })).toBeVisible({ timeout: 30000 });
+  await expect(painel.getByRole('button', { name: /^Excluir guia comprovante/ })).toHaveCount(0); // só guias
+  // cancelar não faz nada
+  await painel.getByRole('button', { name: 'Excluir guia DAS SIMPLES.pdf' }).click();
+  const d = page.getByRole('dialog', { name: 'Excluir guia' });
+  await expect(d).toContainText('DAS SIMPLES.pdf');
+  await expect(d).toContainText('O imposto, o valor, o vencimento e o lançamento em Contas a pagar continuam como estão');
+  await d.getByRole('button', { name: 'Cancelar' }).click();
+  expect(chamadas(registro, 'rpc/excluir_guia_imposto')).toHaveLength(0);
+  // erro do banco: aparece no modal e o arquivo NÃO é apagado
+  recusar = true;
+  await painel.getByRole('button', { name: 'Excluir guia DAS SIMPLES.pdf' }).click();
+  await d.getByRole('button', { name: 'Excluir guia' }).click();
+  await expect(d.getByRole('alert')).toContainText('Imposto já pago');
+  expect(chamadas(registro, '/storage/v1/object/guias-impostos')).toHaveLength(0);
+  await d.getByRole('button', { name: 'Cancelar' }).click();
+  // exclui: RPC primeiro, depois remove o arquivo do bucket privado
+  recusar = false;
+  await painel.getByRole('button', { name: 'Excluir guia DAS SIMPLES.pdf' }).click();
+  await d.getByRole('button', { name: 'Excluir guia' }).click();
+  await expect(page.getByText('Guia excluída.')).toBeVisible({ timeout: 15000 });
+  expect(chamadas(registro, 'rpc/excluir_guia_imposto').at(-1)!.corpo).toEqual({ p_id_arquivo: 'ar1' });
+  const remocao = chamadas(registro, '/storage/v1/object/guias-impostos').at(-1)!;
+  expect(JSON.stringify(remocao.corpo)).toContain(CAM);
+  expect(registro.escritasBloqueadas.filter((x) => !x.includes('rpc/'))).toEqual([]);
+  await ctx.close();
+});
+
+test('contador: excluir imposto corrente e parcela com confirmação; imposto pago não oferece exclusão; erro do banco aparece', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  let recusar = true;
+  const registro = await sessaoSimulada(ctx, rotas('contador', ['ver_documentos', 'gerenciar_impostos'], (c) => {
+    if (c === 'rpc/excluir_imposto') return recusar ? { status: 400, corpo: { code: '23514', message: 'Imposto pago: estorne o pagamento no Financeiro antes de excluí-lo.', details: null, hint: null } } : { status: 200, corpo: null };
+  }));
+  const page = await abrir(ctx, `/contador/empresas/${EMPRESA.id}/impostos`, 'Empresa Exemplo');
+  const det = page.getByRole('complementary', { name: 'Detalhes do imposto' });
+  await page.getByTestId('imposto-FGTS Digital').click();
+  await expect(det.getByRole('button', { name: 'Excluir imposto' })).toBeVisible({ timeout: 30000 });
+  // cancelar na confirmação não chama o banco; erro do banco fica no modal
+  await det.getByRole('button', { name: 'Excluir imposto' }).click();
+  const d = page.getByRole('dialog', { name: 'Excluir FGTS Digital' });
+  await expect(d).toContainText('sai das listas e da conta a pagar do Financeiro');
+  await d.getByRole('button', { name: 'Cancelar' }).click();
+  expect(chamadas(registro, 'rpc/excluir_imposto')).toHaveLength(0);
+  await det.getByRole('button', { name: 'Excluir imposto' }).click();
+  await d.getByRole('button', { name: 'Excluir imposto' }).click();
+  await expect(d.getByRole('alert')).toContainText('Imposto pago: estorne');
+  await d.getByRole('button', { name: 'Cancelar' }).click();
+  // sucesso
+  recusar = false;
+  await det.getByRole('button', { name: 'Excluir imposto' }).click();
+  await d.getByRole('button', { name: 'Excluir imposto' }).click();
+  await expect(page.getByText('Imposto excluído.')).toBeVisible({ timeout: 15000 });
+  expect(chamadas(registro, 'rpc/excluir_imposto').at(-1)!.corpo).toEqual({ p_id: '22222222-2222-4222-8222-222222222222' });
+  // parcelas: a paga (parcela 1) não tem exclusão; a pendente (parcela 2) tem e usa o mesmo banco
+  await page.getByRole('tab', { name: 'Parcelamentos' }).click();
+  await page.getByTestId('parcelamento-ACORDO-1').click();
+  const pan = page.getByRole('complementary', { name: 'Parcelas' });
+  await pan.getByRole('button', { name: 'Parcela 1' }).click();
+  await expect(det).toContainText('parcela 1/3');
+  await expect(det.getByRole('button', { name: /^Excluir (parcela|imposto)$/ })).toHaveCount(0);
+  await det.getByRole('button', { name: 'Fechar detalhes' }).click(); // volta ao painel de parcelas
+  await pan.getByRole('button', { name: 'Parcela 2' }).click();
+  await expect(det.getByRole('button', { name: 'Excluir parcela' })).toBeVisible();
+  await det.getByRole('button', { name: 'Excluir parcela' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Excluir imposto' }).click();
+  await expect(page.getByText('Parcela excluída.')).toBeVisible({ timeout: 15000 });
+  expect(chamadas(registro, 'rpc/excluir_imposto').at(-1)!.corpo).toEqual({ p_id: '44444442-4444-4444-8444-444444444444' });
+  await ctx.close();
+});
+
+test('contador: excluir parcelamento só quando nenhuma parcela está paga', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  let pagas = 1;
+  const registro = await sessaoSimulada(ctx, rotas('contador', ['ver_documentos', 'gerenciar_impostos'], (c) => {
+    if (c === 'rpc/listar_parcelamentos_tributarios') return { corpo: [{ ...PARC[0], pagas }] };
+    if (c === 'rpc/excluir_parcelamento_tributario') return { status: 200, corpo: null };
+  }));
+  const page = await abrir(ctx, `/contador/empresas/${EMPRESA.id}/impostos`, 'Empresa Exemplo');
+  await page.getByRole('tab', { name: 'Parcelamentos' }).click();
+  await page.getByTestId('parcelamento-ACORDO-1').click();
+  const pan = page.getByRole('complementary', { name: 'Parcelas' });
+  await expect(pan).toContainText('estorne antes os pagamentos das parcelas pagas', { timeout: 30000 });
+  await expect(pan.getByRole('button', { name: 'Excluir parcelamento' })).toHaveCount(0);
+  // sem parcela paga: confirmação e exclusão do parcelamento inteiro
+  pagas = 0;
+  await page.getByRole('tab', { name: 'Impostos correntes' }).click();
+  await page.getByRole('tab', { name: 'Parcelamentos' }).click();
+  await page.getByTestId('parcelamento-ACORDO-1').click();
+  await pan.getByRole('button', { name: 'Excluir parcelamento' }).click();
+  const d = page.getByRole('dialog', { name: 'Excluir parcelamento ACORDO-1' });
+  await expect(d).toContainText('TODAS as suas parcelas');
+  await d.getByRole('button', { name: 'Excluir parcelamento' }).click();
+  await expect(page.getByText('Parcelamento excluído.')).toBeVisible({ timeout: 15000 });
+  expect(chamadas(registro, 'rpc/excluir_parcelamento_tributario').at(-1)!.corpo).toEqual({ p_id: 'p1' });
+  await ctx.close();
 });

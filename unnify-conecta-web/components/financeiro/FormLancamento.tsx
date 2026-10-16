@@ -10,7 +10,11 @@ import {
 } from '@/lib/financeiro';
 import { Modal, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { SeletorConta } from './SeletorConta';
-import { IconeCategoria } from './IconeCategoria';
+import { SeletorCor } from '@/components/ui/SeletorCor';
+import { mascaraDocumento } from '@/lib/clientes';
+import { CORES_CATEGORIA } from '@/lib/cores';
+import { ICONE_PADRAO, IconeCategoria } from './IconeCategoria';
+import { SeletorIcone } from '@/components/ui/SeletorIcone';
 
 const campo = 'w-full h-11 px-3 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500';
 const rotulo = 'block text-sm font-semibold text-gray-900 mb-1.5';
@@ -50,6 +54,8 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
   const [idCategoria, setIdCategoria] = useState('');
+  const [novas, setNovas] = useState<Categoria[]>([]); // criadas neste formulário (a lista do pai só atualiza ao salvar)
+  const [novaCat, setNovaCat] = useState<{ nome: string; cor: string; icone: string; erro: string | null; salvando: boolean } | null>(null);
   const [competencia, setCompetencia] = useState('');
   const [vencimento, setVencimento] = useState('');
   const [jaPago, setJaPago] = useState(false);
@@ -59,7 +65,8 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
   const [natureza, setNatureza] = useState<NaturezaFinanceira>('operacional');
   const [observacoes, setObservacoes] = useState('');
   // Clientes (opcional, só receitas): vínculo por referência; o banco garante mesma empresa e tipo receita
-  const [clientes, setClientes] = useState<{ id: string; nome: string }[] | null>(null);
+  const [clientes, setClientes] = useState<{ id: string; nome: string; razao: string; documento: string; tipo: 'pf' | 'pj' }[] | null>(null);
+  const [buscaCliente, setBuscaCliente] = useState('');
   const [idCliente, setIdCliente] = useState('');
   const [idClienteOriginal, setIdClienteOriginal] = useState('');
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -74,6 +81,7 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
     setDescricao(lancamento?.descricao ?? '');
     setValor(lancamento ? valorParaMascara(lancamento.valor) : '');
     setIdCategoria(lancamento?.id_categoria ?? '');
+    setNovas([]); setNovaCat(null);
     setCompetencia(lancamento?.data_competencia ?? hoje);
     setVencimento(lancamento?.data_vencimento ?? (lancamento ? '' : hoje));
     setJaPago(lancamento ? lancamento.status === 'pago' : false);
@@ -84,10 +92,10 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
     setObservacoes(lancamento?.observacoes ?? '');
     setArquivo(null);
     setErro(null);
-    setIdCliente(''); setIdClienteOriginal('');
+    setIdCliente(''); setIdClienteOriginal(''); setBuscaCliente('');
     const supabase = createClient();
-    supabase.from('clientes').select('id, nome, nome_fantasia, status').eq('id_empresa', idEmpresa).neq('status', 'inativo').order('nome').limit(500)
-      .then(({ data, error }) => setClientes(error ? null : (data ?? []).map((c) => ({ id: c.id as string, nome: (c.nome_fantasia as string) || (c.nome as string) }))));
+    supabase.from('clientes').select('id, nome, nome_fantasia, documento, tipo_pessoa, status').eq('id_empresa', idEmpresa).neq('status', 'inativo').order('nome').limit(500)
+      .then(({ data, error }) => setClientes(error ? null : (data ?? []).map((c) => ({ id: c.id as string, nome: (c.nome_fantasia as string) || (c.nome as string), razao: c.nome as string, documento: (c.documento as string | null) ?? '', tipo: c.tipo_pessoa as 'pf' | 'pj' }))));
     if (lancamento?.id) {
       supabase.from('lancamentos_financeiros').select('id_cliente').eq('id', lancamento.id).maybeSingle()
         .then(({ data }) => { const v = (data?.id_cliente as string | null) ?? ''; setIdCliente(v); setIdClienteOriginal(v); });
@@ -95,7 +103,22 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reinicia só ao abrir
   }, [aberto, lancamento, tipoInicial]);
 
-  const opcoes = categorias.filter((c) => c.tipo === tipo && (c.ativa || c.id === lancamento?.id_categoria));
+  const todas = [...categorias, ...novas.filter((n) => !categorias.some((c) => c.id === n.id))];
+  const opcoes = todas.filter((c) => c.tipo === tipo && (c.ativa || c.id === lancamento?.id_categoria));
+
+  // Cria a categoria pelo banco (a função confere a permissão financeira da empresa, valida nome/cor e recusa nome repetido)
+  const criarCategoria = async () => {
+    if (!novaCat || novaCat.salvando) return;
+    const nome = novaCat.nome.trim();
+    if (nome.length < 2 || nome.length > 60) return setNovaCat({ ...novaCat, erro: 'Informe o nome (2 a 60 caracteres).' });
+    setNovaCat({ ...novaCat, erro: null, salvando: true });
+    const { data, error } = await createClient().rpc('salvar_categoria_financeira', { p_id: null, p_id_empresa: idEmpresa, p_tipo: tipo, p_nome: nome, p_cor: novaCat.cor, p_icone: novaCat.icone });
+    if (error || !data) return setNovaCat((n) => (n ? { ...n, salvando: false, erro: mensagemDeErro(error, 'Não foi possível criar a categoria.') } : n));
+    const criada: Categoria = { id: data as string, tipo, nome, cor: novaCat.cor, icone: novaCat.icone, ativa: true } as Categoria;
+    setNovas((x) => [...x, criada]);
+    setIdCategoria(criada.id); // já fica selecionada no lançamento
+    setNovaCat(null);
+  };
   const receita = tipo === 'receita';
   const classificacao = NATUREZAS[tipo].find((n) => n.valor === natureza) ?? NATUREZAS[tipo][0];
   const exigeSocio = NATUREZA_EXIGE_SOCIO.includes(natureza);
@@ -183,7 +206,7 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
                 aria-selected={tipo === t}
                 onClick={() => {
                   setTipo(t);
-                  setIdCategoria('');
+                  setIdCategoria(''); setNovaCat(null); setBuscaCliente('');
                   setNatureza('operacional');
                 }}
                 className={`min-h-10 rounded-md text-sm font-semibold ${tipo === t ? (t === 'receita' ? 'bg-white text-green-700 shadow-sm' : 'bg-white text-red-700 shadow-sm') : 'text-gray-600'}`}
@@ -193,6 +216,48 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
             ))}
           </div>
         )}
+        {receita && clientes && clientes.length > 0 && (() => {
+          const norm = (t: string) => t.normalize('NFD').replace(new RegExp(`[${String.fromCharCode(0x300)}-${String.fromCharCode(0x36f)}]`, 'g'), '').toLowerCase();
+          const termo = norm(buscaCliente.trim());
+          const digitos = buscaCliente.replace(/\D/g, '');
+          const buscando = termo.length >= 2 || digitos.length >= 3;
+          const achados = !buscando ? [] : clientes.filter((c) => norm(c.nome).includes(termo) || norm(c.razao).includes(termo) || (digitos.length >= 3 && c.documento.includes(digitos))).slice(0, 8);
+          const escolhido = clientes.find((c) => c.id === idCliente);
+          const escolher = (c: (typeof clientes)[number] | null) => {
+            setIdCliente(c?.id ?? ''); setBuscaCliente('');
+            if (c && !contraparte.trim()) setContraparte(c.nome);
+          };
+          return (
+            <div data-testid="cliente-cadastrado">
+              <label htmlFor="lanc-cliente-busca" className={rotulo}>Cliente cadastrado <span className="font-normal text-gray-500">(opcional — vincula a receita ao cliente)</span></label>
+              {escolhido ? (
+                <div className="flex items-center gap-2 rounded-lg border border-gray-300 bg-gray-50 px-3 min-h-11" data-testid="cliente-escolhido">
+                  <span className="min-w-0 flex-1 text-sm"><span className="block truncate font-semibold text-gray-900">{escolhido.nome}</span>
+                    {escolhido.documento && <span className="block text-xs text-gray-500">{escolhido.tipo === 'pj' ? 'CNPJ' : 'CPF'} {mascaraDocumento(escolhido.tipo, escolhido.documento)}</span>}</span>
+                  <button type="button" onClick={() => escolher(null)} className="text-xs font-semibold text-orange-600 hover:underline shrink-0 min-h-9 px-2">Trocar</button>
+                </div>
+              ) : (
+                <>
+                  <input id="lanc-cliente-busca" type="search" role="combobox" aria-expanded={buscando} aria-controls="lanc-cliente-lista" autoComplete="off" className={campo}
+                    placeholder="Buscar por nome ou CNPJ/CPF" value={buscaCliente} onChange={(e) => setBuscaCliente(e.target.value)} />
+                  {buscando && (
+                    <ul id="lanc-cliente-lista" role="listbox" aria-label="Clientes encontrados" className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
+                      {achados.length === 0 && <li className="px-3 py-2 text-sm text-gray-500">Nenhum cliente encontrado.</li>}
+                      {achados.map((c) => (
+                        <li key={c.id} role="option" aria-selected={false}>
+                          <button type="button" onClick={() => escolher(c)} className="w-full text-left px-3 py-2 min-h-11 hover:bg-orange-50 focus-visible:outline-none focus-visible:bg-orange-50">
+                            <span className="block text-sm font-semibold text-gray-900 truncate">{c.nome}</span>
+                            {c.documento && <span className="block text-xs text-gray-500">{c.tipo === 'pj' ? 'CNPJ' : 'CPF'} {mascaraDocumento(c.tipo, c.documento)}</span>}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })()}
         <div>
           <label htmlFor="lanc-natureza" className={rotulo}>
             Classificação
@@ -231,6 +296,33 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
                 </option>
               ))}
             </select>
+            {!novaCat && (
+              <button type="button" onClick={() => setNovaCat({ nome: '', cor: CORES_CATEGORIA[0].valor, icone: ICONE_PADRAO, erro: null, salvando: false })}
+                className="mt-1.5 text-sm font-semibold text-orange-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded">
+                + Nova categoria
+              </button>
+            )}
+            {novaCat && (
+              <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-3 space-y-3" data-testid="nova-categoria" onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setNovaCat(null); } }}>
+                <div>
+                  <label htmlFor="nova-cat-nome" className={rotulo}>Nome da nova categoria ({tipo === 'receita' ? 'receita' : 'despesa'})</label>
+                  <input id="nova-cat-nome" maxLength={60} autoFocus value={novaCat.nome} className={campo}
+                    onChange={(e) => setNovaCat({ ...novaCat, nome: e.target.value, erro: null })}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); criarCategoria(); } }} />
+                </div>
+                <SeletorCor rotulo="Cor" valor={novaCat.cor} aoMudar={(cor) => setNovaCat((n) => (n ? { ...n, cor } : n))} cores={CORES_CATEGORIA} />
+                <div className="flex items-center gap-3">
+                  <IconeCategoria icone={novaCat.icone} cor={novaCat.cor} tamanho="lg" />
+                  <p className="text-sm font-semibold text-gray-900 truncate">{novaCat.nome.trim() || 'Prévia da categoria'}</p>
+                </div>
+                <SeletorIcone valor={novaCat.icone} aoMudar={(icone) => setNovaCat((n) => (n ? { ...n, icone } : n))} cor={novaCat.cor} />
+                {novaCat.erro && <p role="alert" className="text-sm text-red-700">{novaCat.erro}</p>}
+                <div className="flex justify-end gap-2">
+                  <button type="button" className={classeBotaoSecundario} onClick={() => setNovaCat(null)}>Cancelar</button>
+                  <button type="button" className={classeBotaoPrimario} disabled={novaCat.salvando} onClick={criarCategoria}>{novaCat.salvando ? 'Criando...' : 'Criar categoria'}</button>
+                </div>
+              </div>
+            )}
             {(() => {
               const escolhida = opcoes.find((c) => c.id === idCategoria);
               return escolhida ? (
@@ -249,19 +341,6 @@ export function FormLancamento({ aberto, aoFechar, idEmpresa, tipoInicial, lanca
           </label>
           <input id="lanc-contraparte" className={campo} maxLength={120} value={contraparte} onChange={(e) => setContraparte(e.target.value)} />
         </div>
-        {receita && clientes && clientes.length > 0 && (
-          <div>
-            <label htmlFor="lanc-cliente" className={rotulo}>Cliente cadastrado <span className="font-normal text-gray-500">(opcional — vincula a receita ao cliente)</span></label>
-            <select id="lanc-cliente" className={campo} value={idCliente} onChange={(e) => {
-              setIdCliente(e.target.value);
-              const escolhido = clientes.find((c) => c.id === e.target.value);
-              if (escolhido && !contraparte.trim()) setContraparte(escolhido.nome);
-            }}>
-              <option value="">Sem cliente</option>
-              {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-            </select>
-          </div>
-        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="lanc-competencia" className={rotulo}>

@@ -49,140 +49,10 @@ interface Comissao {
   dataPagamento: string | null;
 }
 
-const comissoesFicticias: Comissao[] = [
-  {
-    id: '1',
-    beneficiarioNome: 'Ana Clara Souza',
-    beneficiarioId: 'AC',
-    tipo: 'Contador',
-    empresaIndicada: 'Comercial Ferreira LTDA',
-    plano: 'Básico',
-    mensalidade: 49.90,
-    comissao: 9.98,
-    competencia: '10/2026',
-    status: 'paga',
-    dataPagamento: '05/11/2026',
-  },
-  {
-    id: '2',
-    beneficiarioNome: 'Ricardo Sousa',
-    beneficiarioId: 'RS',
-    tipo: 'Parceiro',
-    empresaIndicada: 'Top Serviços LTDA',
-    plano: 'Pro',
-    mensalidade: 99.90,
-    comissao: 19.98,
-    competencia: '10/2026',
-    status: 'pendente',
-    dataPagamento: null,
-  },
-  {
-    id: '3',
-    beneficiarioNome: 'João Martins',
-    beneficiarioId: 'JM',
-    tipo: 'Contador',
-    empresaIndicada: 'Mercado Almeida LTDA',
-    plano: 'Premium',
-    mensalidade: 149.90,
-    comissao: 29.98,
-    competencia: '10/2026',
-    status: 'paga',
-    dataPagamento: '03/11/2026',
-  },
-  {
-    id: '4',
-    beneficiarioNome: 'Fernanda Silva',
-    beneficiarioId: 'FS',
-    tipo: 'Parceiro',
-    empresaIndicada: 'Farmácia Central LTDA',
-    plano: 'Pro',
-    mensalidade: 99.90,
-    comissao: 19.98,
-    competencia: '10/2026',
-    status: 'pendente',
-    dataPagamento: null,
-  },
-  {
-    id: '5',
-    beneficiarioNome: 'Paulo Ribeiro',
-    beneficiarioId: 'PR',
-    tipo: 'Contador',
-    empresaIndicada: 'Barbearia Reis LTDA',
-    plano: 'Básico',
-    mensalidade: 49.90,
-    comissao: 9.98,
-    competencia: '09/2026',
-    status: 'paga',
-    dataPagamento: '05/10/2026',
-  },
-  {
-    id: '6',
-    beneficiarioNome: 'Lucas Mendes',
-    beneficiarioId: 'LM',
-    tipo: 'Parceiro',
-    empresaIndicada: 'Loja Silva LTDA',
-    plano: 'Pro',
-    mensalidade: 99.90,
-    comissao: 19.98,
-    competencia: '09/2026',
-    status: 'paga',
-    dataPagamento: '05/10/2026',
-  },
-  {
-    id: '7',
-    beneficiarioNome: 'Carlos Santos',
-    beneficiarioId: 'CS',
-    tipo: 'Parceiro',
-    empresaIndicada: 'Transportadora Rápido LTDA',
-    plano: 'Premium',
-    mensalidade: 149.90,
-    comissao: 29.98,
-    competencia: '09/2026',
-    status: 'cancelada',
-    dataPagamento: null,
-  },
-  {
-    id: '8',
-    beneficiarioNome: 'Maria Vitória',
-    beneficiarioId: 'MV',
-    tipo: 'Contador',
-    empresaIndicada: 'Padaria Alvorada LTDA',
-    plano: 'Básico',
-    mensalidade: 49.90,
-    comissao: 9.98,
-    competencia: '08/2026',
-    status: 'paga',
-    dataPagamento: '05/09/2026',
-  },
-  {
-    id: '9',
-    beneficiarioNome: 'Diego Lima',
-    beneficiarioId: 'DL',
-    tipo: 'Parceiro',
-    empresaIndicada: 'Auto Peças Rodrigues LTDA',
-    plano: 'Pro',
-    mensalidade: 99.90,
-    comissao: 19.98,
-    competencia: '08/2026',
-    status: 'pendente',
-    dataPagamento: null,
-  },
-  {
-    id: '10',
-    beneficiarioNome: 'Natália Torres',
-    beneficiarioId: 'NT',
-    tipo: 'Parceiro',
-    empresaIndicada: 'Restaurante Vitória LTDA',
-    plano: 'Premium',
-    mensalidade: 149.90,
-    comissao: 29.98,
-    competencia: '08/2026',
-    status: 'paga',
-    dataPagamento: '02/09/2026',
-  },
-];
 
 export default function ComissoesPage() {
+  // Ainda não existe cadastro de comissões no sistema: a lista fica vazia (nada fictício).
+  const comissoes: Comissao[] = [];
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [tipoFilter, setTipoFilter] = useState('todos');
@@ -191,19 +61,19 @@ export default function ComissoesPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Calcular stats
-  const totalComissoes = comissoesFicticias.reduce((sum, c) => sum + c.comissao, 0);
-  const pagasComissoes = comissoesFicticias
+  const totalComissoes = comissoes.reduce((sum, c) => sum + c.comissao, 0);
+  const pagasComissoes = comissoes
     .filter((c) => c.status === 'paga')
     .reduce((sum, c) => sum + c.comissao, 0);
-  const pendentesComissoes = comissoesFicticias
+  const pendentesComissoes = comissoes
     .filter((c) => c.status === 'pendente')
     .reduce((sum, c) => sum + c.comissao, 0);
-  const canceladasComissoes = comissoesFicticias
+  const canceladasComissoes = comissoes
     .filter((c) => c.status === 'cancelada')
     .reduce((sum, c) => sum + c.comissao, 0);
 
   // Filtrar comissões
-  const filteredComissoes = comissoesFicticias.filter((comissao) => {
+  const filteredComissoes = comissoes.filter((comissao) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       comissao.beneficiarioNome.toLowerCase().includes(searchLower) ||
@@ -358,7 +228,7 @@ export default function ComissoesPage() {
             )}
           </BarraFiltros>
 
-          <EstadoTabela vazio={filteredComissoes.length === 0} mensagemVazio="Nenhuma comissão encontrada.">
+          <EstadoTabela vazio={filteredComissoes.length === 0} mensagemVazio="Ainda não há comissões cadastradas no sistema.">
             <Tabela
               colunas={[
                 { titulo: 'Beneficiário' },

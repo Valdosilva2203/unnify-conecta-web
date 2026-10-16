@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback, useState, type ReactNode } from 'react';
+import { FileText, type LucideIcon } from 'lucide-react';
 import { Aviso } from '@/components/conta/Aviso';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 // Cabeçalho + aviso de sucesso/atenção + "versão" que recarrega as listas após cada ação
 export function useAvisoEVersao() {
@@ -13,18 +15,12 @@ export function useAvisoEVersao() {
   return { aviso, setAviso, versao, alterado, recarregar };
 }
 
-export function CabecalhoPagina({ titulo, subtitulo, aviso, aoFecharAviso, children }: {
-  titulo: string; subtitulo: string; aviso: string | null; aoFecharAviso: () => void; children?: ReactNode;
+export function CabecalhoPagina({ titulo, subtitulo, aviso, aoFecharAviso, icone = FileText, children }: {
+  titulo: string; subtitulo: string; aviso: string | null; aoFecharAviso: () => void; icone?: LucideIcon; children?: ReactNode;
 }) {
   return (
     <>
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900">{titulo}</h1>
-          <p className="text-gray-600 mt-1">{subtitulo}</p>
-        </div>
-        {children}
-      </div>
+      <CabecalhoModulo icone={icone} titulo={titulo} descricao={subtitulo} acoes={children} />
       {aviso && (
         <div className="flex items-start gap-2">
           <div className="flex-1"><Aviso tipo={aviso.startsWith('Atenção') ? 'info' : 'sucesso'}>{aviso}</Aviso></div>
@@ -38,12 +34,12 @@ export function CabecalhoPagina({ titulo, subtitulo, aviso, aoFecharAviso, child
 export function Abas<T extends string>({ abas, atual, aoMudar, rotulo }: { abas: { id: T; titulo: string; contador?: number }[]; atual: T; aoMudar: (a: T) => void; rotulo: string }) {
   return (
     <nav aria-label={rotulo} className="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto">
-      <div className="flex gap-1 border-b border-gray-200 min-w-max">
+      <div className="flex gap-2 min-w-max pb-1">
         {abas.map((a) => (
           <button key={a.id} type="button" onClick={() => aoMudar(a.id)} aria-current={atual === a.id ? 'page' : undefined}
-            className={`min-h-11 px-4 text-sm font-semibold border-b-2 -mb-px whitespace-nowrap inline-flex items-center gap-2 ${atual === a.id ? 'border-orange-600 text-orange-600' : 'border-transparent text-gray-600 hover:text-gray-900'}`}>
+            className={classePilula(atual === a.id)}>
             {a.titulo}
-            {!!a.contador && <span className="min-w-5 h-5 px-1.5 rounded-full bg-orange-600 text-white text-[11px] inline-flex items-center justify-center">{a.contador}</span>}
+            {!!a.contador && <span className={`min-w-5 h-5 px-1.5 rounded-full text-[11px] inline-flex items-center justify-center ${atual === a.id ? 'bg-white text-orange-700' : 'bg-orange-600 text-white'}`}>{a.contador}</span>}
           </button>
         ))}
       </div>

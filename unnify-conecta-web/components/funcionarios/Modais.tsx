@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import { formatarMoeda, mascaraMoeda, paraDecimal, valorParaMascara, type ContaFinanceira } from '@/lib/financeiro';
-import { VINCULOS, type Funcionario, type LinhaFolha, type Vinculo } from '@/lib/funcionarios';
+import { VINCULOS, paraPercentual, valorPercentual, type Funcionario, type LinhaFolha, type Vinculo } from '@/lib/funcionarios';
 import { Modal, classeBotaoPerigo, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { enviarComprovante } from '@/components/financeiro/FormLancamento';
 
@@ -148,16 +148,31 @@ export function ModalAjuste({ linha, aoFechar, aoConcluir }: { linha: LinhaFolha
   const [tipo, setTipo] = useState<'adicional' | 'desconto'>('adicional');
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
+  const [calculo, setCalculo] = useState<'fixo' | 'percentual'>('fixo');
+  const [percentual, setPercentual] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
-  useEffect(() => { if (linha) { setTipo('adicional'); setDescricao(''); setValor(''); setErro(null); } }, [linha]);
+  useEffect(() => { if (linha) { setTipo('adicional'); setDescricao(''); setValor(''); setCalculo('fixo'); setPercentual(''); setErro(null); } }, [linha]);
   if (!linha) return null;
+  const base = Number(linha.salario_base);
+  const pct = paraPercentual(percentual);
+  const calculado = pct && base > 0 ? valorPercentual(base, pct) : null;
+  const fixo = paraDecimal(valor);
+  const valorFinal = calculo === 'fixo' ? (fixo ? Number(fixo) : null) : calculado;
   const salvar = async () => {
-    const v = paraDecimal(valor);
     if (descricao.trim().length < 2) return setErro('Descreva o ajuste.');
-    if (!v) return setErro('Informe o valor.');
+    if (calculo === 'fixo' && !fixo) return setErro('Informe o valor.');
+    if (calculo === 'percentual') {
+      if (!pct) return setErro('Informe uma porcentagem maior que zero (até 4 casas decimais).');
+      if (!(base > 0)) return setErro('Salário-base inválido para o cálculo.');
+      if (tipo === 'desconto' && Number(pct) > 100) return setErro('Um desconto percentual não pode passar de 100% do salário-base.');
+      if (!calculado || calculado <= 0) return setErro('O valor calculado ficou em R$ 0,00: aumente a porcentagem.');
+    }
     setOcupado(true); setErro(null);
-    const { error } = await createClient().rpc('adicionar_ajuste_folha', { p_id_folha: linha.id_folha, p_tipo: tipo, p_descricao: descricao, p_valor: v });
+    // Percentual: só a porcentagem vai ao banco; base e valor são calculados lá com o salário gravado na competência
+    const { error } = calculo === 'fixo'
+      ? await createClient().rpc('adicionar_ajuste_folha', { p_id_folha: linha.id_folha, p_tipo: tipo, p_descricao: descricao, p_valor: fixo })
+      : await createClient().rpc('adicionar_ajuste_percentual_folha', { p_id_folha: linha.id_folha, p_tipo: tipo, p_descricao: descricao, p_percentual: pct });
     setOcupado(false);
     if (error) return setErro(mensagemDeErro(error, 'Não foi possível salvar o ajuste.'));
     aoConcluir(tipo === 'adicional' ? 'Adicional lançado; a previsão foi atualizada.' : 'Desconto lançado; a previsão foi atualizada.');
@@ -176,7 +191,30 @@ export function ModalAjuste({ linha, aoFechar, aoConcluir }: { linha: LinhaFolha
           ))}
         </div>
         <div><label htmlFor="aj-desc" className={rotulo}>Descrição</label><input id="aj-desc" maxLength={120} placeholder="Ex.: Hora extra, vale" value={descricao} onChange={(e) => setDescricao(e.target.value)} className={campo} /></div>
-        <div><label htmlFor="aj-valor" className={rotulo}>Valor (R$)</label><input id="aj-valor" inputMode="numeric" placeholder="0,00" value={valor} onChange={(e) => setValor(mascaraMoeda(e.target.value))} className={campo} /></div>
+        <div><label htmlFor="aj-calculo" className={rotulo}>Tipo de cálculo</label>
+          <select id="aj-calculo" value={calculo} onChange={(e) => { setCalculo(e.target.value as 'fixo' | 'percentual'); setErro(null); }} className={campo}>
+            <option value="fixo">Valor fixo (R$)</option>
+            <option value="percentual">Porcentagem (%)</option>
+          </select></div>
+        {calculo === 'fixo' ? (
+          <div><label htmlFor="aj-valor" className={rotulo}>Valor (R$)</label><input id="aj-valor" inputMode="numeric" placeholder="0,00" value={valor} onChange={(e) => setValor(mascaraMoeda(e.target.value))} className={campo} /></div>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><label htmlFor="aj-base" className={rotulo}>Base de cálculo</label>
+              <select id="aj-base" className={campo} defaultValue="salario_base">
+                <option value="salario_base">Salário-base ({formatarMoeda(base)})</option>
+              </select></div>
+            <div><label htmlFor="aj-percentual" className={rotulo}>Porcentagem (%)</label>
+              <input id="aj-percentual" inputMode="decimal" placeholder="Ex.: 7,5" value={percentual} onChange={(e) => setPercentual(e.target.value.replace(/[^\d,]/g, ''))} className={campo} /></div>
+            <p className="sm:col-span-2 text-xs text-gray-500">Lançamento manual: não calcula INSS, IRRF, FGTS nem horas extras legais.</p>
+          </div>
+        )}
+        {valorFinal !== null && valorFinal > 0 && (
+          <div data-testid="previa-ajuste" className={`rounded-xl border px-4 py-3 text-sm ${tipo === 'adicional' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>
+            <p className="font-semibold">{tipo === 'adicional' ? 'Valor do adicional: + ' : 'Valor do desconto: − '}{formatarMoeda(valorFinal)}</p>
+            {calculo === 'percentual' && pct && <p className="text-xs mt-0.5">{pct.replace('.', ',')}% sobre {formatarMoeda(base)}</p>}
+          </div>
+        )}
       </div>
     </Modal>
   );

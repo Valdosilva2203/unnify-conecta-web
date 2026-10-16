@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { AdminLayout } from '@/components/AdminLayout';
 import {
   BarraFiltros,
@@ -51,140 +52,41 @@ interface Usuario {
   avatar: string;
 }
 
-const usuariosFicticios: Usuario[] = [
-  {
-    id: '1',
-    nome: 'Vado Silva',
-    profissao: 'Administrador Master',
-    email: 'vado@unnify.com.br',
-    perfil: 'Admin Master',
-    tipoConta: 'Admin Master',
-    vinculacao: null,
-    status: 'ativo',
-    ultimoAcesso: '10/10/2026 às 14:20',
-    cadastro: '10/01/2026 às 09:00',
-    avatar: 'VS',
-  },
-  {
-    id: '2',
-    nome: 'Ana Clara Souza',
-    profissao: 'Contadora',
-    email: 'ana@claracontabil.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Contador',
-    vinculacao: 'Clara Contábil Escritório',
-    status: 'ativo',
-    ultimoAcesso: '09/10/2026 às 16:45',
-    cadastro: '12/02/2026 às 10:30',
-    avatar: 'AC',
-  },
-  {
-    id: '3',
-    nome: 'Ricardo Sousa',
-    profissao: 'Parceiro',
-    email: 'ricardo@rsconsultoria.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Empresário',
-    vinculacao: null,
-    status: 'ativo',
-    ultimoAcesso: '09/10/2026 às 11:10',
-    cadastro: '18/02/2026 às 14:15',
-    avatar: 'RS',
-  },
-  {
-    id: '4',
-    nome: 'João Martins',
-    profissao: 'Empresário',
-    email: 'joao@mercadoalmeida.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Empresário',
-    vinculacao: 'Mercado Almeida LTDA',
-    status: 'ativo',
-    ultimoAcesso: '08/10/2026 às 09:30',
-    cadastro: '05/03/2026 às 11:20',
-    avatar: 'JM',
-  },
-  {
-    id: '5',
-    nome: 'Fernanda Silva',
-    profissao: 'Contadora',
-    email: 'fernanda@silvacontabil.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Contador',
-    vinculacao: 'Silva Contabilidade Escritório',
-    status: 'pendente',
-    ultimoAcesso: '28/09/2026 às 16:10',
-    cadastro: '-',
-    avatar: 'FS',
-  },
-  {
-    id: '6',
-    nome: 'Paulo Ribeiro',
-    profissao: 'Empresário',
-    email: 'paulo@barbeariaseis.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Empresário',
-    vinculacao: 'Barbearia Reis LTDA',
-    status: 'ativo',
-    ultimoAcesso: '07/10/2026 às 13:50',
-    cadastro: '15/03/2026 às 09:40',
-    avatar: 'PR',
-  },
-  {
-    id: '7',
-    nome: 'Lucas Mendes',
-    profissao: 'Empresário',
-    email: 'lucas@lojasilva.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Empresário',
-    vinculacao: 'Loja Silva LTDA',
-    status: 'inativo',
-    ultimoAcesso: '22/09/2026 às 10:15',
-    cadastro: '01/02/2026 às 17:30',
-    avatar: 'LM',
-  },
-  {
-    id: '8',
-    nome: 'Carlos Santos',
-    profissao: 'Contador',
-    email: 'carlos@santoscont.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Contador',
-    vinculacao: 'Santos Contabilidade Escritório',
-    status: 'ativo',
-    ultimoAcesso: '10/10/2026 às 08:55',
-    cadastro: '20/01/2026 às 14:20',
-    avatar: 'CS',
-  },
-  {
-    id: '9',
-    nome: 'Maria Vitória',
-    profissao: 'Empresária',
-    email: 'maria@padariaalvorada.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Empresário',
-    vinculacao: 'Padaria Alvorada LTDA',
-    status: 'pendente',
-    ultimoAcesso: '25/09/2026 às 13:10',
-    cadastro: '-',
-    avatar: 'MV',
-  },
-  {
-    id: '10',
-    nome: 'Diego Lima',
-    profissao: 'Contador',
-    email: 'diego@dlcontabilidade.com.br',
-    perfil: 'Usuário',
-    tipoConta: 'Contador',
-    vinculacao: 'DL Contabilidade Escritório',
-    status: 'ativo',
-    ultimoAcesso: '09/10/2026 às 18:20',
-    cadastro: '10/02/2026 às 11:45',
-    avatar: 'DL',
-  },
-];
 
 export default function UsuariosPage() {
+  // Usuários REAIS (perfis): o banco só entrega ao Admin Master o que as políticas permitem
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [carregandoUsuarios, setCarregandoUsuarios] = useState(true);
+  const [erroUsuarios, setErroUsuarios] = useState<string | null>(null);
+  useEffect(() => {
+    const supabase = createClient();
+    const quando = (iso: string | null) => (iso ? new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' }).replace(', ', ' às ') : '—');
+    Promise.all([
+      supabase.from('perfis').select('id_usuario, nome_completo, email, funcao_global, tipo_usuario, status, criado_em').order('criado_em', { ascending: false }),
+      supabase.from('usuarios_empresas').select('id_usuario, empresas(nome_comercial, razao_social)').eq('ativo', true),
+    ]).then(([perfis, vinculos]) => {
+      if (perfis.error) { setErroUsuarios('Não foi possível carregar os usuários.'); setCarregandoUsuarios(false); return; }
+      const empresaDe = new Map<string, string>();
+      for (const v of (vinculos.data ?? []) as unknown as { id_usuario: string; empresas: { nome_comercial: string | null; razao_social: string } | null }[]) {
+        if (v.empresas && !empresaDe.has(v.id_usuario)) empresaDe.set(v.id_usuario, v.empresas.nome_comercial || v.empresas.razao_social);
+      }
+      setUsuarios((perfis.data ?? []).map((u) => {
+        const funcao = u.funcao_global as string | null;
+        const perfil: Usuario['perfil'] = funcao === 'admin_master' ? 'Admin Master' : funcao === 'admin' ? 'Administrador' : 'Usuário';
+        const tipoConta: Usuario['tipoConta'] = funcao === 'admin_master' ? 'Admin Master' : funcao === 'admin' ? 'Administrador' : u.tipo_usuario === 'contador' ? 'Contador' : 'Empresário';
+        const nome = (u.nome_completo as string | null) || (u.email as string | null) || 'Usuário';
+        return {
+          id: u.id_usuario as string, nome, profissao: tipoConta, email: (u.email as string | null) ?? '', perfil, tipoConta,
+          vinculacao: empresaDe.get(u.id_usuario as string) ?? null,
+          status: u.status === 'active' ? 'ativo' : u.status === 'pending' ? 'pendente' : 'inativo',
+          ultimoAcesso: '—', // o último acesso não fica registrado nos perfis
+          cadastro: quando(u.criado_em as string | null),
+          avatar: nome.split(' ').filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase(),
+        };
+      }));
+      setCarregandoUsuarios(false);
+    });
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFilter, setTipoFilter] = useState('todos');
   const [perfilFilter, setPerfilFilter] = useState('todos');
@@ -194,13 +96,13 @@ export default function UsuariosPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Calcular stats
-  const totalUsuarios = usuariosFicticios.length;
-  const ativosCount = usuariosFicticios.filter((u) => u.status === 'ativo').length;
-  const pendentesCount = usuariosFicticios.filter((u) => u.status === 'pendente').length;
-  const inativos = usuariosFicticios.filter((u) => u.status === 'inativo').length;
+  const totalUsuarios = usuarios.length;
+  const ativosCount = usuarios.filter((u) => u.status === 'ativo').length;
+  const pendentesCount = usuarios.filter((u) => u.status === 'pendente').length;
+  const inativos = usuarios.filter((u) => u.status === 'inativo').length;
 
   // Filtrar usuários
-  const filteredUsuarios = usuariosFicticios.filter((usuario) => {
+  const filteredUsuarios = usuarios.filter((usuario) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       usuario.nome.toLowerCase().includes(searchLower) ||
@@ -380,7 +282,7 @@ export default function UsuariosPage() {
             )}
           </BarraFiltros>
 
-          <EstadoTabela vazio={filteredUsuarios.length === 0} mensagemVazio="Nenhum usuário encontrado.">
+          <EstadoTabela carregando={carregandoUsuarios} erro={erroUsuarios} vazio={filteredUsuarios.length === 0} mensagemVazio="Nenhum usuário encontrado.">
             <Tabela
               colunas={[
                 { titulo: 'Usuário' },

@@ -43,6 +43,7 @@ export const ROTULO_HISTORICO: Record<string, string> = {
   criado: 'Imposto cadastrado', editado: 'Dados alterados', guia_enviada: 'Guia enviada', comprovante_enviado: 'Comprovante anexado',
   pagamento_informado: 'Pagamento informado (aguarda confirmação)', pagamento_confirmado: 'Pagamento confirmado no Financeiro', cancelado: 'Cancelado',
   parcelamento_criado: 'Parcelamento cadastrado', parcelamento_cancelado: 'Parcelamento cancelado',
+  guia_excluida: 'Guia excluída', excluido: 'Imposto excluído', parcelamento_excluido: 'Parcelamento excluído',
 };
 
 export const competenciaRotulo = (c: string | null) => (c ? `${c.slice(5, 7)}/${c.slice(0, 4)}` : '—');

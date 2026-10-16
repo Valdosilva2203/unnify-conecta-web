@@ -39,6 +39,19 @@ interface Props {
 }
 
 // Módulo ÚNICO de gastos fixos: empresas (/app/financeiro) e plataforma (/admin/financeiro). O contexto é validado no banco.
+// Filtros da lista de gastos fixos (a soma do rodapé usa os mesmos)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function filtrarGastos(q: any, f: { categoria: string; situacao: string; banco: string; buscaAplicada: string }) {
+  if (f.categoria) q = q.eq('id_categoria', f.categoria);
+  if (f.situacao) q = q.eq('situacao', f.situacao);
+  if (f.banco) q = q.eq('id_conta_financeira', f.banco);
+  if (f.buscaAplicada) {
+    const termo = f.buscaAplicada.replace(/[%,()]/g, ' ');
+    q = q.or(`nome.ilike.%${termo}%,contraparte.ilike.%${termo}%,subcategoria.ilike.%${termo}%,observacoes.ilike.%${termo}%,categoria_nome.ilike.%${termo}%`);
+  }
+  return q;
+}
+
 export function GastosFixos({ contexto, idEmpresa, categorias, contas, periodo, versao, aoAlterar, aoIrParaContas }: Props) {
   const [hoje, setHoje] = useState('');
   const [busca, setBusca] = useState('');
@@ -85,14 +98,7 @@ export function GastosFixos({ contexto, idEmpresa, categorias, contas, periodo, 
     const supabase = createClient();
     // O banco valida o contexto (RLS); o filtro aqui só separa empresa x plataforma na consulta
     const base = supabase.from('gastos_fixos_resumo').select('*', { count: 'exact' }).eq('contexto', contexto);
-    let q = idEmpresa ? base.eq('id_empresa', idEmpresa) : base.is('id_empresa', null);
-    if (categoria) q = q.eq('id_categoria', categoria);
-    if (situacao) q = q.eq('situacao', situacao);
-    if (banco) q = q.eq('id_conta_financeira', banco);
-    if (buscaAplicada) {
-      const termo = buscaAplicada.replace(/[%,()]/g, ' ');
-      q = q.or(`nome.ilike.%${termo}%,contraparte.ilike.%${termo}%,subcategoria.ilike.%${termo}%,observacoes.ilike.%${termo}%,categoria_nome.ilike.%${termo}%`);
-    }
+    const q = filtrarGastos(idEmpresa ? base.eq('id_empresa', idEmpresa) : base.is('id_empresa', null), { categoria, situacao, banco, buscaAplicada });
     const inicio = (pagina - 1) * porPagina;
     setCarregando(true);
     Promise.all([
@@ -118,6 +124,29 @@ export function GastosFixos({ contexto, idEmpresa, categorias, contas, periodo, 
     });
     return () => { ativo = false; };
   }, [contexto, idEmpresa, categoria, situacao, banco, buscaAplicada, pagina, porPagina, hoje, mes, versao, gerado]);
+
+  // Soma do valor de TODOS os gastos fixos que atendem aos filtros (não só da página), em centavos
+  const [somaFiltro, setSomaFiltro] = useState<{ centavos: number; limitado: boolean } | null>(null);
+  useEffect(() => {
+    if (!hoje || !gerado) return;
+    let ativo = true;
+    setSomaFiltro(null);
+    (async () => {
+      const supabase = createClient();
+      let centavos = 0;
+      const POR_LOTE = 1000, MAX_LOTES = 10;
+      for (let lote = 0; lote < MAX_LOTES; lote++) {
+        const base = supabase.from('gastos_fixos_resumo').select('valor').eq('contexto', contexto);
+        const { data, error } = await filtrarGastos(idEmpresa ? base.eq('id_empresa', idEmpresa) : base.is('id_empresa', null), { categoria, situacao, banco, buscaAplicada })
+          .order('id').range(lote * POR_LOTE, (lote + 1) * POR_LOTE - 1);
+        if (!ativo || error) return;
+        for (const g of (data ?? []) as unknown as { valor: number | string }[]) centavos += Math.round(Number(g.valor) * 100);
+        if ((data ?? []).length < POR_LOTE) return setSomaFiltro({ centavos, limitado: false });
+      }
+      if (ativo) setSomaFiltro({ centavos, limitado: true });
+    })();
+    return () => { ativo = false; };
+  }, [contexto, idEmpresa, categoria, situacao, banco, buscaAplicada, hoje, versao, gerado]);
 
   const abrirDetalhe = (id: string) => {
     setDetalhe(id);
@@ -264,6 +293,13 @@ export function GastosFixos({ contexto, idEmpresa, categorias, contas, periodo, 
               </Linha>
             ))}
           </Tabela>
+        )}
+        {!erro && !carregando && gastos.length > 0 && somaFiltro && (
+          <p className="flex flex-wrap items-baseline justify-end gap-x-2 text-sm text-gray-600" data-testid="total-filtro">
+            <span>Total dos gastos fixos{total > 0 ? ` (${total} ${total === 1 ? 'gasto' : 'gastos'})` : ''}:</span>
+            <strong className="text-base text-red-700">{formatarMoeda(somaFiltro.centavos / 100)}</strong>
+            {somaFiltro.limitado && <span className="text-xs text-amber-700">soma dos primeiros 10.000 gastos</span>}
+          </p>
         )}
         {!erro && !carregando && total > 0 && <Paginacao pagina={pagina} aoMudarPagina={setPagina} porPagina={porPagina} aoMudarPorPagina={setPorPagina} total={total} />}
       </section>

@@ -18,7 +18,7 @@ export function bancoLocal(url = urlSupabase()): boolean {
 
 // Specs que tocam o banco real: tudo que não usa a API simulada nem se declara "teste-sem-banco"
 export function specsComBancoReal(pasta: string): string[] {
-  return readdirSync(pasta).filter((f) => f.endsWith('.spec.ts')).filter((f) => {
+  return readdirSync(pasta).filter((f) => f.endsWith('.spec.ts') || f.endsWith('.test.ts')).filter((f) => {
     const texto = readFileSync(join(pasta, f), 'utf8');
     return !texto.includes('sessaoSimulada') && !texto.includes('teste-sem-banco');
   });

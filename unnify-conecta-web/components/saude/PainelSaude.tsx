@@ -16,6 +16,7 @@ import {
 import { Selo } from '@/components/admin/tabela';
 import { GraficoRosca } from '@/components/financeiro/GraficoRosca';
 import { GraficoFluxoCaixa, GraficoReceitasDespesas, MedidorIndice } from './Graficos';
+import { CabecalhoModulo } from '@/components/navegacao/NavegacaoModulos';
 
 type Estado = { tipo: 'carregando' } | { tipo: 'erro'; semAcesso: boolean; ausente?: boolean } | { tipo: 'ok'; dados: SaudeEmpresarial };
 const card = 'bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 min-w-0';
@@ -48,14 +49,26 @@ export function PainelSaude({ idEmpresa, papel }: { idEmpresa: string; papel: 'e
   }, [carregar]);
 
   const Titulo = papel === 'empresa' ? 'h1' : 'h2';
-  const cabecalho = (
+  const cabecalho = (papel === 'empresa' ? (
+      <CabecalhoModulo icone={HeartPulse} titulo="Saúde Empresarial" descricao="Acompanhe a saúde financeira da sua empresa e tome decisões com mais segurança."
+      acoes={<>
+      <div className="flex items-center gap-2">
+        {atualizando && <span role="status" className="text-xs text-gray-500 inline-flex items-center gap-1"><RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />Atualizando</span>}
+        <label className="sr-only" htmlFor={`periodo-saude-${papel}`}>Período analisado</label>
+        <select id={`periodo-saude-${papel}`} value={meses} onChange={(e) => setMeses(Number(e.target.value))}
+          className="min-h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          {PERIODOS.map((p) => <option key={p.meses} value={p.meses}>{p.rotulo}</option>)}
+        </select>
+      </div>
+      </>} />
+    ) : (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
       <div className="flex items-start gap-3 min-w-0">
         <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><HeartPulse className="w-7 h-7" aria-hidden="true" /></span>
         <div className="min-w-0">
-          <Titulo className={papel === 'empresa' ? 'text-2xl sm:text-3xl font-black text-gray-900' : 'text-xl font-bold text-gray-900'}>Saúde Empresarial</Titulo>
+          <Titulo className="text-xl font-bold text-gray-900">Saúde Empresarial</Titulo>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">
-            {papel === 'empresa' ? 'Acompanhe a saúde financeira da sua empresa e tome decisões com mais segurança.' : 'Indicadores calculados a partir do financeiro da empresa (somente leitura).'}
+            Indicadores calculados a partir do financeiro da empresa (somente leitura).
           </p>
         </div>
       </div>
@@ -68,7 +81,7 @@ export function PainelSaude({ idEmpresa, papel }: { idEmpresa: string; papel: 'e
         </select>
       </div>
     </div>
-  );
+    ));
 
   if (estado.tipo === 'carregando') {
     return (

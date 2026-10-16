@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Calendar, ChevronDown, ClipboardCheck, DollarSign, FileText, HeartPulse, Inbox, Landmark, LayoutDashboard, ListChecks, Lock, Search, type LucideIcon,
+  ArrowLeft, Calendar, ChevronDown, ClipboardCheck, DollarSign, FileText, HeartPulse, Inbox, Landmark, LayoutDashboard, ListChecks, Lock, Search, Wallet, type LucideIcon,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useContadorAtual, type ContadorAtual } from '@/components/contador/LayoutContador';
@@ -31,6 +31,7 @@ export const MODULOS: Modulo[] = [
   { segmento: 'obrigacoes', titulo: 'Obrigações', icone: ClipboardCheck, descricao: 'Prazos e entregas', permitido: (p) => p('gerenciar_obrigacoes'), permissao: PERMISSOES.gerenciar_obrigacoes },
   { segmento: 'impostos', titulo: 'Impostos', icone: Landmark, descricao: 'Guias e parcelamentos', permitido: (p) => p('gerenciar_impostos'), permissao: PERMISSOES.gerenciar_impostos },
   { segmento: 'financeiro', titulo: 'Financeiro', icone: DollarSign, descricao: 'Visão financeira do mês', permitido: (p) => p('ver_financeiro'), permissao: PERMISSOES.ver_financeiro },
+  { segmento: 'folha', titulo: 'Folha', icone: Wallet, descricao: 'Folha de pagamento', permitido: (p) => p('ver_folha'), permissao: PERMISSOES.ver_folha },
   { segmento: 'agenda', titulo: 'Agenda', icone: Calendar, descricao: 'Compromissos compartilhados', permitido: (p) => p('gerenciar_agenda'), permissao: PERMISSOES.gerenciar_agenda },
   { segmento: 'tarefas', titulo: 'Tarefas', icone: ListChecks, descricao: 'Organização do trabalho', permitido: () => true },
   { segmento: 'saude', titulo: 'Saúde Empresarial', icone: HeartPulse, descricao: 'Indicadores (somente leitura)', permitido: (p) => p('ver_financeiro') || p('gerenciar_financeiro'), permissao: PERMISSOES.ver_financeiro },

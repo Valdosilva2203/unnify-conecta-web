@@ -42,170 +42,10 @@ interface Parceiro {
   dataAcao: string;
 }
 
-const parceirosFicticios: Parceiro[] = [
-  {
-    id: '1',
-    nome: 'Alex Lima',
-    nomeComercial: 'AL Soluções em TI',
-    tipo: 'Pessoa Física',
-    cpfCnpj: '123.456.789-00',
-    telefone: '63 99912-3456',
-    email: 'alex@alsolucoes.com.br',
-    cidade: 'Augustinópolis',
-    uf: 'TO',
-    indicacoes: 12,
-    comissoes: 2398.80,
-    status: 'ativo',
-    cadastro: '10/10/2026',
-    dataAcao: '10/10/2026 às 14:20',
-  },
-  {
-    id: '2',
-    nome: 'João Ribeiro',
-    nomeComercial: 'JR Telecom',
-    tipo: 'Pessoa Física',
-    cpfCnpj: '234.567.890-11',
-    telefone: '63 99234-5678',
-    email: 'joao@jrtelecom.com.br',
-    cidade: 'Araguatins',
-    uf: 'TO',
-    indicacoes: 8,
-    comissoes: 1599.20,
-    status: 'ativo',
-    cadastro: '05/10/2026',
-    dataAcao: '05/10/2026 às 11:45',
-  },
-  {
-    id: '3',
-    nome: 'Comercial Martins',
-    nomeComercial: 'Martins Implementações',
-    tipo: 'Pessoa Jurídica',
-    cpfCnpj: '12.345.678/0001-90',
-    telefone: '63 99345-6789',
-    email: 'contato@martinsimp.com.br',
-    cidade: 'Sampaio',
-    uf: 'TO',
-    indicacoes: 15,
-    comissoes: 3299.00,
-    status: 'ativo',
-    cadastro: '28/09/2026',
-    dataAcao: '28/09/2026 às 16:30',
-  },
-  {
-    id: '4',
-    nome: 'Silva Fiber',
-    nomeComercial: 'Silva Fiber Internet',
-    tipo: 'Pessoa Jurídica',
-    cpfCnpj: '23.456.789/0001-01',
-    telefone: '63 99123-4567',
-    email: 'contato@silvafiber.com.br',
-    cidade: 'Axixá',
-    uf: 'TO',
-    indicacoes: 5,
-    comissoes: 999.50,
-    status: 'pendente',
-    cadastro: '25/09/2026',
-    dataAcao: '25/09/2026 às 10:15',
-  },
-  {
-    id: '5',
-    nome: 'Ricardo Costa',
-    nomeComercial: 'RC Marketing Digital',
-    tipo: 'Pessoa Física',
-    cpfCnpj: '345.678.901-22',
-    telefone: '63 99678-9012',
-    email: 'ricardo@rcmarketing.com.br',
-    cidade: 'Imperatriz',
-    uf: 'MA',
-    indicacoes: 9,
-    comissoes: 1849.10,
-    status: 'ativo',
-    cadastro: '20/09/2026',
-    dataAcao: '20/09/2026 às 09:40',
-  },
-  {
-    id: '6',
-    nome: 'Top Serviços',
-    nomeComercial: 'Top Serviços LTDA',
-    tipo: 'Pessoa Jurídica',
-    cpfCnpj: '34.567.890/0001-12',
-    telefone: '63 99901-2345',
-    email: 'contato@topservicos.com.br',
-    cidade: 'Palmas',
-    uf: 'TO',
-    indicacoes: 3,
-    comissoes: 599.70,
-    status: 'inativo',
-    cadastro: '15/09/2026',
-    dataAcao: '15/09/2026 às 13:10',
-  },
-  {
-    id: '7',
-    nome: 'Fernanda Barbosa',
-    nomeComercial: 'FB Consultoria',
-    tipo: 'Pessoa Física',
-    cpfCnpj: '456.789.012-33',
-    telefone: '63 99222-3344',
-    email: 'fernanda@fbconsult.com.br',
-    cidade: 'Gurupi',
-    uf: 'TO',
-    indicacoes: 7,
-    comissoes: 1399.30,
-    status: 'ativo',
-    cadastro: '10/09/2026',
-    dataAcao: '10/09/2026 às 08:25',
-  },
-  {
-    id: '8',
-    nome: 'Norte Vendas',
-    nomeComercial: 'Norte Vendas LTDA',
-    tipo: 'Pessoa Jurídica',
-    cpfCnpj: '45.678.901/0001-23',
-    telefone: '63 99876-5432',
-    email: 'contato@nortevendas.com.br',
-    cidade: 'Porto Nacional',
-    uf: 'TO',
-    indicacoes: 4,
-    comissoes: 799.60,
-    status: 'pendente',
-    cadastro: '05/09/2026',
-    dataAcao: '05/09/2026 às 15:50',
-  },
-  {
-    id: '9',
-    nome: 'Diego Lima',
-    nomeComercial: 'DL Tecnologia',
-    tipo: 'Pessoa Física',
-    cpfCnpj: '567.890.123-44',
-    telefone: '63 99111-7788',
-    email: 'diego@dltecnologia.com.br',
-    cidade: 'Tocantinópolis',
-    uf: 'TO',
-    indicacoes: 11,
-    comissoes: 2199.40,
-    status: 'ativo',
-    cadastro: '01/09/2026',
-    dataAcao: '01/09/2026 às 12:35',
-  },
-  {
-    id: '10',
-    nome: 'Sampaio Parceiros',
-    nomeComercial: 'Sampaio Parceiros LTDA',
-    tipo: 'Pessoa Jurídica',
-    cpfCnpj: '56.789.012/0001-34',
-    telefone: '63 99444-8899',
-    email: 'contato@sampaiop.com.br',
-    cidade: 'Sampaio',
-    uf: 'TO',
-    indicacoes: 6,
-    comissoes: 1199.00,
-    status: 'ativo',
-    cadastro: '28/08/2026',
-    dataAcao: '28/08/2026 às 17:10',
-  },
-];
 
 export default function ParceirosPage() {
+  // Ainda não existe cadastro de parceiros no sistema: a lista fica vazia (nada fictício).
+  const parceiros: Parceiro[] = [];
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [tipoFilter, setTipoFilter] = useState('todos');
@@ -214,13 +54,13 @@ export default function ParceirosPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Calcular stats
-  const totalParceiros = parceirosFicticios.length;
-  const ativosCount = parceirosFicticios.filter((p) => p.status === 'ativo').length;
-  const pendentesCount = parceirosFicticios.filter((p) => p.status === 'pendente').length;
-  const inativos = parceirosFicticios.filter((p) => p.status === 'inativo').length;
+  const totalParceiros = parceiros.length;
+  const ativosCount = parceiros.filter((p) => p.status === 'ativo').length;
+  const pendentesCount = parceiros.filter((p) => p.status === 'pendente').length;
+  const inativos = parceiros.filter((p) => p.status === 'inativo').length;
 
   // Filtrar parceiros
-  const filteredParceiros = parceirosFicticios.filter((parceiro) => {
+  const filteredParceiros = parceiros.filter((parceiro) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       parceiro.nome.toLowerCase().includes(searchLower) ||
@@ -252,7 +92,7 @@ export default function ParceirosPage() {
   );
 
   // Cidades únicas
-  const cidades = Array.from(new Set(parceirosFicticios.map((p) => p.cidade))).sort();
+  const cidades = Array.from(new Set(parceiros.map((p) => p.cidade))).sort();
 
   return (
     <AdminLayout>
@@ -383,7 +223,7 @@ export default function ParceirosPage() {
             )}
           </BarraFiltros>
 
-          <EstadoTabela vazio={filteredParceiros.length === 0} mensagemVazio="Nenhum parceiro encontrado.">
+          <EstadoTabela vazio={filteredParceiros.length === 0} mensagemVazio="Ainda não há parceiros cadastrados no sistema.">
             <Tabela
               colunas={[
                 { titulo: 'Parceiro' },

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Ban, CalendarClock, CheckCircle2, Eye, FileText, HandCoins, History, MoreHorizontal, Paperclip, Pencil, Plus, Receipt, RefreshCw, Upload, X } from 'lucide-react';
+import { Ban, CalendarClock, CheckCircle2, Eye, FileText, HandCoins, History, MoreHorizontal, Paperclip, Pencil, Plus, Receipt, RefreshCw, Trash2, Upload, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import { recursoAusente } from '@/lib/erros-banco';
@@ -16,6 +16,7 @@ import {
 } from '@/lib/impostos';
 import { formatarCnpj } from '@/lib/contabil';
 import { CAMPOS_DAS, lerDocumentoPdf, type DadosDas, type ResultadoDocumentoPdf } from '@/lib/leitura-pdf';
+import { classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 // Impostos e parcelamentos de UMA empresa — usado pelo contador (aba da empresa) e pelo empresário (/app/impostos).
 // Tudo passa pelas funções do banco (migration 045), que conferem a permissão a cada chamada.
@@ -69,7 +70,7 @@ export function ModuloImpostos({ idEmpresa, papel, cnpjEmpresa }: { idEmpresa: s
   const [podeFinanceiro, setPodeFinanceiro] = useState(false);
   const [contas, setContas] = useState<ContaFinanceira[]>([]);
   const [aviso, setAviso] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
-  const [modal, setModal] = useState<null | { tipo: 'imposto'; imposto: ImpostoLinha | null } | { tipo: 'parcelamento' } | { tipo: 'informar' | 'confirmar' | 'cancelar'; imposto: ImpostoLinha } | { tipo: 'cancelar_parc'; parc: ParcelamentoLinha }>(null);
+  const [modal, setModal] = useState<null | { tipo: 'imposto'; imposto: ImpostoLinha | null } | { tipo: 'parcelamento' } | { tipo: 'informar' | 'confirmar' | 'cancelar' | 'excluir'; imposto: ImpostoLinha } | { tipo: 'cancelar_parc' | 'excluir_parc'; parc: ParcelamentoLinha }>(null);
   const [versao, setVersao] = useState(0);
   const req = useRef(0);
 
@@ -132,10 +133,10 @@ export function ModuloImpostos({ idEmpresa, papel, cnpjEmpresa }: { idEmpresa: s
       <div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1fr)_25rem]">
         <section aria-label="Impostos e parcelamentos" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3 sm:p-4 min-w-0 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div role="tablist" aria-label="Tipo de lista" className="flex flex-wrap gap-1">
+            <div role="tablist" aria-label="Tipo de lista" className="flex flex-wrap gap-2">
               {([['correntes', 'Impostos correntes'], ['parcelamentos', 'Parcelamentos'], ['todos', 'Todos']] as const).map(([v, rot]) => (
                 <button key={v} type="button" role="tab" aria-selected={sub === v} onClick={() => { setSub(v); setSelImposto(null); }}
-                  className={`min-h-11 px-3 rounded-lg text-sm font-semibold ${sub === v ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}>{rot}</button>
+                  className={classePilula(sub === v)}>{rot}</button>
               ))}
             </div>
             <button type="button" className={`${classeBotaoPrimario} whitespace-nowrap`} onClick={() => setModal(sub === 'parcelamentos' ? { tipo: 'parcelamento' } : { tipo: 'imposto', imposto: null })}>
@@ -171,7 +172,7 @@ export function ModuloImpostos({ idEmpresa, papel, cnpjEmpresa }: { idEmpresa: s
             aoAlterado={alterado} aoAviso={(t) => setAviso({ tipo: 'erro', texto: t })} />
         ) : sub === 'parcelamentos' ? (
           parc ? <PainelParcelas parc={parc} parcelas={todasParcelas.filter((p) => p.id_parcelamento === parc.id).sort((a, b) => (a.numero_parcela ?? 0) - (b.numero_parcela ?? 0))}
-            aoFechar={() => setSelParc(null)} aoAbrir={setSelImposto} aoCancelar={() => setModal({ tipo: 'cancelar_parc', parc })} />
+            aoFechar={() => setSelParc(null)} aoAbrir={setSelImposto} aoCancelar={() => setModal({ tipo: 'cancelar_parc', parc })} aoExcluir={() => setModal({ tipo: 'excluir_parc', parc })} />
             : <aside aria-label="Parcelas" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-sm text-gray-500 self-start">Selecione um parcelamento para ver as parcelas.</aside>
         ) : <aside aria-label="Detalhes do imposto" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-sm text-gray-500 self-start">Selecione um imposto para ver os detalhes.</aside>}
       </div>
@@ -182,6 +183,12 @@ export function ModuloImpostos({ idEmpresa, papel, cnpjEmpresa }: { idEmpresa: s
       {modal?.tipo === 'confirmar' && <ModalConfirmar imposto={modal.imposto} contas={contas} hoje={hoje} aoFechar={() => setModal(null)} aoSalvar={alterado} />}
       {modal?.tipo === 'cancelar' && <ModalMotivo titulo={`Cancelar ${modal.imposto.nome}`} texto="A conta a pagar deste imposto também é cancelada (não é apagada). Impostos pagos precisam ser estornados no Financeiro antes."
         aoFechar={() => setModal(null)} aoConfirmar={async (m) => { const { error } = await createClient().rpc('cancelar_imposto', { p_id: modal.imposto.id, p_motivo: m }); if (error) return mensagemDeErro(error, 'Não foi possível cancelar.'); setSelImposto(null); alterado('Imposto cancelado.'); return null; }} />}
+      {modal?.tipo === 'excluir' && <ModalExcluir titulo={`Excluir ${modal.imposto.nome}`} botao="Excluir imposto"
+        texto={`${modal.imposto.id_parcelamento ? 'A parcela' : 'O imposto'} sai das listas e da conta a pagar do Financeiro. O histórico fica guardado. Se já foi pago, estorne o pagamento no Financeiro antes.`}
+        aoFechar={() => setModal(null)} aoConfirmar={async () => { const { error } = await createClient().rpc('excluir_imposto', { p_id: modal.imposto.id }); if (error) return mensagemDeErro(error, 'Não foi possível excluir o imposto.'); setSelImposto(null); alterado(modal.imposto.id_parcelamento ? 'Parcela excluída.' : 'Imposto excluído.'); return null; }} />}
+      {modal?.tipo === 'excluir_parc' && <ModalExcluir titulo={`Excluir parcelamento ${modal.parc.numero_acordo}`} botao="Excluir parcelamento"
+        texto="O parcelamento e TODAS as suas parcelas saem das listas e das contas a pagar do Financeiro. O histórico fica guardado. Só é possível se nenhuma parcela estiver paga."
+        aoFechar={() => setModal(null)} aoConfirmar={async () => { const { error } = await createClient().rpc('excluir_parcelamento_tributario', { p_id: modal.parc.id }); if (error) return mensagemDeErro(error, 'Não foi possível excluir o parcelamento.'); setSelParc(null); alterado('Parcelamento excluído.'); return null; }} />}
       {modal?.tipo === 'cancelar_parc' && <ModalMotivo titulo={`Cancelar parcelamento ${modal.parc.numero_acordo}`} texto="As parcelas em aberto (e suas contas a pagar) são canceladas. Parcelas pagas são preservadas."
         aoFechar={() => setModal(null)} aoConfirmar={async (m) => { const { error } = await createClient().rpc('cancelar_parcelamento_tributario', { p_id: modal.parc.id, p_motivo: m }); if (error) return mensagemDeErro(error, 'Não foi possível cancelar.'); alterado('Parcelamento cancelado.'); return null; }} />}
     </div>
@@ -230,12 +237,15 @@ interface Arquivo { id: string; tipo: 'guia' | 'comprovante'; caminho: string; n
 interface Evento { acao: string; dados: Record<string, unknown> | null; criado_em: string }
 function PainelImposto({ imposto: i, idEmpresa, papel, podeFinanceiro, versao, aoFechar, aoAcao, aoAlterado, aoAviso }: {
   imposto: ImpostoLinha; idEmpresa: string; papel: 'contador' | 'empresa'; podeFinanceiro: boolean; versao: number; aoFechar: () => void;
-  aoAcao: (t: 'editar' | 'informar' | 'confirmar' | 'cancelar') => void; aoAlterado: (m: string) => void; aoAviso: (t: string) => void;
+  aoAcao: (t: 'editar' | 'informar' | 'confirmar' | 'cancelar' | 'excluir') => void; aoAlterado: (m: string) => void; aoAviso: (t: string) => void;
 }) {
   const [aba, setAba] = useState<'detalhes' | 'historico'>('detalhes');
   const [arquivos, setArquivos] = useState<Arquivo[] | null>(null);
   const [hist, setHist] = useState<Evento[] | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [excluindoGuia, setExcluindoGuia] = useState<Arquivo | null>(null);
+  const [erroExcluir, setErroExcluir] = useState<string | null>(null);
+  const [apagando, setApagando] = useState(false);
   const inputGuia = useRef<HTMLInputElement>(null);
   const inputComp = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -249,8 +259,20 @@ function PainelImposto({ imposto: i, idEmpresa, papel, podeFinanceiro, versao, a
     setEnviando(true); const e = await enviarArquivo(idEmpresa, i.id, tipo, arq); setEnviando(false);
     if (e) aoAviso(e); else aoAlterado(tipo === 'guia' ? 'Guia enviada. A empresa foi avisada.' : 'Comprovante anexado.');
   };
+  // Excluir guia: remove o registro pelo banco (confere permissão e situação) e só então apaga o arquivo do bucket privado
+  const excluirGuia = async () => {
+    if (!excluindoGuia || apagando) return;
+    setApagando(true); setErroExcluir(null);
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc('excluir_guia_imposto', { p_id_arquivo: excluindoGuia.id });
+    if (error) { setApagando(false); return setErroExcluir(mensagemDeErro(error, 'Não foi possível excluir a guia.')); }
+    if (typeof data === 'string') await supabase.storage.from('guias-impostos').remove([data]); // sem registro, o arquivo vira descartável pela política do Storage
+    setApagando(false); setExcluindoGuia(null);
+    aoAlterado('Guia excluída.');
+  };
   const aberto = i.situacao === 'pendente' || i.situacao === 'vencido';
   const ativo = i.situacao !== 'cancelado';
+  const podeExcluirGuia = i.situacao !== 'pago' && ativo; // guia de imposto pago fica como prova do pagamento
   const guias = (arquivos ?? []).filter((a) => a.tipo === 'guia');
   const comps = (arquivos ?? []).filter((a) => a.tipo === 'comprovante');
   const Arq = ({ a }: { a: Arquivo }) => (
@@ -258,6 +280,10 @@ function PainelImposto({ imposto: i, idEmpresa, papel, podeFinanceiro, versao, a
       {a.tipo === 'guia' ? <FileText className="w-5 h-5 text-red-500 shrink-0" aria-hidden="true" /> : <Paperclip className="w-5 h-5 text-gray-500 shrink-0" aria-hidden="true" />}
       <span className="flex-1 min-w-0"><span className="block truncate font-medium">{a.nome_arquivo}</span><span className="block text-xs text-gray-500">{Math.max(1, Math.round(Number(a.tamanho) / 1024))} KB · {formatarData(a.criado_em.slice(0, 10))}</span></span>
       <button type="button" onClick={async () => { const e = await abrirArquivo(a.caminho); if (e) aoAviso(e); }} className="min-h-9 px-2 rounded-lg border border-gray-200 text-xs font-semibold">{a.tipo === 'guia' ? 'Visualizar guia' : 'Abrir'}</button>
+      {a.tipo === 'guia' && podeExcluirGuia && (
+        <button type="button" aria-label={`Excluir guia ${a.nome_arquivo}`} title="Excluir guia" onClick={() => { setErroExcluir(null); setExcluindoGuia(a); }}
+          className="w-9 h-9 shrink-0 inline-flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
+      )}
     </div>
   );
   return (
@@ -299,6 +325,7 @@ function PainelImposto({ imposto: i, idEmpresa, papel, podeFinanceiro, versao, a
               {papel === 'empresa' && i.situacao !== 'pago' && <button type="button" disabled={enviando} onClick={() => inputGuia.current?.click()} className={classeBotaoSecundario}><Upload className="w-4 h-4" aria-hidden="true" />Anexar guia</button>}
               {!i.id_parcelamento && i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('editar')} className={classeBotaoSecundario}><Pencil className="w-4 h-4" aria-hidden="true" />Editar imposto</button>}
               {!i.id_parcelamento && i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('cancelar')} className={`${classeBotaoSecundario} !text-red-700`}><Ban className="w-4 h-4" aria-hidden="true" />Cancelar imposto</button>}
+              {i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('excluir')} className={`${classeBotaoSecundario} !text-red-700`}><Trash2 className="w-4 h-4" aria-hidden="true" />{i.id_parcelamento ? 'Excluir parcela' : 'Excluir imposto'}</button>}
               <input ref={inputGuia} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Arquivo da guia" onChange={(e) => { enviar('guia', e.target.files?.[0]); e.target.value = ''; }} />
               <input ref={inputComp} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Arquivo do comprovante" onChange={(e) => { enviar('comprovante', e.target.files?.[0]); e.target.value = ''; }} />
             </div>
@@ -314,6 +341,12 @@ function PainelImposto({ imposto: i, idEmpresa, papel, podeFinanceiro, versao, a
           </ul>
         )
       )}
+      <Modal aberto={!!excluindoGuia} aoFechar={() => { if (!apagando) setExcluindoGuia(null); }} titulo="Excluir guia" descricao={excluindoGuia?.nome_arquivo}
+        rodape={<><button type="button" className={classeBotaoSecundario} disabled={apagando} onClick={() => setExcluindoGuia(null)}>Cancelar</button>
+          <button type="button" className={classeBotaoPerigo} disabled={apagando} onClick={excluirGuia}>{apagando ? 'Excluindo...' : 'Excluir guia'}</button></>}>
+        <p className="text-sm text-gray-700">A guia será apagada definitivamente. O imposto, o valor, o vencimento e o lançamento em Contas a pagar continuam como estão, e você pode enviar uma nova guia depois.</p>
+        {erroExcluir && <p role="alert" className="mt-3 text-sm text-red-700">{erroExcluir}</p>}
+      </Modal>
     </aside>
   );
 }
@@ -343,7 +376,7 @@ function TabelaParcelamentos({ linhas, selecionado, aoSelecionar }: { linhas: Pa
   );
 }
 
-function PainelParcelas({ parc, parcelas, aoFechar, aoAbrir, aoCancelar }: { parc: ParcelamentoLinha; parcelas: ImpostoLinha[]; aoFechar: () => void; aoAbrir: (id: string) => void; aoCancelar: () => void }) {
+function PainelParcelas({ parc, parcelas, aoFechar, aoAbrir, aoCancelar, aoExcluir }: { parc: ParcelamentoLinha; parcelas: ImpostoLinha[]; aoFechar: () => void; aoAbrir: (id: string) => void; aoCancelar: () => void; aoExcluir: () => void }) {
   return (
     <aside aria-label="Parcelas" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 self-start min-w-0 space-y-3">
       <div className="flex items-start gap-2">
@@ -364,6 +397,9 @@ function PainelParcelas({ parc, parcelas, aoFechar, aoAbrir, aoCancelar }: { par
       </ul>
       <p className="text-xs text-gray-500">Clique numa parcela para ver a guia, informar ou confirmar o pagamento.</p>
       {parc.situacao === 'em_andamento' && <button type="button" onClick={aoCancelar} className={`${classeBotaoSecundario} w-full !text-red-700`}><Ban className="w-4 h-4" aria-hidden="true" />Cancelar parcelamento</button>}
+      {Number(parc.pagas) === 0
+        ? <button type="button" onClick={aoExcluir} className={`${classeBotaoSecundario} w-full !text-red-700`}><Trash2 className="w-4 h-4" aria-hidden="true" />Excluir parcelamento</button>
+        : <p className="text-xs text-gray-500">Para excluir o parcelamento, estorne antes os pagamentos das parcelas pagas no Financeiro.</p>}
     </aside>
   );
 }
@@ -639,6 +675,26 @@ function ModalParcelamento({ idEmpresa, hoje, aoFechar, aoSalvar }: { idEmpresa:
           </div>
         )}
       </div>
+    </Modal>
+  );
+}
+
+// Confirmação de exclusão (sem motivo): o banco confere a permissão e a situação; erro volta como mensagem
+function ModalExcluir({ titulo, texto, botao, aoFechar, aoConfirmar }: { titulo: string; texto: string; botao: string; aoFechar: () => void; aoConfirmar: () => Promise<string | null> }) {
+  const [erro, setErro] = useState<string | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+  const confirmar = async () => {
+    if (ocupado) return;
+    setOcupado(true); setErro(null);
+    const e = await aoConfirmar();
+    if (e) { setErro(e); setOcupado(false); }
+  };
+  return (
+    <Modal aberto aoFechar={() => { if (!ocupado) aoFechar(); }} titulo={titulo}
+      rodape={<><button type="button" className={classeBotaoSecundario} disabled={ocupado} onClick={aoFechar}>Cancelar</button>
+        <button type="button" className={classeBotaoPerigo} disabled={ocupado} onClick={confirmar}>{ocupado ? 'Excluindo...' : botao}</button></>}>
+      <p className="text-sm text-gray-700">{texto}</p>
+      {erro && <p role="alert" className="mt-3 text-sm text-red-700">{erro}</p>}
     </Modal>
   );
 }

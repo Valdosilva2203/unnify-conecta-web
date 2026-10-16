@@ -10,7 +10,7 @@ import { carregarPreferenciasExibicao } from '@/lib/conta';
 const AcessoAdmin = createContext(false);
 export const useAcessoAdminConfirmado = () => useContext(AcessoAdmin);
 
-// Camada de interface: impede que não-admins vejam o painel.
+// Camada de interface (a 1ª barreira é o middleware no servidor): impede que não-admins vejam o painel.
 // A proteção dos dados em si é feita no banco (RLS + funções is_admin/is_admin_master).
 export function GuardaAdmin({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -49,18 +49,14 @@ export function GuardaAdmin({ children }: { children: ReactNode }) {
     };
   }, [router]);
 
-  return (
-    <>
-      {!liberado && (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status">
-          <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin" />
-          <span className="sr-only">Verificando acesso...</span>
-        </div>
-      )}
-      {/* Mantido montado (oculto e inerte) para a validação de navegação do Next; só aparece após a verificação */}
-      <div hidden={!liberado} inert={!liberado}>
-        <AcessoAdmin.Provider value={liberado}>{children}</AcessoAdmin.Provider>
+  // As páginas só montam depois da confirmação do papel: nenhuma consulta administrativa sai antes disso
+  if (!liberado) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status">
+        <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin" />
+        <span className="sr-only">Verificando acesso...</span>
       </div>
-    </>
-  );
+    );
+  }
+  return <AcessoAdmin.Provider value={liberado}>{children}</AcessoAdmin.Provider>;
 }

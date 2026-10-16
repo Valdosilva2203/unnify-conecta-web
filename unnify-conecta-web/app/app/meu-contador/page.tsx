@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, ClipboardList, FileText, History, Mail, MessageCircle, MoreHorizontal, Phone, UsersRound } from 'lucide-react';
+import { Briefcase, CheckCircle2, ClipboardList, FileText, History, Mail, MessageCircle, MoreHorizontal, Phone, UsersRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useEmpresaAtual } from '@/components/app/LayoutEmpresa';
 import { FUNCOES, PERMISSOES, formatarTelefone, iniciaisDe, mensagemDeErro, type Funcao, type Permissao } from '@/lib/contabil';
@@ -75,7 +75,7 @@ export default function MeuContadorPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <CabecalhoPagina titulo="Meu Contador" subtitulo="Gerencie seu relacionamento contábil." aviso={aviso} aoFecharAviso={() => setAviso(null)} />
+      <CabecalhoPagina icone={Briefcase} titulo="Meu Contador" subtitulo="Gerencie seu relacionamento contábil." aviso={aviso} aoFecharAviso={() => setAviso(null)} />
 
       {vinculo.carregando ? (
         <div role="status" aria-label="Carregando" className="h-44 rounded-2xl bg-white border border-gray-200 animate-pulse" />

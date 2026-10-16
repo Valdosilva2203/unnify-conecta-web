@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, DollarSign, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useEmpresaAtual } from '@/components/app/LayoutEmpresa';
 import { hojeBrasil, inicioDoMes, rotuloMes, somarMeses, type Categoria, type ContaFinanceira, type Lancamento, type TipoLancamento } from '@/lib/financeiro';
@@ -13,6 +13,7 @@ import { FormLancamento } from '@/components/financeiro/FormLancamento';
 import { ContasBancos } from '@/components/financeiro/ContasBancos';
 import { Parcelamentos } from '@/components/financeiro/Parcelamentos';
 import { GastosFixos } from '@/components/financeiro/GastosFixos';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 type Aba = 'visao' | 'lancamentos' | 'pagar' | 'receber' | 'gastos-fixos' | 'parcelamentos' | 'contas' | 'categorias';
 const ABAS: { id: Aba; titulo: string }[] = [
@@ -120,11 +121,8 @@ export default function FinanceiroPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Financeiro</h1>
-          <p className="text-gray-600 mt-1">Controle as finanças da sua empresa de forma simples e organizada.</p>
-        </div>
+      <CabecalhoModulo icone={DollarSign} titulo="Financeiro" descricao="Controle as finanças da sua empresa de forma simples e organizada."
+        acoes={<>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex items-center gap-2" role="group" aria-label="Período">
             <button type="button" onClick={() => setPeriodo((p) => somarMeses(p, -1))} aria-label="Mês anterior" className="w-11 h-11 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
@@ -162,17 +160,17 @@ export default function FinanceiroPage() {
             )}
           </div>
         </div>
-      </div>
+        </>} />
 
       <nav aria-label="Seções do financeiro" className="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto">
-        <div className="flex gap-1 border-b border-gray-200 min-w-max">
+        <div className="flex gap-2 min-w-max pb-1">
           {ABAS.map((a) => (
             <button
               key={a.id}
               type="button"
               onClick={() => irPara(a.id)}
               aria-current={aba === a.id ? 'page' : undefined}
-              className={`min-h-11 px-4 text-sm font-semibold border-b-2 -mb-px whitespace-nowrap ${aba === a.id ? 'border-orange-600 text-orange-600' : 'border-transparent text-gray-600 hover:text-gray-900'}`}
+              className={classePilula(aba === a.id)}
             >
               {a.titulo}
             </button>

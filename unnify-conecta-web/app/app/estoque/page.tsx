@@ -13,6 +13,7 @@ import { Paginacao, Selo } from '@/components/admin/tabela';
 import { Indicador } from '@/components/financeiro/Indicador';
 import { classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { ModalMovimentacao, ModalProduto, type TipoMovimentacao } from '@/components/estoque/Modais';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 type Lista = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string; ausente: boolean } | { tipo: 'ok'; linhas: Produto[]; total: number };
 const filtro = 'min-h-11 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500';
@@ -68,14 +69,10 @@ export default function EstoquePage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><Box className="w-7 h-7" aria-hidden="true" /></span>
-          <div className="min-w-0"><h1 className="text-2xl sm:text-3xl font-black text-gray-900">Estoque</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Produtos, serviços, saldos e movimentações.</p></div>
-        </div>
+      <CabecalhoModulo icone={Box} titulo="Estoque" descricao="Produtos, serviços, saldos e movimentações."
+        acoes={<>
         {podeOperar && <button type="button" className={`${classeBotaoPrimario} whitespace-nowrap self-start xl:self-auto`} onClick={() => setModal({ p: null })}><Plus className="w-4 h-4" aria-hidden="true" />Novo produto ou serviço</button>}
-      </div>
+        </>} />
 
       {aviso && <div role="status" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex justify-between gap-3"><span>{aviso}</span><button type="button" className="underline" onClick={() => setAviso(null)}>Fechar</button></div>}
       {lista.tipo === 'erro' && (lista.ausente
@@ -95,7 +92,7 @@ export default function EstoquePage() {
           <div role="tablist" aria-label="Situação do estoque" className="flex flex-wrap gap-1">
             {([['', 'Todos'], ['em_estoque', 'Em estoque'], ['estoque_baixo', 'Estoque baixo'], ['sem_estoque', 'Sem estoque'], ['servico', 'Serviços']] as const).map(([v, rot]) => (
               <button key={v} type="button" role="tab" aria-selected={aba === v} onClick={() => { setAba(v); setPagina(1); }}
-                className={`min-h-11 px-3 sm:px-4 rounded-lg text-sm font-semibold ${aba === v ? 'bg-orange-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>{rot}</button>
+                className={classePilula(aba === v)}>{rot}</button>
             ))}
           </div>
           <div className="flex flex-col sm:flex-row gap-2">

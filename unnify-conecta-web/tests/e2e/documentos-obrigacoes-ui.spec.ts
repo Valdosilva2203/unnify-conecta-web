@@ -84,7 +84,8 @@ test('empresário: biblioteca, envio validado no servidor, edição, compartilha
   });
   const page = await abrir(ctx, '/app/documentos', 'Meus documentos');
   // Menu: item habilitado
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Meus documentos' })).toHaveAttribute('href', '/app/documentos');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Documentos', exact: true })).toHaveAttribute('href', '/app/documentos');
+  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Contabilidade e Obrigações' })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByTestId('documento-Contrato social')).toBeVisible();
   await expect(page.getByTestId('documento-Contrato social')).toContainText('Compartilhado com o contador');
   await expect(page.getByRole('row').filter({ hasText: 'Balancete agosto' })).toContainText('Carlos Contador');
@@ -176,7 +177,7 @@ test('obrigações: indicadores, criação com responsável, cancelamento com mo
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const registro = await sessaoSimulada(ctx, rotas('empresa', (c) => (['rpc/salvar_obrigacao', 'rpc/alterar_situacao_obrigacao', 'rpc/criar_tarefa_da_obrigacao'].includes(c) ? { status: 200, corpo: 'ok' } : undefined)));
   const page = await abrir(ctx, '/app/obrigacoes', 'Obrigações');
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Obrigações' })).toHaveAttribute('href', '/app/obrigacoes');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Obrigações' })).toHaveAttribute('href', '/app/obrigacoes');
   await expect(page.getByRole('region', { name: 'Atrasadas', exact: true })).toContainText('1', { timeout: 15000 }); // espera o resumo carregar
   const atrasada = page.getByRole('row').filter({ hasText: 'Entrega da DCTFWeb' });
   await expect(atrasada).toContainText('Atrasada');

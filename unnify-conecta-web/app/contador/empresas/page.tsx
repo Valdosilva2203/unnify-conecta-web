@@ -70,8 +70,12 @@ export default function EmpresasDoContadorPage() {
   const [vinculando, setVinculando] = useState(false);
   const [versaoConvites, setVersaoConvites] = useState(0);
 
+  // Dependências por id (não pelo objeto do contexto): o layout pode recriar o objeto sem mudar o contador,
+  // e isso não deve recarregar a lista nem desmontar a linha/link em uso
+  const idContador = contador?.id ?? null;
+  const idEscritorio = contador?.escritorio?.id ?? null;
   const carregar = useCallback(async () => {
-    if (!contador) return;
+    if (!idContador) return;
     const atual = ++requisicao.current;
     setCarregando(true);
     const supabase = createClient();
@@ -82,8 +86,8 @@ export default function EmpresasDoContadorPage() {
       p_deslocamento: (pagina - 1) * porPagina,
     };
     const { data, error } =
-      aba === 'escritorio' && contador.escritorio
-        ? await supabase.rpc('empresas_do_escritorio', { p_id_escritorio: contador.escritorio.id, ...filtros })
+      aba === 'escritorio' && idEscritorio
+        ? await supabase.rpc('empresas_do_escritorio', { p_id_escritorio: idEscritorio, ...filtros })
         : await supabase.rpc('empresas_do_contador', filtros);
     if (atual !== requisicao.current) return;
     if (error) {
@@ -94,7 +98,7 @@ export default function EmpresasDoContadorPage() {
       setTotal((data?.[0] as LinhaVinculo | undefined)?.total ?? 0);
     }
     setCarregando(false);
-  }, [contador, aba, busca, status, pagina, porPagina]);
+  }, [idContador, idEscritorio, aba, busca, status, pagina, porPagina]);
 
   useEffect(() => {
     const t = setTimeout(carregar, 250);
@@ -214,7 +218,7 @@ export default function EmpresasDoContadorPage() {
         </BarraFiltros>
 
         <EstadoTabela
-          carregando={carregando}
+          carregando={carregando && linhas.length === 0}
           erro={erro}
           vazio={linhas.length === 0}
           mensagemVazio={

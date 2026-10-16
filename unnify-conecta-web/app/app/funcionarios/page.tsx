@@ -7,12 +7,15 @@ import { useEmpresaAtual } from '@/components/app/LayoutEmpresa';
 import { mensagemDeErro } from '@/lib/contabil';
 import { formatarData, formatarMoeda, hojeBrasil, inicioDoMes, rotuloMes, rotuloMesCurto, somarMeses, type ContaFinanceira } from '@/lib/financeiro';
 import { recursoAusente } from '@/lib/erros-banco';
-import { SITUACOES, VINCULOS, iniciais, type Ajuste, type EventoHistorico, type Funcionario, type LinhaFolha } from '@/lib/funcionarios';
+import { SITUACOES, VINCULOS, calculoDoAjuste, iniciais, type Ajuste, type EventoHistorico, type Funcionario, type LinhaFolha } from '@/lib/funcionarios';
 import { Selo } from '@/components/admin/tabela';
 import { Indicador } from '@/components/financeiro/Indicador';
 import { GraficoRosca } from '@/components/financeiro/GraficoRosca';
 import { classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 import { ModalAjuste, ModalDesligar, ModalFuncionario, ModalPagamentoFolha } from '@/components/funcionarios/Modais';
+import { NaoAplicarRecorrencia, SecaoRecorrentes } from '@/components/funcionarios/Recorrentes';
+import { PortalJornada } from '@/components/funcionarios/PortalJornada';
+import { CabecalhoModulo, classePilula } from '@/components/navegacao/NavegacaoModulos';
 
 type Estado = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string; ausente: boolean } | { tipo: 'ok'; linhas: LinhaFolha[] };
 type Aba = 'colaboradores' | 'lancamentos' | 'historico';
@@ -63,7 +66,7 @@ export default function FuncionariosPage() {
     setEvolucao((ev.data ?? []) as { competencia: string; previsto: number; pago: number }[]);
     setContas((ct.data ?? []) as ContaFinanceira[]);
     const ids = linhas.map((l) => l.id_folha);
-    const aj = ids.length ? await supabase.from('ajustes_folha').select('id, id_folha, tipo, descricao, valor, criado_em').in('id_folha', ids).order('criado_em') : { data: [] };
+    const aj = ids.length ? await supabase.from('ajustes_folha').select('id, id_folha, tipo, descricao, valor, criado_em, modalidade, percentual, valor_base, id_recorrencia').in('id_folha', ids).order('criado_em') : { data: [] };
     setAjustes((aj.data ?? []) as Ajuste[]);
     setEstado({ tipo: 'ok', linhas });
     setSelecionado((s) => (s && linhas.some((l) => l.id_funcionario === s) ? s : linhas[0]?.id_funcionario ?? null));
@@ -108,14 +111,8 @@ export default function FuncionariosPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-2xl bg-orange-100 text-orange-600 inline-flex items-center justify-center"><Users className="w-7 h-7" aria-hidden="true" /></span>
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Funcionários</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Gerencie seus colaboradores, salários, pagamentos e histórico.</p>
-          </div>
-        </div>
+      <CabecalhoModulo icone={Users} titulo="Funcionários" descricao="Gerencie seus colaboradores, salários, pagamentos e histórico."
+        acoes={<>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-1">
             <CalendarDays className="w-4 h-4 text-gray-500 ml-2" aria-hidden="true" />
@@ -125,7 +122,7 @@ export default function FuncionariosPage() {
           </div>
           <button type="button" className={`${classeBotaoPrimario} whitespace-nowrap`} onClick={() => setEditando({ f: null })}><Plus className="w-4 h-4" aria-hidden="true" />Novo funcionário</button>
         </div>
-      </div>
+        </>} />
 
       {aviso && <div role="status" className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex justify-between gap-3"><span>{aviso}</span><button type="button" className="underline" onClick={() => setAviso(null)}>Fechar</button></div>}
       {erroAcao && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{erroAcao}</p>}
@@ -146,7 +143,7 @@ export default function FuncionariosPage() {
           <div role="tablist" aria-label="Seções" className="flex flex-wrap gap-1">
             {([['colaboradores', 'Colaboradores'], ['lancamentos', 'Lançamentos do mês'], ['historico', 'Histórico']] as const).map(([a, r]) => (
               <button key={a} type="button" role="tab" aria-selected={aba === a} onClick={() => setAba(a)}
-                className={`min-h-11 px-3 sm:px-4 rounded-lg text-sm font-semibold ${aba === a ? 'bg-orange-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>{r}</button>
+                className={classePilula(aba === a)}>{r}</button>
             ))}
           </div>
 
@@ -204,9 +201,9 @@ export default function FuncionariosPage() {
                   const l = linhas.find((x) => x.id_folha === a.id_folha);
                   return (
                     <li key={a.id} className="py-2.5 flex items-center gap-3 text-sm">
-                      <span className="flex-1 min-w-0"><span className="block font-semibold text-gray-900">{a.descricao}</span><span className="block text-xs text-gray-500">{l?.nome} · {formatarData(a.criado_em.slice(0, 10))}</span></span>
+                      <span className="flex-1 min-w-0"><span className="block font-semibold text-gray-900">{a.descricao}{a.id_recorrencia && <span className="ml-1.5 align-middle text-[10px] font-bold uppercase bg-orange-50 text-orange-700 rounded px-1.5 py-0.5">Recorrente</span>}</span><span className="block text-xs text-gray-500">{l?.nome} · {formatarData(a.criado_em.slice(0, 10))}{calculoDoAjuste(a, formatarMoeda) ? ` · ${calculoDoAjuste(a, formatarMoeda)}` : ''}</span></span>
                       <span className={`font-semibold whitespace-nowrap ${a.tipo === 'adicional' ? 'text-green-700' : 'text-red-700'}`}>{a.tipo === 'adicional' ? '+' : '−'} {formatarMoeda(a.valor)}</span>
-                      {l && l.situacao !== 'cancelada' && <button type="button" onClick={() => removerAjuste(a.id)} aria-label={`Remover ${a.descricao}`} className="w-11 h-11 inline-flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>}
+                      {l && l.situacao !== 'cancelada' && !a.id_recorrencia && <button type="button" onClick={() => removerAjuste(a.id)} aria-label={`Remover ${a.descricao}`} className="w-11 h-11 inline-flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>}
                     </li>
                   );
                 })}
@@ -229,7 +226,7 @@ export default function FuncionariosPage() {
 
         <PainelColaborador linha={linhaSel} funcionario={funcSel} ajustes={ajustes.filter((a) => a.id_folha === linhaSel?.id_folha)} competencia={competencia} versao={versao}
           aoEditar={() => funcSel && setEditando({ f: funcSel })} aoPagar={() => linhaSel && setPagando(linhaSel)} aoAjustar={() => linhaSel && setAjustando(linhaSel)}
-          aoDesligar={() => funcSel && setDesligando(funcSel)} aoReativar={() => funcSel && reativar(funcSel)} />
+          aoDesligar={() => funcSel && setDesligando(funcSel)} aoReativar={() => funcSel && reativar(funcSel)} aoRemoverAjuste={removerAjuste} aoAlterado={alterado} />
       </div>
 
       {ok && linhas.length > 0 && (
@@ -276,11 +273,12 @@ function BarrasFolha({ dados, competencia }: { dados: { competencia: string; pre
   );
 }
 
-function PainelColaborador({ linha, funcionario: f, ajustes, competencia, versao, aoEditar, aoPagar, aoAjustar, aoDesligar, aoReativar }: {
+function PainelColaborador({ linha, funcionario: f, ajustes, competencia, versao, aoEditar, aoPagar, aoAjustar, aoDesligar, aoReativar, aoRemoverAjuste, aoAlterado }: {
   linha: LinhaFolha | null; funcionario: Funcionario | null; ajustes: Ajuste[]; competencia: string; versao: number;
-  aoEditar: () => void; aoPagar: () => void; aoAjustar: () => void; aoDesligar: () => void; aoReativar: () => void;
+  aoEditar: () => void; aoPagar: () => void; aoAjustar: () => void; aoDesligar: () => void; aoReativar: () => void; aoRemoverAjuste: (id: string) => Promise<void>; aoAlterado: (m: string) => void;
 }) {
   const [aba, setAba] = useState<'geral' | 'lancamentos' | 'historico'>('geral');
+  const [excluindo, setExcluindo] = useState<string | null>(null);
   const [historico, setHistorico] = useState<EventoHistorico[] | null>(null);
   useEffect(() => {
     if (!f || aba !== 'historico') return;
@@ -319,14 +317,40 @@ function PainelColaborador({ linha, funcionario: f, ajustes, competencia, versao
             <div className="flex justify-between"><span className="text-gray-600">Pendente</span><span className="text-orange-700 font-semibold">{formatarMoeda(linha.pendente)}</span></div>
             <div className="flex justify-between text-xs text-gray-500"><span>Vencimento</span><span>{formatarData(linha.vencimento)}</span></div>
           </div>
+          <PortalJornada funcionario={f} versao={versao} aoAlterado={aoAlterado} />
         </>
       )}
       {aba === 'lancamentos' && (
         <div className="space-y-2">
           {ajustes.length === 0 ? <p className="text-sm text-gray-500">Sem adicionais ou descontos nesta competência.</p> : (
-            <ul className="divide-y divide-gray-100 text-sm">{ajustes.map((a) => <li key={a.id} className="py-2 flex justify-between gap-2"><span>{a.descricao}</span><span className={a.tipo === 'adicional' ? 'text-green-700' : 'text-red-700'}>{a.tipo === 'adicional' ? '+' : '−'} {formatarMoeda(a.valor)}</span></li>)}</ul>
+            <ul className="divide-y divide-gray-100 text-sm">{ajustes.map((a) => (
+              <li key={a.id} className="py-2" data-testid="ajuste-colaborador">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0">{a.descricao}{a.id_recorrencia && <span className="ml-1.5 align-middle text-[10px] font-bold uppercase bg-orange-50 text-orange-700 rounded px-1.5 py-0.5">Recorrente</span>}{calculoDoAjuste(a, formatarMoeda) && <span className="block text-xs text-gray-500">{calculoDoAjuste(a, formatarMoeda)}</span>}</span>
+                  <span className="flex items-center gap-1 shrink-0">
+                    <span className={a.tipo === 'adicional' ? 'text-green-700' : 'text-red-700'}>{a.tipo === 'adicional' ? '+' : '−'} {formatarMoeda(a.valor)}</span>
+                    {linha.situacao !== 'cancelada' && excluindo !== a.id && (
+                      <button type="button" onClick={() => setExcluindo(a.id)} aria-label={a.id_recorrencia ? `Não aplicar ${a.descricao} nesta competência` : `Excluir ${a.descricao}`} className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600">
+                        <Trash2 className="w-4 h-4" aria-hidden="true" /></button>
+                    )}
+                  </span>
+                </div>
+                {excluindo === a.id && a.id_recorrencia && (
+                  <NaoAplicarRecorrencia idRecorrencia={a.id_recorrencia} competencia={competencia} descricao={a.descricao} aoCancelar={() => setExcluindo(null)}
+                    aoConcluir={(m) => { setExcluindo(null); aoAlterado(m); }} />
+                )}
+                {excluindo === a.id && !a.id_recorrencia && (
+                  <div className="mt-2 flex items-center justify-end gap-2 text-xs">
+                    <span className="text-gray-600 mr-auto">Excluir este lançamento?</span>
+                    <button type="button" onClick={() => setExcluindo(null)} className="min-h-9 px-3 rounded-lg border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="button" onClick={async () => { await aoRemoverAjuste(a.id); setExcluindo(null); }} className="min-h-9 px-3 rounded-lg bg-red-600 font-semibold text-white hover:bg-red-700">Excluir</button>
+                  </div>
+                )}
+              </li>
+            ))}</ul>
           )}
           {aberto && <button type="button" onClick={aoAjustar} className={`${classeBotaoSecundario} w-full`}><Plus className="w-4 h-4" aria-hidden="true" />Adicional ou desconto</button>}
+          <SecaoRecorrentes funcionario={f} linha={linha} competencia={competencia} versao={versao} aoAlterar={aoAlterado} />
         </div>
       )}
       {aba === 'historico' && (

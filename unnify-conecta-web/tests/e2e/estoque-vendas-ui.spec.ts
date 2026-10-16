@@ -75,9 +75,10 @@ test('Estoque: indicadores, lista com filtros no servidor, perfil do item e hist
   const ctx = await browser.newContext({ viewport: { width: 1536, height: 1000 } });
   const registro = await sessaoSimulada(ctx, rotas());
   const page = await abrir(ctx, '/app/estoque', 'Estoque');
-  const menu = page.getByRole('navigation', { name: 'Menu principal' });
-  await expect(menu.getByRole('link', { name: 'Estoque' })).toHaveAttribute('href', '/app/estoque');
-  await expect(menu.getByRole('link', { name: 'Vendas' })).toHaveAttribute('href', '/app/vendas');
+  const menu = page.getByRole('navigation', { name: 'Módulos do departamento' }); // Compras e Estoque
+  await expect(menu.getByRole('link', { name: 'Estoque' })).toHaveAttribute('aria-current', 'page');
+  await expect(menu.getByRole('link', { name: 'Compras' })).toHaveAttribute('href', '/app/compras');
+  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Comercial' })).toHaveAttribute('href', '/app/clientes');
   await expect.poll(() => texto(page, 'Itens cadastrados')).toContain('128');
   expect(await texto(page, 'Itens cadastrados')).toContain('110 produtos · 18 serviços');
   expect(await texto(page, 'Estoque baixo')).toContain('12');

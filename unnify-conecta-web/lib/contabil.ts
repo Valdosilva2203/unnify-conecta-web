@@ -50,6 +50,7 @@ export const PERMISSOES = {
   gerenciar_impostos: 'Gerenciar impostos e parcelamentos',
   gerenciar_agenda: 'Agenda compartilhada (compromissos com a empresa)',
   gerenciar_certidoes: 'Gerenciar certidões',
+  processar_folha: 'Processar folha de pagamento (receber, corrigir e devolver)',
 } as const;
 export type Permissao = keyof typeof PERMISSOES;
 

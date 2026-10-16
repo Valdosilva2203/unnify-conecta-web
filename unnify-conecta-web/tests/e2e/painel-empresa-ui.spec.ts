@@ -32,9 +32,19 @@ const RESUMO = {
   serie: [0, 0, 33000, 0, 37000, 32800].map((r, i) => ({ mes: mes(5 - i), receitas: r, despesas: r ? Math.round(r / 2) : 0 })),
 };
 
-type Cenario = { resumo?: 'ok' | 'erro' | 'sem030' | 'vazio'; rpcEdicao?: 'ok' | 'inexistente'; };
+const tarefa = (titulo: string, extra: Record<string, unknown> = {}) => ({ id: `t-${titulo}`, titulo, descricao: null, prioridade: 'media', status: 'pendente', atrasada: false, prazo: null, hora: null, id_categoria: null,
+  categoria_nome: null, categoria_cor: null, categoria_icone: null, id_responsavel: null, responsavel_nome: null, criado_por: null, arquivada: false, qtd_comentarios: 0, qtd_anexos: 0,
+  checklist_total: 0, checklist_feitos: 0, total: 3, ...extra });
+const dia = (d: number) => new Date(Date.parse(`${new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date())}T12:00:00Z`) + d * 86400000).toISOString().slice(0, 10);
+const TAREFAS = [
+  tarefa('Enviar extrato ao contador', { atrasada: true, prazo: dia(-2), prioridade: 'alta', responsavel_nome: 'Ana Souza' }),
+  tarefa('Conferir notas do mês', { prazo: dia(0), hora: '14:30:00' }),
+  tarefa('Renovar certificado digital', { prazo: dia(5), prioridade: 'baixa' }),
+];
 
-async function prepararSessao(ctx: BrowserContext, cenario: Cenario, registro: { escritas: string[]; empresasConsultadas: string[]; edicao?: Record<string, unknown> }) {
+type Cenario = { resumo?: 'ok' | 'erro' | 'sem030' | 'vazio'; rpcEdicao?: 'ok' | 'inexistente'; tarefas?: 'ok' | 'vazio' | 'erro'; };
+
+async function prepararSessao(ctx: BrowserContext, cenario: Cenario, registro: { escritas: string[]; empresasConsultadas: string[]; edicao?: Record<string, unknown>; tarefas?: Record<string, unknown> }) {
   const agora = Math.floor(Date.now() / 1000);
   const jwt = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: usuario.id, role: 'authenticated', aal: 'aal1', amr: [{ method: 'password', timestamp: agora }], exp: agora + 3600, iat: agora })}.${b64('assinatura-falsa')}`;
   const sessao = { access_token: jwt, token_type: 'bearer', expires_in: 3600, expires_at: agora + 3600, refresh_token: 'x', user: usuario };
@@ -50,6 +60,11 @@ async function prepararSessao(ctx: BrowserContext, cenario: Cenario, registro: {
       if (cenario.resumo === 'sem030') { const { a_receber_30_valor: _v, a_receber_30_qtd: _q, ...r } = RESUMO; return json(r); }
       if (cenario.resumo === 'vazio') return json({ ...RESUMO, receitas_mes: 0, despesas_mes: 0, receitas_mes_anterior: 0, despesas_mes_anterior: 0, serie: RESUMO.serie.map((s) => ({ ...s, receitas: 0, despesas: 0 })) });
       return json(RESUMO);
+    }
+    if (url.pathname.endsWith('/rpc/listar_tarefas')) {
+      registro.tarefas = JSON.parse(req.postData() ?? '{}');
+      if (cenario.tarefas === 'erro') return json({ message: 'falha simulada', code: 'XX000' }, 500);
+      return json(cenario.tarefas === 'vazio' ? [] : TAREFAS);
     }
     if (url.pathname.endsWith('/rpc/atualizar_dados_empresa')) {
       registro.edicao = JSON.parse(req.postData() ?? '{}');
@@ -83,7 +98,7 @@ test.describe.configure({ mode: 'serial' });
 test.setTimeout(3 * 60 * 1000);
 
 test('indicadores, gráfico, listas e dados vêm da API (valores sem invenção); troca de empresa', async ({ browser }) => {
-  const registro = { escritas: [] as string[], empresasConsultadas: [] as string[] };
+  const registro: { escritas: string[]; empresasConsultadas: string[]; tarefas?: Record<string, unknown> } = { escritas: [], empresasConsultadas: [] };
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   await prepararSessao(ctx, { resumo: 'ok' }, registro);
   const page = await ctx.newPage();
@@ -116,7 +131,17 @@ test('indicadores, gráfico, listas e dados vêm da API (valores sem invenção)
   await expect(page.getByTestId('conta-Cliente XYZ')).toContainText('Vence em 3 dias');
   await expect(page.getByRole('link', { name: 'Ver todas →' }).first()).toHaveAttribute('href', '/app/financeiro#pagar');
   await expect(page.getByRole('link', { name: 'Ver todas →' }).nth(1)).toHaveAttribute('href', '/app/financeiro#receber');
-  await expect(page.getByLabel('Dados cadastrais')).toContainText('(11) 93456-7890');
+  // O card ao lado das contas agora mostra as TAREFAS em aberto (os dados da empresa seguem editáveis pelo botão do topo)
+  const cartaoTarefas = page.getByRole('region', { name: 'Tarefas', exact: true });
+  await expect(cartaoTarefas.getByTestId('tarefa-Enviar extrato ao contador')).toContainText('Atrasada há 2 dias');
+  await expect(cartaoTarefas.getByTestId('tarefa-Enviar extrato ao contador')).toContainText('Ana Souza');
+  await expect(cartaoTarefas.getByTestId('tarefa-Enviar extrato ao contador')).toContainText('Alta');
+  await expect(cartaoTarefas.getByTestId('tarefa-Conferir notas do mês')).toContainText('Vence hoje às 14:30');
+  await expect(cartaoTarefas.getByTestId('tarefa-Renovar certificado digital')).toContainText('Vence em 5 dias');
+  await expect(cartaoTarefas.getByRole('link', { name: 'Ver todas →' })).toHaveAttribute('href', '/app/tarefas');
+  await expect(page.getByLabel('Dados cadastrais')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Editar dados da empresa' })).toBeVisible();
+  expect(registro.tarefas).toEqual({ p_contexto: 'empresa', p_id_empresa: EMPRESAS[0].id, p_visao: 'todas', p_limite: 4 });
 
   // Troca de empresa: só entre as empresas da lista; os dados passam a ser consultados para a nova empresa
   await page.getByLabel('Empresa selecionada').selectOption(EMPRESAS[1].id);
@@ -184,7 +209,7 @@ test('estados: erro não vira R$ 0,00; sem movimentação mostra vazio; sem migr
     await prepararSessao(ctx, { resumo: cenario }, { escritas: [], empresasConsultadas: [] });
     const page = await ctx.newPage();
     await page.goto(`${BASE}/app`);
-    await expect(page.getByText('Dados da empresa', { exact: true })).toBeVisible({ timeout: 90000 });
+    await expect(page.getByRole('heading', { name: 'Tarefas', exact: true })).toBeVisible({ timeout: 90000 });
     await verificar(page);
     await ctx.close();
   }
@@ -195,12 +220,55 @@ test('layout do painel sem rolagem lateral de 320 a 1920px', async ({ browser })
   await prepararSessao(ctx, { resumo: 'ok' }, { escritas: [], empresasConsultadas: [] });
   const page = await ctx.newPage();
   await page.goto(`${BASE}/app`);
-  await expect(page.getByText('Dados da empresa', { exact: true })).toBeVisible({ timeout: 90000 });
+  await expect(page.getByRole('heading', { name: 'Tarefas', exact: true })).toBeVisible({ timeout: 90000 });
   for (const largura of LARGURAS) {
     await page.setViewportSize({ width: largura, height: 900 });
     await page.waitForTimeout(200);
     const excesso = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(excesso, `painel @${largura}px`).toBeLessThanOrEqual(1);
   }
+  await ctx.close();
+});
+
+test('card de Tarefas: vazio e erro de carregamento com nova tentativa', async ({ browser }) => {
+  for (const [cenario, esperado] of [['vazio', 'Nenhuma tarefa em aberto.'], ['erro', 'Não foi possível carregar as tarefas.']] as const) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await prepararSessao(ctx, { resumo: 'ok', tarefas: cenario }, { escritas: [], empresasConsultadas: [] });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/app`);
+    await expect(page.getByRole('region', { name: 'Tarefas', exact: true })).toContainText(esperado, { timeout: 90000 });
+    await ctx.close();
+  }
+});
+
+test('menu do usuário: "Dados da empresa" abre o formulário de dados (já no painel e vindo pelo endereço)', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const registro: { escritas: string[]; empresasConsultadas: string[] } = { escritas: [], empresasConsultadas: [] };
+  await prepararSessao(ctx, { resumo: 'ok', rpcEdicao: 'ok' }, registro);
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/app`);
+  await expect(page.getByRole('heading', { name: 'Tarefas', exact: true })).toBeVisible({ timeout: 90000 });
+  await page.getByRole('button', { name: /Ana Souza/ }).click();
+  const item = page.getByRole('menuitem', { name: /Dados da empresa/ });
+  await expect(item).not.toHaveAttribute('aria-disabled', 'true'); // não é mais "Em breve"
+  await expect(page.getByRole('menu').getByText('Em breve')).toHaveCount(0); // nenhum item do menu está mais "Em breve"
+  await expect(page.getByRole('menuitem', { name: /Configurações/ })).not.toHaveAttribute('aria-disabled', 'true');
+  await item.click();
+  const d = page.getByRole('dialog', { name: 'Editar dados da empresa' });
+  await expect(d).toBeVisible({ timeout: 15000 });
+  await expect(d.getByText('ALFA COMERCIO LTDA')).toBeVisible();
+  await expect(d.getByLabel('Telefone')).toHaveValue('(11) 93456-7890'); // preenchido com os dados cadastrados
+  await d.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(d).toHaveCount(0);
+  // Configurações → seções Notificações/Preferências que já existem em Minha conta
+  await page.getByRole('button', { name: /Ana Souza/ }).click();
+  await page.getByRole('menuitem', { name: /Configurações/ }).click();
+  await expect(page).toHaveURL(/\/app\/minha-conta#notificacoes$/, { timeout: 30000 });
+  // vindo de outra página: o endereço abre o formulário e limpa o #
+  await page.goto('about:blank'); // carga completa, como ao chegar de outra página
+  await page.goto(`${BASE}/app#dados-empresa`);
+  await expect(page.getByRole('dialog', { name: 'Editar dados da empresa' })).toBeVisible({ timeout: 90000 });
+  expect(new URL(page.url()).hash).toBe('');
+  expect(registro.escritas).toEqual([]);
   await ctx.close();
 });

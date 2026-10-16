@@ -45,7 +45,7 @@ test('mês: eventos das 4 origens no dia, indicadores, filtros e acesso ao regis
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const registro = await sessaoSimulada(ctx, rotas());
   const page = await abrir(ctx);
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Agenda' })).toHaveAttribute('href', '/app/agenda');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Agenda' })).toHaveAttribute('href', '/app/agenda');
   await expect(page.getByTestId(`dia-${hoje}`)).toContainText('DAS Simples Nacional'); // dia inteiro primeiro; demais no "+2"
   await expect(page.getByTestId(`dia-${hoje}`)).toContainText('+2');
   const dia = page.getByTestId('itens-do-dia');

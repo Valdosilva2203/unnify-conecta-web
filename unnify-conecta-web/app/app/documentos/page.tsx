@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Folder } from 'lucide-react';
 import { useEmpresaAtual } from '@/components/app/LayoutEmpresa';
 import { createClient } from '@/lib/supabase/client';
 import { BibliotecaDocumentos } from '@/components/documentos/BibliotecaDocumentos';
@@ -32,7 +33,7 @@ export default function DocumentosEmpresaPage() {
 
   return (
     <div className="space-y-5 min-w-0">
-      <CabecalhoPagina titulo="Meus documentos" subtitulo="Guarde os documentos da empresa e responda ao que o seu contador pedir." aviso={aviso} aoFecharAviso={() => setAviso(null)} />
+      <CabecalhoPagina icone={Folder} titulo="Meus documentos" subtitulo="Guarde os documentos da empresa e responda ao que o seu contador pedir." aviso={aviso} aoFecharAviso={() => setAviso(null)} />
       <Abas rotulo="Seções de documentos" atual={aba} aoMudar={mudar} abas={[
         { id: 'documentos', titulo: 'Documentos' },
         { id: 'certidoes', titulo: 'Certidões' },

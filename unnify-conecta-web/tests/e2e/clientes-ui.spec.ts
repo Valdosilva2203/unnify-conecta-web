@@ -24,7 +24,7 @@ function rotas(extra?: Rotas): Rotas {
     if (c === 'usuarios_empresas') return { corpo: [{ empresas: EMPRESA }] };
     if (c === 'rpc/buscar_clientes') return { corpo: LINHAS };
     if (c === 'rpc/resumo_clientes') return { corpo: RESUMO };
-    if (c === 'clientes') return { corpo: u.searchParams.get('id') ? COMPLETO : LINHAS.map((l) => ({ id: l.id, nome: l.nome, tipo_pessoa: l.tipo_pessoa, criado_em: l.criado_em, status: l.status, nome_fantasia: l.nome_fantasia })) };
+    if (c === 'clientes') return { corpo: u.searchParams.get('id') ? COMPLETO : LINHAS.map((l) => ({ id: l.id, nome: l.nome, tipo_pessoa: l.tipo_pessoa, criado_em: l.criado_em, status: l.status, nome_fantasia: l.nome_fantasia, documento: l.documento })) };
     if (c === 'rpc/financeiro_cliente') return { corpo: MOVS };
     if (c === 'historico_clientes') return { corpo: [{ acao: 'editado', dados: { campos: ['contato', 'endereco'] }, criado_em: `${hoje}T12:00:00Z` }, { acao: 'criado', dados: { status: 'ativo' }, criado_em: '2024-02-10T12:00:00Z' }] };
     if (c === 'rpc/pode_gerenciar_clientes') return { corpo: true };
@@ -51,7 +51,7 @@ test('painel, lista paginada no servidor, abas/filtros e detalhes com financeiro
   const ctx = await browser.newContext({ viewport: { width: 1536, height: 1000 } });
   const registro = await sessaoSimulada(ctx, rotas());
   const page = await abrir(ctx);
-  await expect(page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Clientes' })).toHaveAttribute('href', '/app/clientes');
+  await expect(page.getByRole('navigation', { name: 'Módulos do departamento' }).getByRole('link', { name: 'Clientes' })).toHaveAttribute('href', '/app/clientes');
   await expect.poll(() => texto(page, 'A receber')).toContain('R$ 8.450,00');
   expect(await texto(page, 'Clientes cadastrados')).toContain('23');
   expect(await texto(page, 'Clientes ativos')).toContain('78% do total');
@@ -139,7 +139,23 @@ test('Financeiro: receita lançada com cliente vincula pelo banco', async ({ bro
   await form.locator('#lanc-descricao').fill('Consultoria');
   await form.locator('#lanc-valor').fill('120000');
   await form.locator('#lanc-categoria').selectOption('cat1');
-  await form.getByLabel(/Cliente cadastrado/).selectOption('c2');
+  // Cliente cadastrado é o PRIMEIRO campo (antes da Classificação) e a busca aceita nome ou CNPJ/CPF
+  const campos = await form.locator('input, select').evaluateAll((els) => els.map((e) => e.id).filter(Boolean));
+  expect(campos.indexOf('lanc-cliente-busca')).toBeLessThan(campos.indexOf('lanc-natureza'));
+  const busca = form.getByLabel(/Cliente cadastrado/);
+  await busca.fill('x');
+  await expect(form.getByRole('listbox')).toHaveCount(0); // menos de 2 letras não busca
+  await busca.fill('comercial');
+  await expect(form.getByRole('listbox', { name: 'Clientes encontrados' }).getByRole('option')).toHaveText([/Comercial Silva/]); // por nome (fantasia ou razão social)
+  await expect(form.getByRole('listbox', { name: 'Clientes encontrados' }).getByRole('option')).toContainText('CNPJ 11.222.333/0001-81');
+  await busca.fill('11.222.333');
+  await expect(form.getByRole('listbox', { name: 'Clientes encontrados' }).getByRole('option')).toHaveCount(1); // por CNPJ (com ou sem pontuação)
+  await busca.fill('00000000');
+  await expect(form.getByRole('listbox')).toContainText('Nenhum cliente encontrado.');
+  await busca.fill('maria');
+  await form.getByRole('listbox', { name: 'Clientes encontrados' }).getByRole('option', { name: /Maria Oliveira/ }).click();
+  await expect(form.getByTestId('cliente-escolhido')).toContainText('Maria Oliveira');
+  await expect(form.getByTestId('cliente-escolhido')).toContainText('CPF 529.982.247-25');
   await form.getByRole('button', { name: 'Salvar lançamento' }).click();
   await expect.poll(() => chamadas(registro, 'rpc/vincular_cliente_lancamento').length).toBe(1);
   expect(chamadas(registro, 'rpc/vincular_cliente_lancamento')[0].corpo).toMatchObject({ p_id_lancamento: 'l-novo', p_id_cliente: 'c2' });
@@ -176,5 +192,98 @@ test('estados: vazio, erro, banco sem a migration; layout de 320 a 1920px', asyn
     await page.waitForTimeout(200);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), `@${largura}`).toBeLessThanOrEqual(1);
   }
+  await ctx.close();
+});
+
+test('CEP preenche o endereço automaticamente (ViaCEP simulado), sem apagar o que foi digitado', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const consultas: string[] = [];
+  await ctx.route('https://viacep.com.br/ws/**', (route) => {
+    consultas.push(new URL(route.request().url()).pathname);
+    const cep = new URL(route.request().url()).pathname.split('/')[2];
+    const corpo = cep === '77960000' ? { cep: '77960-000', logradouro: 'Rua Rui Barbosa', bairro: 'Centro', localidade: 'Augustinópolis', uf: 'TO' }
+      : cep === '01310100' ? { cep: '01310-100', logradouro: 'Avenida Paulista', bairro: 'Bela Vista', localidade: 'São Paulo', uf: 'SP' } : { erro: 'true' };
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corpo) });
+  });
+  await sessaoSimulada(ctx, rotas());
+  const page = await abrir(ctx);
+  await page.getByRole('button', { name: 'Novo cliente' }).first().click();
+  const m = page.getByRole('dialog', { name: 'Novo cliente' });
+  await m.getByLabel('Bairro').fill('Bairro digitado');
+  await m.getByLabel('CEP').fill('77960000');
+  await expect(m.getByLabel('Logradouro')).toHaveValue('Rua Rui Barbosa');
+  await expect(m.getByLabel('Cidade')).toHaveValue('Augustinópolis');
+  await expect(m.getByLabel('UF')).toHaveValue('TO');
+  await expect(m.getByLabel('Bairro')).toHaveValue('Bairro digitado'); // não sobrescreve o que o usuário digitou
+  await expect(m.getByLabel('CEP')).toHaveValue('77960-000');
+  await expect(m.getByLabel('Número')).toBeFocused();
+  // Outro CEP troca o que veio do CEP anterior
+  await m.getByLabel('CEP').fill('01310100');
+  await expect(m.getByLabel('Logradouro')).toHaveValue('Avenida Paulista');
+  await expect(m.getByLabel('Cidade')).toHaveValue('São Paulo');
+  await expect(m.getByLabel('UF')).toHaveValue('SP');
+  // CEP inexistente: avisa e mantém os campos
+  await m.getByLabel('CEP').fill('99999999');
+  await expect(m.getByText('CEP não encontrado. Preencha o endereço manualmente.')).toBeVisible();
+  await expect(m.getByLabel('Logradouro')).toHaveValue('Avenida Paulista');
+  expect(consultas).toEqual(['/ws/77960000/json/', '/ws/01310100/json/', '/ws/99999999/json/']); // só o CEP sai do navegador
+  await ctx.close();
+});
+
+test('CNPJ preenche os dados da empresa automaticamente (BrasilAPI simulada), sem apagar o que foi digitado', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const consultas: string[] = [];
+  const viacep: string[] = [];
+  await ctx.route('https://viacep.com.br/ws/**', (route) => { viacep.push(route.request().url()); return route.fulfill({ status: 200, contentType: 'application/json', body: '{"erro":"true"}' }); });
+  await ctx.route('https://brasilapi.com.br/api/cnpj/v1/**', (route) => {
+    const cnpj = new URL(route.request().url()).pathname.split('/').pop();
+    consultas.push(cnpj ?? '');
+    if (cnpj === '11222333000181') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cnpj, razao_social: 'COMERCIAL EXEMPLO LTDA', nome_fantasia: 'EXEMPLO', ddd_telefone_1: '6334939002',
+      email: 'CONTATO@EXEMPLO.COM.BR', cep: '77960000', logradouro: 'RUA RUI BARBOSA', numero: '436', complemento: 'SALA 2', bairro: 'CENTRO', municipio: 'AUGUSTINOPOLIS', uf: 'TO' }) });
+    if (cnpj === '11444777000161') {
+      if (consultas.filter((c) => c === cnpj).length === 1) return route.fulfill({ status: 503, contentType: 'application/json', body: '{}' });
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cnpj, razao_social: 'SEGUNDA EMPRESA SA', cep: '77001000', logradouro: 'QUADRA 104', numero: 'S/N', bairro: 'PLANO', municipio: 'PALMAS', uf: 'TO' }) });
+    }
+    return route.fulfill({ status: 404, contentType: 'application/json', body: '{"message":"CNPJ não encontrado"}' });
+  });
+  await sessaoSimulada(ctx, rotas());
+  const page = await abrir(ctx);
+  await page.getByRole('button', { name: 'Novo cliente' }).first().click();
+  const m = page.getByRole('dialog', { name: 'Novo cliente' });
+  await m.getByRole('radio', { name: 'Pessoa jurídica' }).click();
+  await m.getByLabel('E-mail').fill('meu@email.com');
+  await m.getByLabel('CNPJ (opcional)').fill('11222333000181');
+  await expect(m.getByLabel('Razão social')).toHaveValue('COMERCIAL EXEMPLO LTDA');
+  await expect(m.getByLabel('Nome fantasia (opcional)')).toHaveValue('EXEMPLO');
+  await expect(m.getByLabel('Telefone')).toHaveValue('(63) 3493-9002');
+  await expect(m.getByLabel('E-mail')).toHaveValue('meu@email.com'); // não sobrescreve o digitado
+  await expect(m.getByLabel('CEP')).toHaveValue('77960-000');
+  await expect(m.getByLabel('Logradouro')).toHaveValue('RUA RUI BARBOSA');
+  await expect(m.getByLabel('Número')).toHaveValue('436');
+  await expect(m.getByLabel('Complemento')).toHaveValue('SALA 2');
+  await expect(m.getByLabel('Bairro')).toHaveValue('CENTRO');
+  await expect(m.getByLabel('Cidade')).toHaveValue('AUGUSTINOPOLIS');
+  await expect(m.getByLabel('UF')).toHaveValue('TO');
+  await expect(m.getByText('Dados da empresa preenchidos. Confira antes de salvar.')).toBeVisible();
+  expect(viacep).toEqual([]); // o endereço já veio do CNPJ: o CEP não consulta por cima
+  // CNPJ inválido não consulta; CNPJ válido não encontrado avisa e mantém os campos
+  // Outra empresa: ao digitar o novo CNPJ o que veio da anterior é limpo (o e-mail digitado fica) e a nova é preenchida
+  await m.getByLabel('CNPJ (opcional)').fill('11222333000182');
+  await expect(m.getByLabel('Razão social')).toHaveValue('');
+  await expect(m.getByLabel('Logradouro')).toHaveValue('');
+  await expect(m.getByLabel('E-mail')).toHaveValue('meu@email.com');
+  await m.getByLabel('CNPJ (opcional)').fill('11444777000161'); // BrasilAPI responde 503 na 1ª e ok na 2ª tentativa
+  await expect(m.getByLabel('Razão social')).toHaveValue('SEGUNDA EMPRESA SA', { timeout: 15000 });
+  await expect(m.getByLabel('Cidade')).toHaveValue('PALMAS');
+  await expect(m.getByLabel('CEP')).toHaveValue('77001-000');
+  // CNPJ não encontrado: avisa e deixa os campos livres
+  await m.getByLabel('CNPJ (opcional)').fill('45997418000153');
+  await expect(m.getByText('Não foi possível buscar os dados deste CNPJ. Preencha manualmente.')).toBeVisible();
+  await expect(m.getByLabel('Razão social')).toHaveValue('');
+  expect(consultas).toEqual(['11222333000181', '11444777000161', '11444777000161', '45997418000153']);
+  // Pessoa física não consulta CNPJ
+  await m.getByRole('radio', { name: 'Pessoa física' }).click();
+  await m.getByLabel('CPF (opcional)').fill('52998224725');
+  expect(consultas).toHaveLength(4); // CPF não consulta
   await ctx.close();
 });
