@@ -298,7 +298,9 @@ function FormAnotacao({ anotacao, idEmpresa, categoriaInicial, aoFechar, aoSalva
     const todas = linhas.every((l) => prefixo.test(l));
     const novas = linhas.map((l, i) => (todas ? l.replace(prefixo, '$1') : `${numerada ? `${i + 1}. ` : '- '}${l.replace(prefixo, '$1')}`));
     setConteudo(conteudo.slice(0, ini) + novas.join('\n') + conteudo.slice(fim));
-    requestAnimationFrame(() => el.focus());
+    // Volta o foco ao texto só se continua no botão clicado: não rouba o foco de quem já foi para outro campo
+    const origem = document.activeElement;
+    requestAnimationFrame(() => { if (document.activeElement === origem || document.activeElement === document.body) el.focus(); });
   };
   const adicionarTag = (texto = tagDigitada) => {
     setTags((atuais) => limparTags([...atuais, ...texto.split(',')]));

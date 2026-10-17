@@ -21,7 +21,9 @@ function estadoInicial() {
     funcionarios: [
       func(ID.ana, 'Ana Costa', 4, 'Vendedora', 1900, 'apto', 1, conf(false)),
       func(ID.carlos, 'Carlos Santos', 3, 'Instalador', 2000, 'apto', 0, conf(true)),
-      func(ID.joao, 'João Silva', 1, 'Técnico de Redes', 2200, 'apto', 1, conf(false)),
+      { ...func(ID.joao, 'João Silva', 1, 'Técnico de Redes', 2200, 'apto', 1, conf(false)), ajustes: [
+        { id: 'aj1', tipo: 'adicional', descricao: 'Periculosidade', valor: 660, calculo: '30% sobre o salário-base de R$ 2.200,00', recorrente: true },
+        { id: 'aj2', tipo: 'desconto', descricao: 'Vale', valor: 100, recorrente: false }] },
       func(ID.maria, 'Maria Oliveira', 2, 'Atendente', 1800, 'pendente', 1),
       func(ID.pedro, 'Pedro Almeida', 5, 'Suporte Técnico', 2100, 'a_conferir', 0),
     ],
@@ -133,6 +135,14 @@ test('painel lateral: ocorrências, dados, Esc fecha; confirmar sem ocorrências
   await expect(painel.getByRole('heading', { name: 'João Silva' })).toBeVisible();
   await expect(painel.getByTestId('ocorrencia')).toContainText('Horas extras');
   await expect(painel.getByTestId('ocorrencia')).toContainText('5 horas');
+  // Adicionais e descontos lançados em Funcionários aparecem na folha (com cálculo e recorrência)
+  const aj = painel.getByTestId('painel-ajustes');
+  await expect(aj).toContainText('Periculosidade');
+  await expect(aj).toContainText('Recorrente');
+  await expect(aj).toContainText('30% sobre o salário-base de R$ 2.200,00');
+  await expect(aj).toContainText('+ R$ 660,00');
+  await expect(aj).toContainText('− R$ 100,00');
+  await expect(aj).toContainText('Total previstoR$ 2.760,00');
   await painel.getByRole('tab', { name: 'Dados' }).click();
   await expect(painel).toContainText('Técnico de Redes');
   await expect(painel).toContainText('R$ 2.200,00');
@@ -194,6 +204,10 @@ test('envio consolidado: só com todos aptos, resumo, responsável e confirmaç�
   await dialogo.getByLabel(/Confirmo que conferi/).check();
   await dialogo.getByRole('button', { name: 'Confirmar envio' }).click();
   await expect(page.getByTestId('status-competencia')).toHaveText('Enviada ao contador · v1');
+  // O contador vê os adicionais/descontos de cada funcionário na lista
+  await expect(linha(page, 'João Silva').getByTestId('ajustes-funcionario')).toContainText('+ R$ 660,00');
+  await expect(linha(page, 'João Silva').getByTestId('ajustes-funcionario')).toContainText('Periculosidade, Vale');
+  await expect(linha(page, 'Ana Costa').getByTestId('ajustes-funcionario')).toHaveText('Nenhum');
   expect(chamadas(reg, 'rpc/enviar_folha_contador')[0].corpo).toMatchObject({ p_id_empresa: EMPRESA.id, p_competencia: COMP, p_responsavel: 'Ana Souza', p_confirmo: true });
   await expect(page.getByTestId('fluxo-folha').locator('li').nth(1)).toHaveAttribute('data-estado', 'concluido');
   // Depois do envio: somente leitura

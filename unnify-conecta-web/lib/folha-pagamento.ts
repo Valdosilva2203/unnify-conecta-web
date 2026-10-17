@@ -10,9 +10,12 @@ export type TipoOcorrencia = 'horas_extras' | 'faltas' | 'atrasos' | 'comissoes'
 export type SituacaoJustificativa = 'justificada' | 'nao_justificada' | 'pendente';
 export type CategoriaDocumento = 'anexo_ocorrencia' | 'holerite' | 'resumo' | 'liquidos' | 'guia' | 'outro' | 'comprovante';
 
+// Adicionais/descontos lançados em Funcionários (avulsos, percentuais e recorrentes) — migration 058
+export interface AjusteFolhaPagamento { id: string; tipo: 'adicional' | 'desconto'; descricao: string; valor: number; calculo?: string; recorrente: boolean }
+export const somaAjustes = (a: AjusteFolhaPagamento[] | undefined, tipo: 'adicional' | 'desconto') => (a ?? []).filter((x) => x.tipo === tipo).reduce((t, x) => t + Number(x.valor), 0);
 export interface FuncionarioFolha {
   id: string; nome: string; matricula: number; cargo: string | null; vinculo: string; data_admissao: string; status_funcionario: string;
-  salario_base: number; ocorrencias: number; pendencias: number; situacao: SituacaoFuncionario;
+  salario_base: number; ajustes?: AjusteFolhaPagamento[]; ocorrencias: number; pendencias: number; situacao: SituacaoFuncionario;
   conferencia: { sem_ocorrencias: boolean; confirmado_em: string; confirmado_por: string | null } | null;
 }
 export interface PendenciaFolha { id_funcionario: string; origem: 'ocorrencia' | 'rh' | 'contador'; id: string; descricao: string }

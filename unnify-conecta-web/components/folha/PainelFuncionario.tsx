@@ -9,6 +9,7 @@ import { VINCULOS, type Vinculo } from '@/lib/funcionarios';
 import {
   ROTULO_DATA, ROTULO_VALOR, SITUACAO_FUNCIONARIO, SITUACOES_JUSTIFICATIVA, TIPOS_OCORRENCIA, abrirArquivoFolha, dataHora, enviarArquivoFolha, matricula, resumoOcorrencia,
   type DocumentoFolha, type EventoFolha, type FuncionarioFolha, type Ocorrencia, type PendenciaFolha, type SituacaoJustificativa, type TipoOcorrencia,
+  somaAjustes,
 } from '@/lib/folha-pagamento';
 import { Avatar, Selo } from '@/components/admin/tabela';
 import { classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
@@ -131,6 +132,33 @@ export function PainelFuncionario({ funcionario: f, ocorrencias, documentos, pen
 
           {aba === 'ocorrencias' && (
             <>
+              {mostrarSalario && (
+                <section aria-label="Adicionais e descontos" className="rounded-xl border border-gray-200 p-3 space-y-2" data-testid="painel-ajustes">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-bold text-gray-900">Adicionais e descontos</p>
+                    <span className="text-[11px] text-gray-500">lançados em Funcionários</span>
+                  </div>
+                  {!f.ajustes?.length ? <p className="text-sm text-gray-600">Nenhum nesta competência.</p> : (
+                    <>
+                      <ul className="divide-y divide-gray-100 text-sm">
+                        {f.ajustes.map((x) => (
+                          <li key={x.id} className="py-1.5 flex items-start justify-between gap-2">
+                            <span className="min-w-0">{x.descricao}{x.recorrente && <span className="ml-1.5 align-middle text-[10px] font-bold uppercase bg-orange-50 text-orange-700 rounded px-1.5 py-0.5">Recorrente</span>}
+                              {x.calculo && <span className="block text-xs text-gray-500">{x.calculo}</span>}</span>
+                            <span className={`shrink-0 font-semibold ${x.tipo === 'adicional' ? 'text-green-700' : 'text-red-700'}`}>{x.tipo === 'adicional' ? '+' : '−'} {formatarMoeda(Number(x.valor))}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <dl className="border-t border-gray-100 pt-2 text-sm space-y-0.5">
+                        <div className="flex justify-between"><dt className="text-gray-600">Salário base</dt><dd>{formatarMoeda(f.salario_base)}</dd></div>
+                        <div className="flex justify-between"><dt className="text-gray-600">Adicionais</dt><dd className="text-green-700">{formatarMoeda(somaAjustes(f.ajustes, 'adicional'))}</dd></div>
+                        <div className="flex justify-between"><dt className="text-gray-600">Descontos</dt><dd className="text-red-700">{formatarMoeda(somaAjustes(f.ajustes, 'desconto'))}</dd></div>
+                        <div className="flex justify-between font-bold"><dt>Total previsto</dt><dd>{formatarMoeda(Number(f.salario_base) + somaAjustes(f.ajustes, 'adicional') - somaAjustes(f.ajustes, 'desconto'))}</dd></div>
+                      </dl>
+                    </>
+                  )}
+                </section>
+              )}
               {pendenciasAvulsas.length > 0 && (
                 <div className="rounded-xl border border-red-200 bg-red-50 p-3 space-y-2">
                   <p className="text-sm font-semibold text-red-800">Pendências</p>

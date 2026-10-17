@@ -12,6 +12,7 @@ import {
   ETAPAS, ROTULO_CATEGORIA_DOC, ROTULO_ESTADO_ETAPA, SITUACAO_FUNCIONARIO, STATUS_COMPETENCIA, TIPOS_OCORRENCIA, abrirArquivoFolha, competenciaCurta, dataHora,
   etapasDoFluxo, matricula, pagamentoConcluido, resumoOcorrencia,
   type DocumentoFolha, type EstadoEtapa, type EventoFolha, type FuncionarioFolha, type Ocorrencia, type PainelFolha, type SituacaoFuncionario, type TipoOcorrencia, type ValorFolha,
+  somaAjustes,
 } from '@/lib/folha-pagamento';
 import { Avatar, Paginacao, Selo } from '@/components/admin/tabela';
 import { Modal, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
@@ -266,6 +267,7 @@ export function ModuloFolha({ idEmpresa, papel, nomeUsuario = '' }: { idEmpresa:
                           <th scope="col" className="px-3 py-3 font-semibold">Funcionário</th>
                           <th scope="col" className="px-3 py-3 font-semibold">Cargo</th>
                           <th scope="col" className="px-3 py-3 font-semibold">Salário base</th>
+                          <th scope="col" className="px-3 py-3 font-semibold">Adicionais / descontos</th>
                           <th scope="col" className="px-3 py-3 font-semibold">Ocorrências do mês</th>
                           {aba === 'funcionarios' && <th scope="col" className="px-3 py-3 font-semibold">Conferência</th>}
                           <th scope="col" className="px-3 py-3 font-semibold">Situação</th>
@@ -288,6 +290,12 @@ export function ModuloFolha({ idEmpresa, papel, nomeUsuario = '' }: { idEmpresa:
                               </td>
                               <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{f.cargo || '—'}</td>
                               <td className="px-3 py-3 text-gray-900 whitespace-nowrap">{formatarMoeda(f.salario_base)}</td>
+                              <td className="px-3 py-3 whitespace-nowrap" data-testid="ajustes-funcionario">{!f.ajustes?.length ? <span className="text-gray-500">Nenhum</span> : (
+                                <span className="flex flex-col text-xs">
+                                  {somaAjustes(f.ajustes, 'adicional') > 0 && <span className="text-green-700 font-semibold">+ {formatarMoeda(somaAjustes(f.ajustes, 'adicional'))}</span>}
+                                  {somaAjustes(f.ajustes, 'desconto') > 0 && <span className="text-red-700 font-semibold">− {formatarMoeda(somaAjustes(f.ajustes, 'desconto'))}</span>}
+                                  <span className="text-gray-500 truncate max-w-[180px]">{f.ajustes.map((x) => x.descricao).join(', ')}</span>
+                                </span>)}</td>
                               <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{ocs.length === 0 ? 'Nenhuma' : ocs.length === 1 ? `${resumoOcorrencia(ocs[0], formatarMoeda)} · ${TIPOS_OCORRENCIA[ocs[0].tipo].rotulo.toLowerCase()}` : `${ocs.length} ocorrências`}</td>
                               {aba === 'funcionarios' && <td className="px-3 py-3 text-xs text-gray-600 whitespace-nowrap">{f.conferencia ? `${f.conferencia.confirmado_por ?? '—'} · ${dataHora(f.conferencia.confirmado_em)}` : '—'}</td>}
                               <td className="px-3 py-3"><Selo tipo={s.selo} texto={s.rotulo} /></td>
