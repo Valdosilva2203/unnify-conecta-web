@@ -17,7 +17,7 @@ const oc = (id: string, f: string, tipo: string, extra: Record<string, unknown>)
 
 function estadoInicial() {
   return {
-    status: 'preparacao' as string, versao: 0, contador: true,
+    status: 'preparacao' as string, versao: 0, contador: true, devolucao: null as unknown,
     funcionarios: [
       func(ID.ana, 'Ana Costa', 4, 'Vendedora', 1900, 'apto', 1, conf(false)),
       func(ID.carlos, 'Carlos Santos', 3, 'Instalador', 2000, 'apto', 0, conf(true)),
@@ -49,7 +49,7 @@ function montar(e: Estado, papel: 'empresa' | 'contador' = 'empresa', permissoes
       competencia: { id: 'c1', competencia: COMP, status: e.status, versao_atual: e.versao, atualizado_em: `${hoje}T12:00:00Z` },
       funcionarios: e.funcionarios, pendencias: e.pendencias,
       pacote: e.versao ? { id: 'p1', versao: e.versao, responsavel: 'Ana Souza', enviado_em: `${hoje}T13:00:00Z`, observacoes: null, enviado_por: 'Ana Souza' } : null,
-      devolucao: null, pagamento: null, pode_preparar: papel === 'empresa', pode_processar: papel === 'contador' && permissoes.includes('processar_folha'), contador_habilitado: e.contador } };
+      devolucao: e.devolucao, pagamento: null, pode_preparar: papel === 'empresa', pode_processar: papel === 'contador' && permissoes.includes('processar_folha'), contador_habilitado: e.contador } };
     if (c === 'ocorrencias_folha') return { corpo: e.ocorrencias };
     if (c === 'eventos_folha') return { corpo: [{ id: 'e1', id_funcionario: ID.joao, tipo: 'ocorrencia_registrada', descricao: 'Ocorrência registrada: horas extras', versao: null, criado_em: `${hoje}T10:00:00Z`, id_usuario: null }] };
     if (['documentos_folha', 'pacotes_folha', 'valores_folha', 'notificacoes', 'empresas'].includes(c)) return { corpo: [] };
@@ -68,6 +68,7 @@ function montar(e: Estado, papel: 'empresa' | 'contador' = 'empresa', permissoes
     }
     if (c === 'rpc/enviar_folha_contador') { e.status = 'enviada'; e.versao = 1; return { corpo: 'p1' }; }
     if (c === 'rpc/iniciar_processamento_folha') { e.status = 'em_processamento'; return { status: 204 }; }
+    if (c === 'rpc/abrir_devolucao_folha') { e.devolucao = { id: 'dv2', numero: 2, situacao: 'rascunho', enviada_em: null, observacoes: null, motivo_revisao: null, numero_origem: 1, aprovada_em: null, aprovada_por: null, faltas: 0 }; return { status: 204 }; }
     return undefined;
   };
 }
@@ -240,8 +241,24 @@ test('contador: recebe a folha enviada e inicia o processamento; sem "processar"
   await expect(page.getByRole('button', { name: 'Registrar ocorrência' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Iniciar processamento' }).click();
   await expect(page.getByTestId('status-competencia')).toHaveText('Em processamento · v1');
-  await expect(page.getByRole('button', { name: 'Anexar documento' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Anexar documento' })).toBeEnabled();
+  // Rascunho aberto já com o que foi devolvido antes, com aviso da origem
+  await expect(page.getByTestId('aviso-origem')).toHaveText('Valores e documentos trazidos da devolução nº 1. Confira e altere só o que mudou antes de devolver.');
+  expect(chamadas(reg, 'rpc/abrir_devolucao_folha')).toHaveLength(1);
   expect(chamadas(reg, 'rpc/iniciar_processamento_folha')[0].corpo).toMatchObject({ p_id_competencia: 'c1' });
+  // Anexar: o próprio botão abre a escolha do arquivo e envia; holerite exige o funcionário e fica ligado a ele
+  const registrados: unknown[] = [];
+  await ctx.route('**/storage/v1/object/folha/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ Key: 'folha/x.pdf' }) }));
+  await ctx.route('**/rest/v1/rpc/registrar_documento_devolucao_folha', async (r) => { registrados.push(JSON.parse(r.request().postData() ?? '{}')); await r.fulfill({ status: 200, contentType: 'application/json', body: '"d1"' }); });
+  await page.getByLabel('Tipo').selectOption('holerite');
+  await page.getByRole('button', { name: 'Anexar documento' }).click();
+  await expect(page.locator('p[role="alert"]')).toHaveText('Escolha o funcionário do holerite.');
+  await page.getByLabel('Funcionário', { exact: true }).selectOption({ label: 'João Silva' });
+  await expect(page.getByText('aparece no Portal do Colaborador dele depois que a empresa aprovar', { exact: false })).toBeVisible();
+  const [seletor] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Anexar documento' }).click()]);
+  await seletor.setFiles({ name: 'holerite-joao.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF') });
+  await expect.poll(() => registrados.length).toBe(1);
+  expect(registrados[0]).toMatchObject({ p_id_competencia: 'c1', p_categoria: 'holerite', p_id_funcionario: ID.joao, p_nome_arquivo: 'holerite-joao.pdf' });
   await ctx.close();
 
   const ctx2 = await browser.newContext();

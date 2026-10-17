@@ -326,3 +326,25 @@ test('contador: excluir parcelamento só quando nenhuma parcela está paga', asy
   expect(chamadas(registro, 'rpc/excluir_parcelamento_tributario').at(-1)!.corpo).toEqual({ p_id: 'p1' });
   await ctx.close();
 });
+
+test('encargo da folha aprovada em Impostos: selo "Folha de pagamento", sem editar/cancelar/excluir, pagamento normal', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  await sessaoSimulada(ctx, rotas('empresa', undefined, (c, u) => {
+    if (c === 'impostos') return { corpo: u.searchParams.get('id') === 'eq.22222222-2222-4222-8222-222222222222' ? { id_valor_folha: 'v1' } : { id_valor_folha: null } };
+    return undefined;
+  }));
+  const page = await abrir(ctx, '/app/impostos', 'Impostos');
+  await page.getByTestId('imposto-FGTS Digital').click();
+  const det = page.getByRole('complementary', { name: 'Detalhes do imposto' });
+  await expect(det.getByTestId('origem-folha')).toHaveText('Folha de pagamento');
+  await expect(det.getByText('Encargo da folha de pagamento aprovada', { exact: false })).toBeVisible();
+  await expect(det.getByRole('button', { name: 'Editar imposto' })).toHaveCount(0);
+  await expect(det.getByRole('button', { name: 'Cancelar imposto' })).toHaveCount(0);
+  await expect(det.getByRole('button', { name: 'Excluir imposto' })).toHaveCount(0);
+  await expect(det.getByRole('button', { name: 'Confirmar pagamento (baixa)' })).toBeVisible();
+  // Imposto comum continua editável
+  await page.getByTestId('imposto-DAS – Simples Nacional').click();
+  await expect(det.getByTestId('origem-folha')).toHaveCount(0);
+  await expect(det.getByRole('button', { name: 'Editar imposto' })).toBeVisible();
+  await ctx.close();
+});

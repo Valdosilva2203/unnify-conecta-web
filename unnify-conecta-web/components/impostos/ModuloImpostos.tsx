@@ -248,9 +248,11 @@ function PainelImposto({ imposto: i, idEmpresa, papel, podeFinanceiro, versao, a
   const [apagando, setApagando] = useState(false);
   const inputGuia = useRef<HTMLInputElement>(null);
   const inputComp = useRef<HTMLInputElement>(null);
+  const [daFolha, setDaFolha] = useState(false); // encargo da folha aprovada (migration 060): só a folha altera
   useEffect(() => {
     const supabase = createClient();
-    setArquivos(null); setHist(null);
+    setArquivos(null); setHist(null); setDaFolha(false);
+    supabase.from('impostos').select('id_valor_folha').eq('id', i.id).maybeSingle().then(({ data }) => setDaFolha(!!(data as { id_valor_folha: string | null } | null)?.id_valor_folha));
     supabase.from('arquivos_impostos').select('id, tipo, caminho, nome_arquivo, tamanho, criado_em').eq('id_imposto', i.id).order('criado_em', { ascending: false }).then(({ data }) => setArquivos((data ?? []) as Arquivo[]));
     supabase.from('historico_impostos').select('acao, dados, criado_em').eq('id_imposto', i.id).order('criado_em', { ascending: false }).limit(50).then(({ data }) => setHist((data ?? []) as Evento[]));
   }, [i.id, versao]);
@@ -289,7 +291,8 @@ function PainelImposto({ imposto: i, idEmpresa, papel, podeFinanceiro, versao, a
   return (
     <aside aria-label="Detalhes do imposto" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 self-start min-w-0 space-y-3">
       <div className="flex items-start gap-2">
-        <div className="flex-1 min-w-0"><p className="text-lg font-black text-gray-900 break-words">{i.nome}</p><p className="text-xs text-gray-500">{i.orgao}</p></div>
+        <div className="flex-1 min-w-0"><p className="text-lg font-black text-gray-900 break-words">{i.nome}</p><p className="text-xs text-gray-500">{i.orgao}</p>
+          {daFolha && <span className="mt-1 inline-block text-[10px] font-bold uppercase bg-violet-50 text-violet-700 rounded px-1.5 py-0.5" data-testid="origem-folha">Folha de pagamento</span>}</div>
         <Selo tipo={SITUACAO[i.situacao].selo} texto={SITUACAO[i.situacao].rotulo} />
         <button type="button" aria-label="Fechar detalhes" onClick={aoFechar} className="w-9 h-9 -mt-1 inline-flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"><X className="w-4 h-4" aria-hidden="true" /></button>
       </div>
@@ -323,9 +326,10 @@ function PainelImposto({ imposto: i, idEmpresa, papel, podeFinanceiro, versao, a
               {papel === 'contador' && i.situacao !== 'pago' && <button type="button" disabled={enviando} onClick={() => inputGuia.current?.click()} className={classeBotaoSecundario}><Upload className="w-4 h-4" aria-hidden="true" />{guias.length ? 'Enviar nova guia' : 'Enviar guia'}</button>}
               <button type="button" disabled={enviando} onClick={() => inputComp.current?.click()} className={classeBotaoSecundario}><Paperclip className="w-4 h-4" aria-hidden="true" />{enviando ? 'Enviando...' : 'Anexar comprovante'}</button>
               {papel === 'empresa' && i.situacao !== 'pago' && <button type="button" disabled={enviando} onClick={() => inputGuia.current?.click()} className={classeBotaoSecundario}><Upload className="w-4 h-4" aria-hidden="true" />Anexar guia</button>}
-              {!i.id_parcelamento && i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('editar')} className={classeBotaoSecundario}><Pencil className="w-4 h-4" aria-hidden="true" />Editar imposto</button>}
-              {!i.id_parcelamento && i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('cancelar')} className={`${classeBotaoSecundario} !text-red-700`}><Ban className="w-4 h-4" aria-hidden="true" />Cancelar imposto</button>}
-              {i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('excluir')} className={`${classeBotaoSecundario} !text-red-700`}><Trash2 className="w-4 h-4" aria-hidden="true" />{i.id_parcelamento ? 'Excluir parcela' : 'Excluir imposto'}</button>}
+              {daFolha && i.situacao !== 'pago' && <p className="text-xs text-gray-600 bg-gray-50 rounded-lg p-2">Encargo da folha de pagamento aprovada: valor, vencimento e exclusão só mudam pela Folha de Pagamento. O pagamento é registrado aqui normalmente.</p>}
+              {!daFolha && !i.id_parcelamento && i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('editar')} className={classeBotaoSecundario}><Pencil className="w-4 h-4" aria-hidden="true" />Editar imposto</button>}
+              {!daFolha && !i.id_parcelamento && i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('cancelar')} className={`${classeBotaoSecundario} !text-red-700`}><Ban className="w-4 h-4" aria-hidden="true" />Cancelar imposto</button>}
+              {!daFolha && i.situacao !== 'pago' && <button type="button" onClick={() => aoAcao('excluir')} className={`${classeBotaoSecundario} !text-red-700`}><Trash2 className="w-4 h-4" aria-hidden="true" />{i.id_parcelamento ? 'Excluir parcela' : 'Excluir imposto'}</button>}
               <input ref={inputGuia} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Arquivo da guia" onChange={(e) => { enviar('guia', e.target.files?.[0]); e.target.value = ''; }} />
               <input ref={inputComp} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" aria-label="Arquivo do comprovante" onChange={(e) => { enviar('comprovante', e.target.files?.[0]); e.target.value = ''; }} />
             </div>

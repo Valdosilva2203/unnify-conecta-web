@@ -101,7 +101,7 @@ function DocumentosDevolucao({ documentos, painel, aoErro, aoRemover }: {
   return (
     <ul className="divide-y divide-gray-100 border border-gray-100 rounded-xl">
       {documentos.map((d) => (
-        <li key={d.id} className="flex items-center gap-3 px-3 py-2 text-sm min-w-0">
+        <li key={d.id} data-testid="documento-devolucao" className="flex items-center gap-3 px-3 py-2 text-sm min-w-0 first:rounded-t-xl last:rounded-b-xl transition-colors motion-reduce:transition-none hover:bg-orange-50 focus-within:bg-orange-50">
           <FileText className="w-4 h-4 text-gray-500 shrink-0" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <button type="button" className="font-semibold text-gray-900 underline truncate block max-w-full text-left" onClick={async () => { const e = await abrirArquivoFolha(d.caminho, d.nome_arquivo); if (e) aoErro(e); }}>{d.nome_arquivo}</button>
@@ -282,6 +282,13 @@ export function ProcessamentoContador({ painel, documentos, valores, idEmpresa, 
     setEncargos(valoresRascunho.filter((v) => v.tipo === 'encargo').map((v) => ({ descricao: v.descricao ?? '', valor: valorParaMascara(Number(v.valor)), vencimento: v.vencimento ?? '' })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assinatura]);
+  // Em processamento sem rascunho (iniciado antes da 059): abre o rascunho já com o que foi devolvido antes
+  const precisaAbrir = painel.pode_processar && comp.status === 'em_processamento' && painel.devolucao?.situacao !== 'rascunho';
+  useEffect(() => {
+    if (!precisaAbrir) return;
+    createClient().rpc('abrir_devolucao_folha', { p_id_competencia: comp.id }).then(({ error }) => { if (!error) aoAlterar(''); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [precisaAbrir, comp.id]);
 
   if (!painel.pode_processar) return (
     <section className={cartao}><p className="text-sm text-gray-700">Você pode visualizar a folha. Para processar, a empresa precisa liberar “Processar folha de pagamento” no seu vínculo.</p></section>
@@ -290,14 +297,27 @@ export function ProcessamentoContador({ painel, documentos, valores, idEmpresa, 
   const docsRascunho = rascunho ? documentos.filter((d) => d.id_devolucao === rascunho.id) : [];
   const holerites = new Set(docsRascunho.filter((d) => d.categoria === 'holerite').map((d) => d.id_funcionario));
 
-  const enviarDocumento = async () => {
-    if (!arquivo) return setErro('Escolha o arquivo.');
+  // O botão "Anexar documento" abre a escolha do arquivo e envia assim que ele é escolhido
+  const escolherArquivo = () => {
     if (categoria === 'holerite' && !funcionario) return setErro('Escolha o funcionário do holerite.');
-    const falha = await enviarArquivoFolha(idEmpresa, arquivo, async (caminho) => createClient().rpc('registrar_documento_devolucao_folha', {
-      p_id_competencia: comp.id, p_categoria: categoria, p_id_funcionario: categoria === 'holerite' ? funcionario : null, p_caminho: caminho, p_nome_arquivo: arquivo.name }));
+    setErro(null);
+    document.getElementById('dev-arq')?.click();
+  };
+  const enviarDocumento = async (escolhido: File | null) => {
+    setChaveArquivo((k) => k + 1);
+    if (!escolhido) return;
+    if (categoria === 'holerite' && !funcionario) return setErro('Escolha o funcionário do holerite.');
+    setArquivo(escolhido); setErro(null);
+    const falha = await enviarArquivoFolha(idEmpresa, escolhido, async (caminho) => createClient().rpc('registrar_documento_devolucao_folha', {
+      p_id_competencia: comp.id, p_categoria: categoria, p_id_funcionario: categoria === 'holerite' ? funcionario : null, p_caminho: caminho, p_nome_arquivo: escolhido.name }));
+    setArquivo(null);
     if (falha) return setErro(falha);
-    setArquivo(null); setChaveArquivo((k) => k + 1); setErro(null);
-    await aoAlterar('Documento anexado.');
+    // Holerite: já deixa selecionado o próximo funcionário que ainda não tem holerite
+    if (categoria === 'holerite') {
+      const proximo = painel.funcionarios.find((f) => f.id !== funcionario && !holerites.has(f.id));
+      setFuncionario(proximo?.id ?? '');
+    }
+    await aoAlterar(categoria === 'holerite' ? 'Holerite anexado.' : 'Documento anexado.');
   };
   const salvarValores = () => {
     const l = Object.entries(liquidos).filter(([, v]) => v).map(([id_funcionario, v]) => ({ id_funcionario, valor: paraDecimal(v) ?? '0' }));
@@ -324,13 +344,16 @@ export function ProcessamentoContador({ painel, documentos, valores, idEmpresa, 
       </div>
       {painel.pacote?.observacoes && <p className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3">Empresa: {painel.pacote.observacoes}</p>}
       {status === 'revisao_solicitada' && painel.devolucao?.motivo_revisao && <p className="text-sm text-red-800 bg-red-50 rounded-xl p-3">Revisão pedida: {painel.devolucao.motivo_revisao}</p>}
+      {status === 'em_processamento' && rascunho?.numero_origem && (
+        <p className="text-sm text-blue-900 bg-blue-50 rounded-xl p-3" data-testid="aviso-origem">Valores e documentos trazidos da devolução nº {rascunho.numero_origem}. Confira e altere só o que mudou antes de devolver.</p>
+      )}
       <Erro texto={erro && !modal ? erro : null} />
 
       {status === 'em_processamento' && (
         <div className="space-y-5">
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-gray-900">Documentos da devolução</h3>
-            <div className="grid sm:grid-cols-3 gap-3 items-end">
+            <div className="grid sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
               <div><label htmlFor="dev-cat" className={rotulo}>Tipo</label>
                 <select id="dev-cat" className={campo} value={categoria} onChange={(e) => setCategoria(e.target.value as typeof categoria)}>
                   {CATEGORIAS_DEVOLUCAO.map((c) => <option key={c.id} value={c.id}>{c.rotulo}</option>)}</select></div>
@@ -338,11 +361,16 @@ export function ProcessamentoContador({ painel, documentos, valores, idEmpresa, 
                 <select id="dev-func" className={campo} value={funcionario} onChange={(e) => setFuncionario(e.target.value)}>
                   <option value="">Selecione</option>
                   {painel.funcionarios.map((f) => <option key={f.id} value={f.id}>{f.nome}{holerites.has(f.id) ? ' ✓' : ''}</option>)}</select></div>}
-              <div><label htmlFor="dev-arq" className={rotulo}>Arquivo (PDF, JPG ou PNG)</label>
-                <input key={chaveArquivo} id="dev-arq" type="file" accept="application/pdf,image/jpeg,image/png" className="block w-full text-sm" onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} /></div>
+              <div>
+                <input key={chaveArquivo} id="dev-arq" type="file" accept="application/pdf,image/jpeg,image/png" className="sr-only" tabIndex={-1} aria-hidden="true"
+                  onChange={(e) => enviarDocumento(e.target.files?.[0] ?? null)} />
+                <button type="button" className={`${classeBotaoPrimario} w-full`} disabled={ocupado || !!arquivo} onClick={escolherArquivo}>
+                  <Upload className="w-4 h-4" aria-hidden="true" />{arquivo ? 'Enviando…' : 'Anexar documento'}</button>
+              </div>
             </div>
-            <button type="button" className={classeBotaoSecundario} disabled={ocupado || !arquivo} onClick={enviarDocumento}><Upload className="w-4 h-4" aria-hidden="true" />Anexar documento</button>
-            <p className="text-xs text-gray-600">Holerites: {holerites.size} de {painel.funcionarios.length}.</p>
+            <p className="text-xs text-gray-600">PDF, JPG ou PNG. {categoria === 'holerite'
+              ? 'O holerite fica ligado ao funcionário escolhido e aparece no Portal do Colaborador dele depois que a empresa aprovar a folha.'
+              : 'Este documento vai para a empresa (não aparece para os funcionários).'} Holerites: {holerites.size} de {painel.funcionarios.length}.</p>
             <DocumentosDevolucao documentos={docsRascunho} painel={painel} aoErro={setErro}
               aoRemover={(d) => executar(() => createClient().rpc('excluir_documento_folha', { p_id: d.id }), 'Documento removido.', 'Não foi possível remover.')} />
           </div>

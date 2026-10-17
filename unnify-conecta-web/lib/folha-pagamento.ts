@@ -24,7 +24,7 @@ export interface PainelFolha {
   funcionarios: FuncionarioFolha[];
   pendencias: PendenciaFolha[];
   pacote: { id: string; versao: number; responsavel: string; enviado_em: string; observacoes: string | null; enviado_por: string | null } | null;
-  devolucao: { id: string; numero: number; situacao: string; enviada_em: string | null; observacoes: string | null; motivo_revisao: string | null;
+  devolucao: { id: string; numero: number; situacao: string; enviada_em: string | null; observacoes: string | null; motivo_revisao: string | null; numero_origem?: number | null;
     aprovada_em: string | null; aprovada_por: string | null; faltas: number } | null;
   pagamento: {
     salarios: { id_funcionario: string; liquido: number; id_folha: string | null; pago: number | null; pendente: number | null; total: number | null }[];
