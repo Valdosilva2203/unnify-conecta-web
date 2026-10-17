@@ -30,6 +30,8 @@ function montar(estado: { notas: ReturnType<typeof INICIAIS>; recusar: boolean; 
       return { corpo: id };
     }
     if (c === 'rpc/alternar_fixacao_anotacao') { const b = corpo(req); const n = estado.notas.find((x) => x.id === b.p_id); if (n) n.fixada = !!b.p_fixada; return { status: 204 }; }
+    if (c === 'rpc/alterar_situacao_anotacao') { const b = corpo(req); const n = estado.notas.find((x) => x.id === b.p_id) as Record<string, unknown> | undefined; if (n) n.situacao = b.p_situacao; return { status: 204 }; }
+    if (c === 'rpc/arquivar_anotacao') { const b = corpo(req); const n = estado.notas.find((x) => x.id === b.p_id) as Record<string, unknown> | undefined; if (n) { n.arquivada_em = b.p_arquivar ? '2026-10-17T12:00:00Z' : null; n.fixada = false; } return { status: 204 }; }
     if (c === 'rpc/excluir_anotacao') { const b = corpo(req); estado.notas = estado.notas.filter((x) => x.id !== b.p_id); return { status: 204 }; }
     if (c === 'notificacoes' || c === 'empresas') return { corpo: [] };
     return undefined;
@@ -211,5 +213,37 @@ test('telas menores usam gaveta; layout de 320 a 1920px sem rolagem lateral; tex
   await page.setViewportSize({ width: 320, height: 800 });
   await page.getByRole('button', { name: 'Nova anotação' }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
+  await ctx.close();
+});
+
+test('situação e arquivo: iniciar, concluir, reabrir, cancelar, arquivar e ver arquivadas', async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const estado = { notas: INICIAIS(), recusar: false, seq: 0 };
+  const reg = await sessaoSimulada(ctx, montar(estado));
+  const page = await abrir(ctx);
+  const primeira = estado.notas[0];
+  await page.getByRole('button', { name: `Abrir ${primeira.titulo}` }).first().click();
+  const acoes = page.getByTestId('acoes-anotacao');
+  await acoes.getByRole('button', { name: 'Iniciar' }).click();
+  await expect(page.getByText('Anotação em andamento.')).toBeVisible();
+  expect(chamadas(reg, 'rpc/alterar_situacao_anotacao').at(-1)!.corpo).toEqual({ p_id: primeira.id, p_situacao: 'em_andamento' });
+  await expect(acoes.getByRole('button', { name: 'Iniciar' })).toHaveCount(0);
+  await acoes.getByRole('button', { name: 'Concluir' }).click();
+  await expect(page.getByText('Anotação concluída.')).toBeVisible();
+  await expect(acoes.getByRole('button', { name: 'Reabrir' })).toBeVisible();
+  await acoes.getByRole('button', { name: 'Reabrir' }).click();
+  await acoes.getByRole('button', { name: 'Cancelar anotação' }).click();
+  await expect(page.getByText('Anotação cancelada.')).toBeVisible();
+  expect(chamadas(reg, 'rpc/alterar_situacao_anotacao').map((x) => (x.corpo as { p_situacao: string }).p_situacao)).toEqual(['em_andamento', 'concluida', 'pendente', 'cancelada']);
+  await acoes.getByRole('button', { name: 'Arquivar' }).click();
+  await expect(page.getByText('Anotação arquivada.')).toBeVisible();
+  await expect(lista(page).getByText(primeira.titulo)).toHaveCount(0); // some da lista normal
+  await page.getByRole('button', { name: 'Arquivadas' }).click();
+  await expect(lista(page).getByText(primeira.titulo)).toBeVisible();
+  await page.getByRole('button', { name: `Abrir ${primeira.titulo}` }).first().click();
+  await expect(acoes.getByRole('button', { name: 'Editar' })).toHaveCount(0);
+  await acoes.getByRole('button', { name: 'Desarquivar' }).click();
+  await expect(page.getByText('Anotação desarquivada.')).toBeVisible();
+  expect(chamadas(reg, 'rpc/arquivar_anotacao').map((x) => (x.corpo as { p_arquivar: boolean }).p_arquivar)).toEqual([true, false]);
   await ctx.close();
 });

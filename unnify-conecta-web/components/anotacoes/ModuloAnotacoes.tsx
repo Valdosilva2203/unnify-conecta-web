@@ -1,19 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, LayoutGrid, List, MoreVertical, Pencil, Pin, PinOff, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
+import { Archive, ArchiveRestore, CalendarDays, CheckCircle2, LayoutGrid, List, MoreVertical, Pencil, Pin, PinOff, Play, Plus, RefreshCw, RotateCcw, Search, Trash2, X, XCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { mensagemDeErro } from '@/lib/contabil';
 import {
-  CATEGORIAS_ANOTACAO, COR_CATEGORIA, LIMITE_CONTEUDO, LIMITE_TAG, LIMITE_TAGS, LIMITE_TITULO, ROTULO_CATEGORIA, casaComBusca, dataHoraAnotacao, limparTags, ordenarAnotacoes,
-  type Anotacao, type CategoriaAnotacao,
+  CATEGORIAS_ANOTACAO, COR_CATEGORIA, LIMITE_CONTEUDO, LIMITE_TAG, LIMITE_TAGS, LIMITE_TITULO, ROTULO_CATEGORIA, SITUACOES_ANOTACAO, casaComBusca, dataHoraAnotacao, limparTags, ordenarAnotacoes,
+  type Anotacao, type CategoriaAnotacao, type SituacaoAnotacao,
 } from '@/lib/anotacoes';
 import { classePilula } from '@/components/navegacao/NavegacaoModulos';
 import { Modal, classeBotaoPerigo, classeBotaoPrimario, classeBotaoSecundario } from '@/components/ui/Modal';
 
 const campo = 'w-full h-11 px-3 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500';
 const rotulo = 'block text-sm font-semibold text-gray-900 mb-1.5';
-const COLUNAS = 'id, titulo, conteudo, categoria, tags, fixada, criado_por, atualizado_em';
+const COLUNAS = 'id, titulo, conteudo, categoria, tags, fixada, criado_por, atualizado_em, situacao, arquivada_em';
 
 function Etiqueta({ categoria }: { categoria: CategoriaAnotacao }) {
   return <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${COR_CATEGORIA[categoria]}`}>{ROTULO_CATEGORIA[categoria]}</span>;
@@ -42,6 +42,7 @@ export function ModuloAnotacoes({ idEmpresa }: { idEmpresa: string }) {
   const [form, setForm] = useState<{ a: Anotacao | null } | null>(null);
   const [excluindo, setExcluindo] = useState<Anotacao | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
+  const [arquivadas, setArquivadas] = useState(false);
   const [aviso, setAviso] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
   const [versao, setVersao] = useState(0);
   const larga = useTelaLarga();
@@ -70,9 +71,9 @@ export function ModuloAnotacoes({ idEmpresa }: { idEmpresa: string }) {
   }, [menu]);
 
   const recarregar = useCallback(() => setVersao((v) => v + 1), []);
-  const filtradas = useMemo(() => (lista ?? []).filter((a) => (!categoria || a.categoria === categoria) && casaComBusca(a, busca)), [lista, categoria, busca]);
+  const filtradas = useMemo(() => (lista ?? []).filter((a) => (!!a.arquivada_em === arquivadas) && (!categoria || a.categoria === categoria) && casaComBusca(a, busca)), [lista, categoria, busca, arquivadas]);
   const atual = (lista ?? []).find((a) => a.id === selecionada) ?? null;
-  const filtrosAtivos = !!busca.trim() || !!categoria;
+  const filtrosAtivos = !!busca.trim() || !!categoria || arquivadas;
 
   const salvarCampos = async (a: Anotacao, campos: Partial<Pick<Anotacao, 'categoria' | 'tags'>>, msg: string) => {
     const { error } = await createClient().rpc('salvar_anotacao', {
@@ -90,8 +91,26 @@ export function ModuloAnotacoes({ idEmpresa }: { idEmpresa: string }) {
     recarregar();
   };
 
+  const alterarSituacao = async (a: Anotacao, s: SituacaoAnotacao, msg: string) => {
+    setMenu(null);
+    const { error } = await createClient().rpc('alterar_situacao_anotacao', { p_id: a.id, p_situacao: s });
+    if (error) return setAviso({ tipo: 'erro', texto: mensagemDeErro(error, 'Não foi possível alterar a anotação.') });
+    setAviso({ tipo: 'ok', texto: msg });
+    recarregar();
+  };
+  const arquivar = async (a: Anotacao) => {
+    setMenu(null);
+    const arquivar = !a.arquivada_em;
+    const { error } = await createClient().rpc('arquivar_anotacao', { p_id: a.id, p_arquivar: arquivar });
+    if (error) return setAviso({ tipo: 'erro', texto: mensagemDeErro(error, 'Não foi possível arquivar a anotação.') });
+    setAviso({ tipo: 'ok', texto: arquivar ? 'Anotação arquivada.' : 'Anotação desarquivada.' });
+    if (selecionada === a.id) setSelecionada(null);
+    recarregar();
+  };
+
   const detalhe = atual && (
     <DetalheAnotacao a={atual} aoFechar={() => setSelecionada(null)} aoFixar={() => alternarFixacao(atual)} aoEditar={() => setForm({ a: atual })} aoExcluir={() => setExcluindo(atual)}
+      aoSituacao={(s, msg) => alterarSituacao(atual, s, msg)} aoArquivar={() => arquivar(atual)}
       aoCategoria={(c) => salvarCampos(atual, { categoria: c }, 'Categoria atualizada.')} aoTags={(t) => salvarCampos(atual, { tags: t }, 'Tags atualizadas.')} />
   );
 
@@ -114,6 +133,8 @@ export function ModuloAnotacoes({ idEmpresa }: { idEmpresa: string }) {
             {[{ id: '' as const, rotulo: 'Todas' }, ...CATEGORIAS_ANOTACAO.map((c) => ({ id: c.id, rotulo: c.rotulo }))].map((c) => (
               <button key={c.id || 'todas'} type="button" role="tab" aria-selected={categoria === c.id} onClick={() => setCategoria(c.id)} className={classePilula(categoria === c.id)}>{c.rotulo}</button>
             ))}
+            <button type="button" aria-pressed={arquivadas} onClick={() => { setArquivadas(!arquivadas); setSelecionada(null); }} className={`${classePilula(arquivadas)} inline-flex items-center gap-1.5`}>
+              <Archive className="w-4 h-4" aria-hidden="true" />Arquivadas</button>
           </div>
           <div className="flex items-center gap-2 lg:ml-auto">
             <button type="button" onClick={() => setForm({ a: null })} className={`${classeBotaoPrimario} whitespace-nowrap`}><Plus className="w-4 h-4" aria-hidden="true" />Nova anotação</button>
@@ -148,7 +169,7 @@ export function ModuloAnotacoes({ idEmpresa }: { idEmpresa: string }) {
                   <li key={a.id} className="min-w-0" data-testid={`anotacao-${a.titulo}`}>
                     <CartaoAnotacao a={a} vista={vista} selecionada={a.id === selecionada} menuAberto={menu === a.id} aoSelecionar={() => setSelecionada(a.id)}
                       aoFixar={() => alternarFixacao(a)} aoMenu={() => setMenu(menu === a.id ? null : a.id)}
-                      aoEditar={() => { setMenu(null); setForm({ a }); }} aoExcluir={() => { setMenu(null); setExcluindo(a); }} />
+                      aoEditar={() => { setMenu(null); setForm({ a }); }} aoExcluir={() => { setMenu(null); setExcluindo(a); }} aoArquivar={() => arquivar(a)} />
                   </li>
                 ))}
               </ul>
@@ -169,23 +190,32 @@ export function ModuloAnotacoes({ idEmpresa }: { idEmpresa: string }) {
   );
 }
 
-function CartaoAnotacao({ a, vista, selecionada, menuAberto, aoSelecionar, aoFixar, aoMenu, aoEditar, aoExcluir }: {
-  a: Anotacao; vista: 'grade' | 'lista'; selecionada: boolean; menuAberto: boolean; aoSelecionar: () => void; aoFixar: () => void; aoMenu: () => void; aoEditar: () => void; aoExcluir: () => void;
+function SeloSituacao({ a }: { a: Anotacao }) {
+  if (a.arquivada_em) return <span className="text-[11px] font-semibold rounded-full px-2 py-0.5 bg-gray-100 text-gray-600">Arquivada</span>;
+  if (!a.situacao || a.situacao === 'pendente') return null;
+  return <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${SITUACOES_ANOTACAO[a.situacao].cor}`} data-testid="situacao-anotacao">{SITUACOES_ANOTACAO[a.situacao].rotulo}</span>;
+}
+const encerrada = (a: Anotacao) => a.situacao === 'concluida' || a.situacao === 'cancelada';
+
+function CartaoAnotacao({ a, vista, selecionada, menuAberto, aoSelecionar, aoFixar, aoMenu, aoEditar, aoExcluir, aoArquivar }: {
+  a: Anotacao; vista: 'grade' | 'lista'; selecionada: boolean; menuAberto: boolean; aoSelecionar: () => void; aoFixar: () => void; aoMenu: () => void; aoEditar: () => void; aoExcluir: () => void; aoArquivar: () => void;
 }) {
   const barra = (
     <div className="flex items-center gap-1 shrink-0" data-menu-anotacao>
-      <button type="button" onClick={aoFixar} aria-label={`${a.fixada ? 'Desafixar' : 'Fixar'} ${a.titulo}`} aria-pressed={a.fixada}
+      {!a.arquivada_em && <button type="button" onClick={aoFixar} aria-label={`${a.fixada ? 'Desafixar' : 'Fixar'} ${a.titulo}`} aria-pressed={a.fixada}
         className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
         {a.fixada ? <Pin className="w-4 h-4 text-orange-600 fill-orange-600" aria-hidden="true" /> : <Pin className="w-4 h-4" aria-hidden="true" />}
-      </button>
+      </button>}
       <div className="relative">
         <button type="button" onClick={aoMenu} aria-label={`Ações de ${a.titulo}`} aria-haspopup="menu" aria-expanded={menuAberto}
           className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"><MoreVertical className="w-4 h-4" aria-hidden="true" /></button>
         {menuAberto && (
           <div role="menu" aria-label={`Ações de ${a.titulo}`} className="absolute right-0 mt-1 w-40 bg-white rounded-xl border border-gray-200 shadow-lg z-20 py-1">
-            <button type="button" role="menuitem" onClick={aoEditar} className="w-full min-h-10 px-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 inline-flex items-center gap-2"><Pencil className="w-4 h-4" aria-hidden="true" />Editar</button>
-            <button type="button" role="menuitem" onClick={aoFixar} className="w-full min-h-10 px-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 inline-flex items-center gap-2">
-              {a.fixada ? <PinOff className="w-4 h-4" aria-hidden="true" /> : <Pin className="w-4 h-4" aria-hidden="true" />}{a.fixada ? 'Desafixar' : 'Fixar'}</button>
+            {!a.arquivada_em && <button type="button" role="menuitem" onClick={aoEditar} className="w-full min-h-10 px-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 inline-flex items-center gap-2"><Pencil className="w-4 h-4" aria-hidden="true" />Editar</button>}
+            {!a.arquivada_em && <button type="button" role="menuitem" onClick={aoFixar} className="w-full min-h-10 px-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 inline-flex items-center gap-2">
+              {a.fixada ? <PinOff className="w-4 h-4" aria-hidden="true" /> : <Pin className="w-4 h-4" aria-hidden="true" />}{a.fixada ? 'Desafixar' : 'Fixar'}</button>}
+            <button type="button" role="menuitem" onClick={aoArquivar} className="w-full min-h-10 px-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 inline-flex items-center gap-2">
+              {a.arquivada_em ? <ArchiveRestore className="w-4 h-4" aria-hidden="true" /> : <Archive className="w-4 h-4" aria-hidden="true" />}{a.arquivada_em ? 'Desarquivar' : 'Arquivar'}</button>
             <button type="button" role="menuitem" onClick={aoExcluir} className="w-full min-h-10 px-3 text-left text-sm font-medium text-red-700 hover:bg-red-50 inline-flex items-center gap-2"><Trash2 className="w-4 h-4" aria-hidden="true" />Excluir</button>
           </div>
         )}
@@ -197,8 +227,8 @@ function CartaoAnotacao({ a, vista, selecionada, menuAberto, aoSelecionar, aoFix
     return (
       <div className={`${moldura} flex items-center gap-3 px-3 py-2`}>
         <button type="button" onClick={aoSelecionar} aria-label={`Abrir ${a.titulo}`} aria-current={selecionada ? 'true' : undefined} className="flex-1 min-w-0 flex items-center gap-3 text-left min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-lg">
-          <Etiqueta categoria={a.categoria} />
-          <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-gray-900 truncate">{a.titulo}</span><span className="block text-xs text-gray-500 truncate">{a.conteudo.replace(/\s+/g, ' ')}</span></span>
+          <Etiqueta categoria={a.categoria} /><SeloSituacao a={a} />
+          <span className="min-w-0 flex-1"><span className={`block text-sm font-bold truncate ${encerrada(a) ? 'line-through text-gray-400' : 'text-gray-900'}`}>{a.titulo}</span><span className="block text-xs text-gray-500 truncate">{a.conteudo.replace(/\s+/g, ' ')}</span></span>
           <span className="hidden sm:inline text-xs text-gray-500 whitespace-nowrap">{dataHoraAnotacao(a.atualizado_em)}</span>
         </button>
         {barra}
@@ -207,9 +237,9 @@ function CartaoAnotacao({ a, vista, selecionada, menuAberto, aoSelecionar, aoFix
   }
   return (
     <div className={`${moldura} p-4 flex flex-col h-full`}>
-      <div className="flex items-start justify-between gap-2 mb-2"><Etiqueta categoria={a.categoria} />{barra}</div>
+      <div className="flex items-start justify-between gap-2 mb-2"><span className="flex flex-wrap items-center gap-1.5"><Etiqueta categoria={a.categoria} /><SeloSituacao a={a} /></span>{barra}</div>
       <button type="button" onClick={aoSelecionar} aria-label={`Abrir ${a.titulo}`} aria-current={selecionada ? 'true' : undefined} className="flex-1 min-w-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-lg">
-        <span className="block text-lg font-bold text-gray-900 break-words">{a.titulo}</span>
+        <span className={`block text-lg font-bold break-words ${encerrada(a) ? 'line-through text-gray-400' : 'text-gray-900'}`}>{a.titulo}</span>
         <span className="block text-sm text-gray-600 mt-1 line-clamp-3 whitespace-pre-line break-words">{a.conteudo}</span>
         <span className="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-500"><CalendarDays className="w-4 h-4" aria-hidden="true" />{dataHoraAnotacao(a.atualizado_em)}</span>
       </button>
@@ -217,9 +247,14 @@ function CartaoAnotacao({ a, vista, selecionada, menuAberto, aoSelecionar, aoFix
   );
 }
 
-function DetalheAnotacao({ a, aoFechar, aoFixar, aoEditar, aoExcluir, aoCategoria, aoTags }: {
+function DetalheAnotacao({ a, aoFechar, aoFixar, aoEditar, aoExcluir, aoCategoria, aoTags, aoSituacao, aoArquivar }: {
   a: Anotacao; aoFechar: () => void; aoFixar: () => void; aoEditar: () => void; aoExcluir: () => void; aoCategoria: (c: CategoriaAnotacao) => void; aoTags: (t: string[]) => void;
+  aoSituacao: (s: SituacaoAnotacao, msg: string) => void; aoArquivar: () => void;
 }) {
+  const arquivada = !!a.arquivada_em;
+  const situacao = a.situacao ?? 'pendente';
+  const aberta = situacao === 'pendente' || situacao === 'em_andamento';
+  const botaoAcao = 'min-h-11 px-3 inline-flex items-center gap-1.5 rounded-lg border text-sm font-semibold';
   const [novaTag, setNovaTag] = useState<string | null>(null);
   const botao = 'w-9 h-9 inline-flex items-center justify-center rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500';
   const adicionar = () => {
@@ -232,21 +267,30 @@ function DetalheAnotacao({ a, aoFechar, aoFixar, aoEditar, aoExcluir, aoCategori
       <div className="flex items-center justify-between gap-2">
         <Etiqueta categoria={a.categoria} />
         <div className="flex items-center gap-1">
-          <button type="button" onClick={aoFixar} aria-label={a.fixada ? 'Desafixar anotação' : 'Fixar anotação'} aria-pressed={a.fixada} className={`${botao} text-gray-600`}>
-            <Pin className={`w-4 h-4 ${a.fixada ? 'text-orange-600 fill-orange-600' : ''}`} aria-hidden="true" /></button>
-          <button type="button" onClick={aoEditar} aria-label="Editar anotação" className={`${botao} text-gray-600`}><Pencil className="w-4 h-4" aria-hidden="true" /></button>
+          {!arquivada && <button type="button" onClick={aoFixar} aria-label={a.fixada ? 'Desafixar anotação' : 'Fixar anotação'} aria-pressed={a.fixada} className={`${botao} text-gray-600`}>
+            <Pin className={`w-4 h-4 ${a.fixada ? 'text-orange-600 fill-orange-600' : ''}`} aria-hidden="true" /></button>}
+          {!arquivada && <button type="button" onClick={aoEditar} aria-label="Editar anotação" className={`${botao} text-gray-600`}><Pencil className="w-4 h-4" aria-hidden="true" /></button>}
           <button type="button" onClick={aoExcluir} aria-label="Excluir anotação" className={`${botao} text-orange-600`}><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
           <button type="button" onClick={aoFechar} aria-label="Fechar detalhes" className={`${botao} text-gray-600`}><X className="w-4 h-4" aria-hidden="true" /></button>
         </div>
       </div>
       <div>
         <h2 className="text-xl font-black text-gray-900 break-words">{a.titulo}</h2>
-        <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-gray-500"><CalendarDays className="w-4 h-4" aria-hidden="true" />{dataHoraAnotacao(a.atualizado_em)}</p>
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500"><span className="inline-flex items-center gap-1.5"><CalendarDays className="w-4 h-4" aria-hidden="true" />{dataHoraAnotacao(a.atualizado_em)}</span><SeloSituacao a={a} /></p>
+      </div>
+      <div className="flex flex-wrap gap-2" data-testid="acoes-anotacao">
+        {!arquivada && situacao === 'pendente' && <button type="button" className={`${botaoAcao} border-blue-200 bg-blue-50 text-blue-700`} onClick={() => aoSituacao('em_andamento', 'Anotação em andamento.')}><Play className="w-4 h-4" aria-hidden="true" />Iniciar</button>}
+        {!arquivada && aberta && <button type="button" className={`${botaoAcao} border-green-200 bg-green-50 text-green-700`} onClick={() => aoSituacao('concluida', 'Anotação concluída.')}><CheckCircle2 className="w-4 h-4" aria-hidden="true" />Concluir</button>}
+        {!arquivada && !aberta && <button type="button" className={`${botaoAcao} border-gray-200 text-gray-700`} onClick={() => aoSituacao('pendente', 'Anotação reaberta.')}><RotateCcw className="w-4 h-4" aria-hidden="true" />Reabrir</button>}
+        {!arquivada && aberta && <button type="button" className={`${botaoAcao} border-gray-200 text-gray-700`} onClick={() => aoSituacao('cancelada', 'Anotação cancelada.')}><XCircle className="w-4 h-4" aria-hidden="true" />Cancelar anotação</button>}
+        {!arquivada && <button type="button" className={`${botaoAcao} border-gray-200 text-gray-700`} onClick={aoEditar}><Pencil className="w-4 h-4" aria-hidden="true" />Editar</button>}
+        <button type="button" className={`${botaoAcao} border-gray-200 text-gray-700`} onClick={aoArquivar}>
+          {arquivada ? <ArchiveRestore className="w-4 h-4" aria-hidden="true" /> : <Archive className="w-4 h-4" aria-hidden="true" />}{arquivada ? 'Desarquivar' : 'Arquivar'}</button>
       </div>
       <div data-testid="conteudo-anotacao" className="rounded-xl bg-amber-50/70 p-4 text-sm text-gray-800 whitespace-pre-wrap break-words max-h-[26rem] overflow-y-auto">{a.conteudo}</div>
       <div>
         <label htmlFor="det-categoria" className={rotulo}>Categoria</label>
-        <select id="det-categoria" value={a.categoria} onChange={(e) => aoCategoria(e.target.value as CategoriaAnotacao)} className={campo}>
+        <select id="det-categoria" value={a.categoria} disabled={arquivada} onChange={(e) => aoCategoria(e.target.value as CategoriaAnotacao)} className={`${campo} disabled:bg-gray-50 disabled:text-gray-500`}>
           {CATEGORIAS_ANOTACAO.map((c) => <option key={c.id} value={c.id}>{c.rotulo}</option>)}
         </select>
       </div>
@@ -255,12 +299,12 @@ function DetalheAnotacao({ a, aoFechar, aoFixar, aoEditar, aoExcluir, aoCategori
         <ul className="flex flex-wrap gap-2" aria-label="Tags da anotação">
           {a.tags.map((t) => (
             <li key={t} className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white pl-3 pr-1 py-1 text-xs font-medium text-gray-700">
-              {t}<button type="button" aria-label={`Remover a tag ${t}`} onClick={() => aoTags(a.tags.filter((x) => x !== t))} className="w-5 h-5 inline-flex items-center justify-center rounded-full hover:bg-gray-100"><X className="w-3 h-3" aria-hidden="true" /></button>
+              {t}{!arquivada && <button type="button" aria-label={`Remover a tag ${t}`} onClick={() => aoTags(a.tags.filter((x) => x !== t))} className="w-5 h-5 inline-flex items-center justify-center rounded-full hover:bg-gray-100"><X className="w-3 h-3" aria-hidden="true" /></button>}
             </li>
           ))}
           <li>
             {novaTag === null ? (
-              a.tags.length < LIMITE_TAGS && <button type="button" onClick={() => setNovaTag('')} aria-label="Adicionar tag" className="w-8 h-8 inline-flex items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"><Plus className="w-4 h-4" aria-hidden="true" /></button>
+              !arquivada && a.tags.length < LIMITE_TAGS && <button type="button" onClick={() => setNovaTag('')} aria-label="Adicionar tag" className="w-8 h-8 inline-flex items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"><Plus className="w-4 h-4" aria-hidden="true" /></button>
             ) : (
               <input autoFocus aria-label="Nova tag" maxLength={LIMITE_TAG} value={novaTag} onChange={(e) => setNovaTag(e.target.value)} onBlur={adicionar}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionar(); } if (e.key === 'Escape') setNovaTag(null); }}

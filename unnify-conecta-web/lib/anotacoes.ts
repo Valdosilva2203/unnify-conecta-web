@@ -1,6 +1,13 @@
 // Anotações da empresa (migration 051): tipos e constantes. O banco decide quem vê/edita; a tela só informa a empresa.
 export type CategoriaAnotacao = 'pessoal' | 'empresa' | 'ideias' | 'reunioes' | 'outras';
 
+// Situação e arquivamento (migration 061), como em Tarefas
+export type SituacaoAnotacao = 'pendente' | 'em_andamento' | 'concluida' | 'cancelada';
+export const SITUACOES_ANOTACAO: Record<SituacaoAnotacao, { rotulo: string; cor: string }> = {
+  pendente: { rotulo: 'Pendente', cor: 'bg-gray-100 text-gray-700' }, em_andamento: { rotulo: 'Em andamento', cor: 'bg-blue-50 text-blue-700' },
+  concluida: { rotulo: 'Concluída', cor: 'bg-green-50 text-green-700' }, cancelada: { rotulo: 'Cancelada', cor: 'bg-gray-100 text-gray-500' },
+};
+
 export interface Anotacao {
   id: string;
   titulo: string;
@@ -10,6 +17,8 @@ export interface Anotacao {
   fixada: boolean;
   criado_por: string | null;
   atualizado_em: string;
+  situacao?: SituacaoAnotacao;
+  arquivada_em?: string | null;
 }
 
 export const CATEGORIAS_ANOTACAO: { id: CategoriaAnotacao; rotulo: string; cor: string; ponto: string }[] = [
